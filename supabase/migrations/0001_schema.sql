@@ -206,4 +206,5 @@ create index on mensajes (hilo_asesor_id);
 create index on mensajes (hilo_asesor_id) where not leido;
 create index on operaciones (asesor_id);
 create index on sugerencias (estado);
+create index on sugerencias (autor_id);
 create index on push_suscripciones (usuario_id);

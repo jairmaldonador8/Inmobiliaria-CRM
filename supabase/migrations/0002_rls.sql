@@ -116,10 +116,7 @@ create policy "asesor actualiza sus leads o admin" on public.leads
 create policy "asesor lee seguimientos de sus leads o admin" on public.seguimientos
   for select to authenticated
   using (
-    exists (
-      select 1 from public.leads l
-      where l.id = lead_id and l.asesor_id = (select auth.uid())
-    )
+    lead_id in (select id from public.leads where asesor_id = (select auth.uid()))
     or (select private.is_admin())
   );
 
@@ -127,10 +124,7 @@ create policy "asesor inserta seguimientos de sus leads o admin" on public.segui
   for insert to authenticated
   with check (
     (
-      exists (
-        select 1 from public.leads l
-        where l.id = lead_id and l.asesor_id = (select auth.uid())
-      )
+      lead_id in (select id from public.leads where asesor_id = (select auth.uid()))
       or (select private.is_admin())
     )
     and autor_id = (select auth.uid())
@@ -287,6 +281,18 @@ grant update (leido) on public.mensajes to authenticated;
 -- seguimientos: append-only, capa 2 (sin update/delete a nivel de grants).
 revoke update, delete on public.seguimientos from authenticated;
 
+-- visitas: asesor puede reagendar/completar/cancelar con nota, pero no
+-- repuntar lead_id/propiedad_id/asesor_id (se fijan al insertar).
+revoke update on public.visitas from authenticated;
+grant update (fecha, estado, nota_resultado) on public.visitas to authenticated;
+
+-- leads: restringe columnas insertables por authenticated; excluye
+-- asignado_en, easybroker_id, archivado, creado_en, id (server-managed).
+revoke insert on public.leads from authenticated;
+grant insert (agencia_id, nombre, telefono, email, fuente, fuente_detalle,
+  propiedad_id, asesor_id, etapa, interes, presupuesto, zona_interes, notas,
+  mensaje_original) on public.leads to authenticated;
+
 -- =====================
 -- 5. Trigger de inmutabilidad de seguimientos (capa 3: aplica a cualquier rol)
 -- =====================
@@ -299,6 +305,8 @@ begin
 end;
 $$;
 
+-- Nota (deliberada): no existe ruta de update, ni siquiera para service-role.
+-- Corregir un typo requiere insertar un seguimiento nuevo que supere al anterior.
 drop trigger if exists seguimientos_bloquea_update_delete on public.seguimientos;
 create trigger seguimientos_bloquea_update_delete
   before update or delete on public.seguimientos
