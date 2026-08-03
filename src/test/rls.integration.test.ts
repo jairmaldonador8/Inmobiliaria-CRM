@@ -211,6 +211,25 @@ describe('RLS Fase 1: aislamiento admin/asesor (Supabase real)', () => {
     expect(after!.asesor_id).toBe(asesor1Id);
   });
 
+  it('asesor1 NO puede modificar campos de un lead ajeno (policy de ownership, 0 filas sin error)', async () => {
+    // A diferencia de la revocacion de columna (asesor_id, que SI produce error),
+    // esta denegacion viene de la policy USING de ownership: supabase-js NO
+    // regresa error, regresa 0 filas afectadas. Trampa clasica de "silent 0 rows"
+    // que la suite debe cubrir explicitamente.
+    const { data, error } = await asesor1
+      .from('leads')
+      .update({ nombre: 'HACKEADO' })
+      .eq('id', lead2Id)
+      .select('id');
+    expect(error).toBeNull();
+    expect(data).toHaveLength(0);
+
+    // Verificacion (service-role): el nombre del lead de asesor2 sigue intacto.
+    const { data: after, error: afterError } = await svc.from('leads').select('nombre').eq('id', lead2Id).single();
+    expect(afterError).toBeNull();
+    expect(after!.nombre).toBe(MARK_LEAD_ASESOR2);
+  });
+
   it('asesor1 NO puede insertar un lead asignado a asesor2 (with check)', async () => {
     const { error } = await asesor1.from('leads').insert({
       agencia_id: agenciaId,
