@@ -1,0 +1,43 @@
+{
+  "pagination": {
+    "limit": 3,
+    "page": 1,
+    "total": 955,
+    "next_page": "https://api.stagingeb.com/v1/contact_requests?limit=3&page=2"
+  },
+  "content": [
+    {
+      "id": 37779,
+      "name": "Elizabeth",
+      "phone": "55555555555",
+      "email": "t@a.com",
+      "contact_id": 135115,
+      "property_id": "EB-C0135",
+      "message": "test",
+      "source": "probe",
+      "happened_at": "2026-07-15T16:55:42-06:00"
+    },
+    {
+      "id": 37768,
+      "name": "Oscar",
+      "phone": "12345",
+      "email": "test@example.com",
+      "contact_id": 137862,
+      "property_id": "EB-C6349",
+      "message": "Hola, me interesa esta propiedad. ¿Sigue disponible?",
+      "source": "forsale-prototype.local",
+      "happened_at": "2026-07-15T10:07:36-06:00"
+    },
+    {
+      "id": 37751,
+      "name": "O HS Chat 17",
+      "phone": "+5288229911003399",
+      "email": "ozatarain+hsc17@easybroker.com",
+      "contact_id": 194622,
+      "property_id": "EB-C6560",
+      "message": "Hola. Me interesa mucho esta propiedad. ¿Me puedes contactar?",
+      "source": "Pincali",
+      "happened_at": "2026-07-14T12:42:23-06:00"
+    }
+  ]
+}

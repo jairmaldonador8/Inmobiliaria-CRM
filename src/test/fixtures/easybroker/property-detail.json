@@ -1,0 +1,154 @@
+{
+  "public_id": "EB-C6349",
+  "title": "DEPARTAMENTO EN RENTA EN EL AGUACATAL EN VALLE PONIENTE",
+  "description": "Departamento amueblado en renta en Valle Poniente con 113 m2 construcción, 2 recámaras, la principal con baño vestidor, cocina, sala, comedor, balcón, 1 cajón de estacionamiento. Seguridad 24/7. La renta mensual incluye: servicios de agua, luz, televisión por cable, línea telefónica, mantenimiento. \n \n La torre cuenta con amenidades como alberca, gimnasio, sala de cine, entre otras. \n \n \n \n Hassaf Bienes Raices\n Dedicados a una asesoría financiera y patrimonial, juntos, multiplicamos resultados. Nuestro compromiso es un servicio profesional y personalizado. Para mas información y grandes resultados, llame!",
+  "bedrooms": 2,
+  "bathrooms": null,
+  "half_bathrooms": null,
+  "parking_spaces": 1,
+  "lot_size": null,
+  "construction_size": 113.0,
+  "lot_length": null,
+  "lot_width": null,
+  "floors": null,
+  "floor": null,
+  "age": null,
+  "internal_id": "H-MP-DV-0547",
+  "expenses": null,
+  "maintenance_status": null,
+  "maintenance_amount": null,
+  "location": {
+    "name": "El Aguacatal, Santa Catarina, Nuevo León",
+    "latitude": null,
+    "longitude": null,
+    "street": null,
+    "postal_code": null,
+    "show_exact_location": true,
+    "hide_exact_location": false,
+    "exterior_number": null,
+    "interior_number": null
+  },
+  "property_type": "Departamento",
+  "created_at": "2021-01-29T18:56:39-06:00",
+  "updated_at": "2024-08-12T23:36:39-06:00",
+  "published_at": "2023-02-10T13:33:01-06:00",
+  "operations": [
+    {
+      "type": "rental",
+      "amount": 33200.0,
+      "currency": "MXN",
+      "formatted_amount": "$33,200 MXN",
+      "commission": {
+        "type": "unspecified"
+      },
+      "unit": "total"
+    }
+  ],
+  "property_files": [],
+  "videos": [],
+  "virtual_tour": null,
+  "collaboration_notes": null,
+  "public_url": "https://www.stagingeb.com/mx/listings/departamento-en-renta-en-el-aguacatal-en-valle-poniente-c12f782d-fb33-49ed-ba25-f3f8f5c8e3de",
+  "shared_commission_percentage": null,
+  "exclusive": null,
+  "foreclosure": false,
+  "uncovered_space": null,
+  "tags": [],
+  "private_description": null,
+  "show_prices": true,
+  "share_commission": false,
+  "property_images": [
+    {
+      "title": null,
+      "url": "https://assets.stagingeb.com/property_images/36349/126557/EB-C6349.jpg?version=1611968228"
+    },
+    {
+      "title": null,
+      "url": "https://assets.stagingeb.com/property_images/36349/126558/EB-C6349.jpg?version=1611968229"
+    },
+    {
+      "title": null,
+      "url": "https://assets.stagingeb.com/property_images/36349/126559/EB-C6349.jpg?version=1611968230"
+    },
+    {
+      "title": null,
+      "url": "https://assets.stagingeb.com/property_images/36349/126560/EB-C6349.jpg?version=1611968230"
+    },
+    {
+      "title": null,
+      "url": "https://assets.stagingeb.com/property_images/36349/126561/EB-C6349.jpg?version=1611968231"
+    },
+    {
+      "title": null,
+      "url": "https://assets.stagingeb.com/property_images/36349/126562/EB-C6349.jpg?version=1611968232"
+    },
+    {
+      "title": null,
+      "url": "https://assets.stagingeb.com/property_images/36349/126563/EB-C6349.jpg?version=1611968232"
+    },
+    {
+      "title": null,
+      "url": "https://assets.stagingeb.com/property_images/36349/126564/EB-C6349.jpg?version=1611968233"
+    },
+    {
+      "title": null,
+      "url": "https://assets.stagingeb.com/property_images/36349/126565/EB-C6349.jpg?version=1611968233"
+    },
+    {
+      "title": null,
+      "url": "https://assets.stagingeb.com/property_images/36349/126566/EB-C6349.jpg?version=1611968234"
+    },
+    {
+      "title": null,
+      "url": "https://assets.stagingeb.com/property_images/36349/126567/EB-C6349.jpg?version=1611968236"
+    }
+  ],
+  "images": [
+    {
+      "title": null,
+      "url": "https://assets.stagingeb.com/property_images/36349/126557/EB-C6349.jpg?version=1611968228"
+    },
+    {
+      "title": null,
+      "url": "https://assets.stagingeb.com/property_images/36349/126558/EB-C6349.jpg?version=1611968229"
+    },
+    {
+      "title": null,
+      "url": "https://assets.stagingeb.com/property_images/36349/126559/EB-C6349.jpg?version=1611968230"
+    },
+    {
+      "title": null,
+      "url": "https://assets.stagingeb.com/property_images/36349/126560/EB-C6349.jpg?version=1611968230"
+    },
+    {
+      "title": null,
+      "url": "https://assets.stagingeb.com/property_images/36349/126561/EB-C6349.jpg?version=1611968231"
+    },
+    {
+      "title": null,
+      "url": "https://assets.stagingeb.com/property_images/36349/126562/EB-C6349.jpg?version=1611968232"
+    },
+    {
+      "title": null,
+      "url": "https://assets.stagingeb.com/property_images/36349/126563/EB-C6349.jpg?version=1611968232"
+    },
+    {
+      "title": null,
+      "url": "https://assets.stagingeb.com/property_images/36349/126564/EB-C6349.jpg?version=1611968233"
+    },
+    {
+      "title": null,
+      "url": "https://assets.stagingeb.com/property_images/36349/126565/EB-C6349.jpg?version=1611968233"
+    },
+    {
+      "title": null,
+      "url": "https://assets.stagingeb.com/property_images/36349/126566/EB-C6349.jpg?version=1611968234"
+    },
+    {
+      "title": null,
+      "url": "https://assets.stagingeb.com/property_images/36349/126567/EB-C6349.jpg?version=1611968236"
+    }
+  ],
+  "agent": null,
+  "features": []
+}
