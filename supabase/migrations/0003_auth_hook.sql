@@ -34,6 +34,11 @@ begin
   claims := jsonb_set(coalesce(event->'claims', '{}'::jsonb),
                       '{user_role}', to_jsonb(v_rol::text));
   return jsonb_set(event, '{claims}', claims);
+exception
+  -- Cinturon de seguridad: cualquier error inesperado (ej. user_id no-UUID) NO debe
+  -- propagarse, porque un hook que lanza error bloquea TODOS los sign-ins de la plataforma.
+  when others then
+    return event;
 end;
 $$;
 
