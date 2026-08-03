@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/easybroker-sync",
+      "schedule": "*/15 * * * *"
+    }
+  ]
+}
