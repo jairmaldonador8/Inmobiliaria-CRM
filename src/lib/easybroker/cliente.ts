@@ -34,6 +34,7 @@ export class EasyBrokerError extends Error {
 
 const LIMITE_MAXIMO = 50
 const PAUSA_ENTRE_PAGINAS_MS = 100 // ≈ ≤10 req/s, bajo el límite de 20 req/s
+const TIMEOUT_MS = 15_000 // por request; cron/tests no deben colgarse si EB no responde
 
 function baseUrl(): string {
   const base = process.env.EASYBROKER_BASE_URL
@@ -56,6 +57,9 @@ export type ParamsEB = Record<string, string | number | boolean | undefined>
 /**
  * GET tipado contra la API de EasyBroker. `path` es relativo (p. ej.
  * '/v1/properties') o una URL absoluta (p. ej. pagination.next_page).
+ *
+ * Nota: se mantiene el nombre `ebFetch` (en vez de renombrar a español) para
+ * no generar churn en `src/test/easybroker-mapeo.test.ts`, que lo importa.
  */
 export async function ebFetch<T>(path: string, params?: ParamsEB): Promise<T> {
   const url = new URL(path.startsWith('http') ? path : `${baseUrl()}${path}`)
@@ -63,19 +67,33 @@ export async function ebFetch<T>(path: string, params?: ParamsEB): Promise<T> {
     if (valor !== undefined) url.searchParams.set(clave, String(valor))
   }
 
-  const respuesta = await fetch(url, {
-    headers: {
-      'X-Authorization': apiKey(),
-      Accept: 'application/json',
-    },
-  })
+  let respuesta: Response
+  try {
+    respuesta = await fetch(url, {
+      headers: {
+        'X-Authorization': apiKey(),
+        Accept: 'application/json',
+      },
+      signal: AbortSignal.timeout(TIMEOUT_MS),
+    })
+  } catch (error) {
+    // Falla de red o timeout (AbortSignal.timeout aborta a los 15s): no hay
+    // respuesta HTTP, así que se reporta con status 0.
+    const mensaje = error instanceof Error ? error.message : String(error)
+    throw new EasyBrokerError(0, `error de red: ${mensaje}`, url.toString())
+  }
 
   if (!respuesta.ok) {
     const cuerpo = await respuesta.text().catch(() => '')
     throw new EasyBrokerError(respuesta.status, cuerpo, url.toString())
   }
 
-  return (await respuesta.json()) as T
+  try {
+    return (await respuesta.json()) as T
+  } catch (error) {
+    const mensaje = error instanceof Error ? error.message : String(error)
+    throw new EasyBrokerError(respuesta.status, `respuesta no-JSON: ${mensaje}`, url.toString())
+  }
 }
 
 /**
