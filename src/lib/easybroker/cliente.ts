@@ -33,7 +33,8 @@ export class EasyBrokerError extends Error {
 }
 
 const LIMITE_MAXIMO = 50
-const PAUSA_ENTRE_PAGINAS_MS = 100 // ≈ ≤10 req/s, bajo el límite de 20 req/s
+/** Pausa entre requests paginados: ≈ ≤10 req/s, bajo el límite de 20 req/s. */
+export const PAUSA_ENTRE_PAGINAS_MS = 100
 const TIMEOUT_MS = 15_000 // por request; cron/tests no deben colgarse si EB no responde
 
 function baseUrl(): string {
@@ -48,7 +49,7 @@ function apiKey(): string {
   return key
 }
 
-function pausa(ms: number): Promise<void> {
+export function pausa(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms))
 }
 

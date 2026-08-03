@@ -7,6 +7,10 @@
  *    Asi este modulo no importa 'server-only' y es testeable con vitest.
  *  - El fetching de EasyBroker tambien es inyectable (DepsSync) para que los
  *    tests de integracion usen fixtures sin tocar la red.
+ *  - Lease de ejecucion unica: sync_estado (fila recurso='lock', columna
+ *    lock_until) actua como lock con expiracion de 5 min. Una invocacion
+ *    concurrente (Vercel Cron puede duplicar invocaciones) no corre: regresa
+ *    de inmediato con omitido=true.
  *  - Cursores en sync_estado (recurso 'propiedades' / 'leads'):
  *      * propiedades: search[updated_after] + sort updated_at-asc. El cursor
  *        avanza DESPUES de cada pagina procesada con exito (una falla en la
@@ -15,15 +19,22 @@
  *      * leads: happened_after. El API no garantiza orden, asi que el cursor
  *        avanza SOLO al final de una corrida completamente exitosa (avanzarlo
  *        a la mitad podria saltarse contact requests de paginas no procesadas).
- *  - Idempotencia: upsert por easybroker_id en propiedades; en leads, dedup
- *    por easybroker_id (skip) y por telefono/email (consulta repetida ->
- *    seguimiento 'sistema' + notificacion, sin crear lead nuevo).
+ *  - Idempotencia: upsert por easybroker_id en propiedades. En leads, dedup
+ *    por easybroker_id tanto en `leads` como en `seguimientos` (un reingreso
+ *    ya registrado no se repite), y por telefono/email (consulta repetida ->
+ *    seguimiento 'sistema' + notificacion, sin crear lead nuevo). Las
+ *    violaciones de unicidad 23505 (carrera entre corridas traslapadas) se
+ *    tratan como duplicado y se saltan sin notificar.
+ *  - Invariante de producto (decision de review): la BANDEJA es la fuente
+ *    autoritativa de leads nuevos; las notificaciones son best-effort. Si una
+ *    notificacion falla o se pierde, el lead sigue visible en /admin/bandeja
+ *    — no hay trigger ni transaccion que las garantice, a proposito.
  *  - sincronizarEasyBroker nunca lanza: acumula en errores[] y registra
  *    ultimo_error / ultimo_ok en sync_estado.
  */
 import type { SupabaseClient } from '@supabase/supabase-js'
 
-import { ebFetch, type PaginaEB, type ParamsEB } from '@/lib/easybroker/cliente'
+import { ebFetch, pausa, PAUSA_ENTRE_PAGINAS_MS, type PaginaEB, type ParamsEB } from '@/lib/easybroker/cliente'
 import {
   mapearContactRequest,
   mapearPropiedadDetalle,
@@ -42,6 +53,8 @@ export interface ResultadoSync {
   propiedades: { procesadas: number; nuevas: number; actualizadas: number }
   leads: { procesados: number; nuevos: number; duplicados: number }
   errores: string[]
+  /** true si la corrida no se ejecuto (otra invocacion tiene el lease). */
+  omitido: boolean
 }
 
 /** Dependencias inyectables (tests usan fixtures; el cron usa los defaults). */
@@ -82,11 +95,11 @@ export interface ResultadoContactRequests {
 // Helpers
 // ---------------------------------------------------------------------------
 
-const PAUSA_ENTRE_PAGINAS_MS = 100
+/** Pausa entre fetches de detalle (N+1) para respetar el rate limit de EB. */
+const PAUSA_ENTRE_DETALLES_MS = 75
 
-function pausa(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms))
-}
+/** Codigo Postgres de violacion de unicidad. */
+const UNIQUE_VIOLATION = '23505'
 
 function mensajeDe(error: unknown): string {
   return error instanceof Error ? error.message : String(error)
@@ -143,6 +156,47 @@ async function marcarError(
 }
 
 // ---------------------------------------------------------------------------
+// Lease de ejecucion unica (fila recurso='lock' en sync_estado)
+// ---------------------------------------------------------------------------
+
+const RECURSO_LOCK = 'lock'
+const LEASE_MS = 5 * 60_000
+
+/**
+ * Intenta adquirir el lease con un UPDATE condicional atomico: solo gana la
+ * invocacion cuyo WHERE (lock libre o expirado) siga cumpliendose al tomar el
+ * row lock en Postgres. Devuelve true si se adquirio.
+ */
+async function adquirirLease(supabase: SupabaseClient): Promise<boolean> {
+  // Asegurar que la fila 'lock' exista (ignoreDuplicates: no pisa lock_until).
+  const { error: upsertError } = await supabase
+    .from('sync_estado')
+    .upsert({ recurso: RECURSO_LOCK }, { onConflict: 'recurso', ignoreDuplicates: true })
+  if (upsertError) throw new Error(`No se pudo asegurar la fila de lock: ${upsertError.message}`)
+
+  const ahora = new Date().toISOString()
+  const { data, error } = await supabase
+    .from('sync_estado')
+    .update({
+      lock_until: new Date(Date.now() + LEASE_MS).toISOString(),
+      actualizado_en: ahora,
+    })
+    .eq('recurso', RECURSO_LOCK)
+    .or(`lock_until.is.null,lock_until.lt.${ahora}`)
+    .select('recurso')
+  if (error) throw new Error(`No se pudo adquirir el lease de sync: ${error.message}`)
+  return (data ?? []).length > 0
+}
+
+async function liberarLease(supabase: SupabaseClient): Promise<void> {
+  const { error } = await supabase
+    .from('sync_estado')
+    .update({ lock_until: null, actualizado_en: new Date().toISOString() })
+    .eq('recurso', RECURSO_LOCK)
+  if (error) throw new Error(`No se pudo liberar el lease de sync: ${error.message}`)
+}
+
+// ---------------------------------------------------------------------------
 // Propiedades
 // ---------------------------------------------------------------------------
 
@@ -185,6 +239,8 @@ export async function procesarPaginaPropiedades(
       const ahora = new Date().toISOString()
 
       if (!idsExistentes.has(base.easybroker_id)) {
+        // Rate limit: el detalle es un request extra por item nuevo.
+        await pausa(PAUSA_ENTRE_DETALLES_MS)
         const detalle = mapearPropiedadDetalle(await ctx.obtenerDetalle(base.easybroker_id))
         const fotos = detalle.fotos.length > 0 ? detalle.fotos : base.fotos
         const { error } = await supabase
@@ -233,15 +289,85 @@ interface LeadExistente {
   id: string
   nombre: string
   asesor_id: string | null
+  creado_en: string
+}
+
+/**
+ * ¿Este contact request ya se registro antes? Se checa contra leads (creo un
+ * lead nuevo) Y contra seguimientos (registro una consulta repetida).
+ */
+async function contactRequestYaVisto(
+  supabase: SupabaseClient,
+  easybrokerId: string
+): Promise<boolean> {
+  const { data: lead, error: leadError } = await supabase
+    .from('leads')
+    .select('id')
+    .eq('easybroker_id', easybrokerId)
+    .maybeSingle()
+  if (leadError) throw new Error(leadError.message)
+  if (lead) return true
+
+  const { data: seguimiento, error: seguimientoError } = await supabase
+    .from('seguimientos')
+    .select('id')
+    .eq('easybroker_id', easybrokerId)
+    .maybeSingle()
+  if (seguimientoError) throw new Error(seguimientoError.message)
+  return seguimiento !== null
+}
+
+/**
+ * Busca un lead NO archivado con el mismo telefono o el mismo email, con DOS
+ * queries indexadas separadas (nunca .or(): un email con comas/parentesis
+ * romperia la sintaxis de filtros de PostgREST). Gana el match mas reciente.
+ */
+async function buscarLeadExistente(
+  supabase: SupabaseClient,
+  telefono: string | null,
+  email: string | null
+): Promise<LeadExistente | null> {
+  const candidatos: LeadExistente[] = []
+
+  if (telefono) {
+    const { data, error } = await supabase
+      .from('leads')
+      .select('id, nombre, asesor_id, creado_en')
+      .eq('archivado', false)
+      .eq('telefono', telefono)
+      .order('creado_en', { ascending: false })
+      .limit(1)
+    if (error) throw new Error(error.message)
+    if (data?.[0]) candidatos.push(data[0])
+  }
+
+  if (email) {
+    const { data, error } = await supabase
+      .from('leads')
+      .select('id, nombre, asesor_id, creado_en')
+      .eq('archivado', false)
+      .eq('email', email)
+      .order('creado_en', { ascending: false })
+      .limit(1)
+    if (error) throw new Error(error.message)
+    if (data?.[0] && !candidatos.some((c) => c.id === data[0].id)) candidatos.push(data[0])
+  }
+
+  if (candidatos.length === 0) return null
+  candidatos.sort((a, b) => (a.creado_en < b.creado_en ? 1 : -1))
+  return candidatos[0]
 }
 
 /**
  * Procesa un lote de contact requests con dedup:
- *  1. easybroker_id ya visto -> skip (duplicado).
+ *  1. easybroker_id ya visto (en leads O en seguimientos) -> skip (duplicado).
  *  2. mismo telefono o email en un lead NO archivado -> consulta repetida:
- *     seguimiento 'sistema' + notificacion (asesor asignado, o admins si esta
- *     en bandeja); no se crea lead.
+ *     seguimiento 'sistema' (marcado con el easybroker_id del contact request)
+ *     + notificacion (asesor asignado, o admins si esta en bandeja); no se
+ *     crea lead.
  *  3. si no -> lead nuevo en bandeja (asesor null) + notificacion a admins.
+ * En 2 y 3, una violacion de unicidad 23505 (carrera con una corrida
+ * traslapada) cuenta como duplicado y NO notifica.
  */
 export async function procesarContactRequests(
   supabase: SupabaseClient,
@@ -259,19 +385,9 @@ export async function procesarContactRequests(
   for (const cr of crs) {
     try {
       const fila = mapearContactRequest(cr)
+      let esNuevo = false
 
-      // 1. Dedup por easybroker_id (incluye leads archivados: reprocesar el
-      // mismo contact request jamas debe crear nada).
-      const { data: porEbId, error: porEbIdError } = await supabase
-        .from('leads')
-        .select('id')
-        .eq('easybroker_id', fila.easybroker_id)
-        .maybeSingle()
-      if (porEbIdError) throw new Error(porEbIdError.message)
-
-      if (porEbId) {
-        resultado.duplicados += 1
-      } else {
+      if (!(await contactRequestYaVisto(supabase, fila.easybroker_id))) {
         // Resolver la propiedad referida (puede no existir en nuestro catalogo).
         let propiedad: PropiedadResuelta | null = null
         if (fila.propiedad_eb_id) {
@@ -284,33 +400,17 @@ export async function procesarContactRequests(
           propiedad = data
         }
 
-        // 2. Dedup por telefono / email entre leads no archivados.
-        const condiciones: string[] = []
-        if (fila.telefono) condiciones.push(`telefono.eq.${fila.telefono}`)
-        if (fila.email) condiciones.push(`email.eq.${fila.email}`)
-
-        let existente: LeadExistente | null = null
-        if (condiciones.length > 0) {
-          const { data, error } = await supabase
-            .from('leads')
-            .select('id, nombre, asesor_id')
-            .eq('archivado', false)
-            .or(condiciones.join(','))
-            .order('creado_en', { ascending: false })
-            .limit(1)
-          if (error) throw new Error(error.message)
-          existente = data?.[0] ?? null
-        }
-
+        const existente = await buscarLeadExistente(supabase, fila.telefono, fila.email)
         if (existente) {
-          await registrarConsultaRepetida(supabase, existente, fila.fuente_detalle, propiedad, fila.propiedad_eb_id)
-          resultado.duplicados += 1
+          await registrarConsultaRepetida(supabase, existente, fila, propiedad)
+          // esNuevo queda false: la consulta repetida cuenta como duplicado.
         } else {
-          await crearLeadEnBandeja(supabase, ctx.agenciaId, fila, propiedad)
-          resultado.nuevos += 1
+          esNuevo = await crearLeadEnBandeja(supabase, ctx.agenciaId, fila, propiedad)
         }
       }
 
+      if (esNuevo) resultado.nuevos += 1
+      else resultado.duplicados += 1
       resultado.procesados += 1
       if (!resultado.maxHappenedAt || fila.creado_en > resultado.maxHappenedAt) {
         resultado.maxHappenedAt = fila.creado_en
@@ -325,12 +425,11 @@ export async function procesarContactRequests(
 async function registrarConsultaRepetida(
   supabase: SupabaseClient,
   existente: LeadExistente,
-  source: string | null,
-  propiedad: PropiedadResuelta | null,
-  propiedadEbId: string | null
+  fila: ReturnType<typeof mapearContactRequest>,
+  propiedad: PropiedadResuelta | null
 ): Promise<void> {
-  const referencia = propiedad?.titulo ?? propiedadEbId
-  const via = source ?? 'portal'
+  const referencia = propiedad?.titulo ?? fila.propiedad_eb_id
+  const via = fila.fuente_detalle ?? 'portal'
   const nota = referencia
     ? `El lead volvió a preguntar por la propiedad ${referencia} vía ${via}`
     : `El lead volvió a preguntar vía ${via}`
@@ -341,8 +440,13 @@ async function registrarConsultaRepetida(
     tipo: 'sistema',
     propiedad_id: propiedad?.id ?? null,
     nota,
+    easybroker_id: fila.easybroker_id, // unique: hace idempotente el reingreso
   })
-  if (error) throw new Error(`seguimiento de consulta repetida: ${error.message}`)
+  if (error) {
+    // Otra corrida ya registro este contact request: duplicado, no notificar.
+    if (error.code === UNIQUE_VIOLATION) return
+    throw new Error(`seguimiento de consulta repetida: ${error.message}`)
+  }
 
   const sufijo = referencia ? ` por ${referencia}` : ''
   if (existente.asesor_id) {
@@ -361,12 +465,13 @@ async function registrarConsultaRepetida(
   }
 }
 
+/** Devuelve true si el lead se creo; false si otra corrida gano la carrera (23505). */
 async function crearLeadEnBandeja(
   supabase: SupabaseClient,
   agenciaId: string,
   fila: ReturnType<typeof mapearContactRequest>,
   propiedad: PropiedadResuelta | null
-): Promise<void> {
+): Promise<boolean> {
   const { error } = await supabase.from('leads').insert({
     agencia_id: agenciaId,
     nombre: fila.nombre,
@@ -381,13 +486,18 @@ async function crearLeadEnBandeja(
     mensaje_original: fila.mensaje_original,
     creado_en: fila.creado_en, // happened_at real del contact request (UTC)
   })
-  if (error) throw new Error(`insert de lead nuevo: ${error.message}`)
+  if (error) {
+    // Otra corrida traslapada ya creo este lead: duplicado, no notificar.
+    if (error.code === UNIQUE_VIOLATION) return false
+    throw new Error(`insert de lead nuevo: ${error.message}`)
+  }
 
   await notificarAdmins(supabase, {
     tipo: 'lead_nuevo',
     texto: `Nuevo lead: ${fila.nombre} — ${fila.fuente_detalle ?? 'portal'}`,
     url: '/admin/bandeja',
   })
+  return true
 }
 
 // ---------------------------------------------------------------------------
@@ -395,8 +505,10 @@ async function crearLeadEnBandeja(
 // ---------------------------------------------------------------------------
 
 /**
- * Corre el sync completo (propiedades y luego leads). Nunca lanza: los
- * errores quedan en el resultado y en sync_estado.ultimo_error.
+ * Corre el sync completo (propiedades y luego leads) bajo un lease de
+ * ejecucion unica. Nunca lanza: los errores quedan en el resultado y en
+ * sync_estado.ultimo_error; si otra invocacion tiene el lease, regresa con
+ * omitido=true sin hacer nada.
  */
 export async function sincronizarEasyBroker(
   supabase: SupabaseClient,
@@ -412,104 +524,121 @@ export async function sincronizarEasyBroker(
     propiedades: { procesadas: 0, nuevas: 0, actualizadas: 0 },
     leads: { procesados: 0, nuevos: 0, duplicados: 0 },
     errores: [],
+    omitido: false,
   }
 
-  const { data: agencia, error: agenciaError } = await supabase
-    .from('agencias')
-    .select('id')
-    .limit(1)
-    .single()
-  if (agenciaError || !agencia) {
-    resultado.errores.push(`no se pudo resolver la agencia: ${agenciaError?.message ?? 'sin filas'}`)
+  try {
+    if (!(await adquirirLease(supabase))) {
+      resultado.omitido = true
+      resultado.errores.push('sync ya en curso')
+      return resultado
+    }
+  } catch (error) {
+    resultado.omitido = true
+    resultado.errores.push(`lease: ${mensajeDe(error)}`)
     return resultado
   }
-  const agenciaId: string = agencia.id
 
-  // --- Propiedades: cursor por pagina (orden updated_at-asc lo hace seguro) ---
   try {
-    const cursor = await leerCursor(supabase, 'propiedades')
-    const params: ParamsEB = { limit: 50, 'search[sort_by]': 'updated_at-asc' }
-    if (cursor) params['search[updated_after]'] = cursor
+    const { data: agencia, error: agenciaError } = await supabase
+      .from('agencias')
+      .select('id')
+      .limit(1)
+      .single()
+    if (agenciaError || !agencia) {
+      resultado.errores.push(`no se pudo resolver la agencia: ${agenciaError?.message ?? 'sin filas'}`)
+      return resultado
+    }
+    const agenciaId: string = agencia.id
 
-    let pagina = (await obtenerPagina('/v1/properties', params)) as PaginaEB<PropiedadListaEB>
-    let paginasLeidas = 1
-    let falloEnPagina = false
+    // --- Propiedades: cursor por pagina (orden updated_at-asc lo hace seguro) ---
+    try {
+      const cursor = await leerCursor(supabase, 'propiedades')
+      const params: ParamsEB = { limit: 50, 'search[sort_by]': 'updated_at-asc' }
+      if (cursor) params['search[updated_after]'] = cursor
 
-    for (;;) {
-      const r = await procesarPaginaPropiedades(supabase, pagina.content, { agenciaId, obtenerDetalle })
-      resultado.propiedades.procesadas += r.procesadas
-      resultado.propiedades.nuevas += r.nuevas
-      resultado.propiedades.actualizadas += r.actualizadas
+      let pagina = (await obtenerPagina('/v1/properties', params)) as PaginaEB<PropiedadListaEB>
+      let paginasLeidas = 1
+      let falloEnPagina = false
 
-      if (r.errores.length > 0) {
-        // No se avanza el cursor de una pagina con fallas: sus items se
-        // reintentan en la proxima corrida.
-        resultado.errores.push(...r.errores)
-        falloEnPagina = true
-        break
+      for (;;) {
+        const r = await procesarPaginaPropiedades(supabase, pagina.content, { agenciaId, obtenerDetalle })
+        resultado.propiedades.procesadas += r.procesadas
+        resultado.propiedades.nuevas += r.nuevas
+        resultado.propiedades.actualizadas += r.actualizadas
+
+        if (r.errores.length > 0) {
+          // No se avanza el cursor de una pagina con fallas: sus items se
+          // reintentan en la proxima corrida.
+          resultado.errores.push(...r.errores)
+          falloEnPagina = true
+          break
+        }
+        if (r.maxActualizadaEb) await avanzarCursor(supabase, 'propiedades', r.maxActualizadaEb)
+
+        if (!pagina.pagination.next_page || paginasLeidas >= maxPaginas) break
+        await pausa(PAUSA_ENTRE_PAGINAS_MS)
+        pagina = (await obtenerPagina(pagina.pagination.next_page)) as PaginaEB<PropiedadListaEB>
+        paginasLeidas += 1
       }
-      if (r.maxActualizadaEb) await avanzarCursor(supabase, 'propiedades', r.maxActualizadaEb)
 
-      if (!pagina.pagination.next_page || paginasLeidas >= maxPaginas) break
-      await pausa(PAUSA_ENTRE_PAGINAS_MS)
-      pagina = (await obtenerPagina(pagina.pagination.next_page)) as PaginaEB<PropiedadListaEB>
-      paginasLeidas += 1
+      if (falloEnPagina) {
+        await marcarError(supabase, 'propiedades', resultado.errores.join('; '))
+      } else {
+        await marcarOk(supabase, 'propiedades')
+      }
+    } catch (error) {
+      const mensaje = `sync propiedades: ${mensajeDe(error)}`
+      resultado.errores.push(mensaje)
+      await marcarError(supabase, 'propiedades', mensaje).catch(() => {})
     }
 
-    if (falloEnPagina) {
-      await marcarError(supabase, 'propiedades', resultado.errores.join('; '))
-    } else {
-      await marcarOk(supabase, 'propiedades')
+    // --- Leads: cursor solo al final (el orden de contact_requests no esta garantizado) ---
+    try {
+      const cursor = await leerCursor(supabase, 'leads')
+      const params: ParamsEB = { limit: 50 }
+      if (cursor) params.happened_after = cursor // filtro top-level, NO search[...]
+
+      let pagina = (await obtenerPagina('/v1/contact_requests', params)) as PaginaEB<ContactRequestEB>
+      let paginasLeidas = 1
+      let maxHappenedAt: string | null = null
+      let fallo = false
+
+      for (;;) {
+        const r = await procesarContactRequests(supabase, pagina.content, { agenciaId })
+        resultado.leads.procesados += r.procesados
+        resultado.leads.nuevos += r.nuevos
+        resultado.leads.duplicados += r.duplicados
+
+        if (r.errores.length > 0) {
+          resultado.errores.push(...r.errores)
+          fallo = true
+          break
+        }
+        if (r.maxHappenedAt && (!maxHappenedAt || r.maxHappenedAt > maxHappenedAt)) {
+          maxHappenedAt = r.maxHappenedAt
+        }
+
+        if (!pagina.pagination.next_page || paginasLeidas >= maxPaginas) break
+        await pausa(PAUSA_ENTRE_PAGINAS_MS)
+        pagina = (await obtenerPagina(pagina.pagination.next_page)) as PaginaEB<ContactRequestEB>
+        paginasLeidas += 1
+      }
+
+      if (fallo) {
+        await marcarError(supabase, 'leads', resultado.errores.join('; '))
+      } else {
+        if (maxHappenedAt) await avanzarCursor(supabase, 'leads', maxHappenedAt)
+        await marcarOk(supabase, 'leads')
+      }
+    } catch (error) {
+      const mensaje = `sync leads: ${mensajeDe(error)}`
+      resultado.errores.push(mensaje)
+      await marcarError(supabase, 'leads', mensaje).catch(() => {})
     }
-  } catch (error) {
-    const mensaje = `sync propiedades: ${mensajeDe(error)}`
-    resultado.errores.push(mensaje)
-    await marcarError(supabase, 'propiedades', mensaje).catch(() => {})
+
+    return resultado
+  } finally {
+    await liberarLease(supabase).catch(() => {})
   }
-
-  // --- Leads: cursor solo al final (el orden de contact_requests no esta garantizado) ---
-  try {
-    const cursor = await leerCursor(supabase, 'leads')
-    const params: ParamsEB = { limit: 50 }
-    if (cursor) params.happened_after = cursor // filtro top-level, NO search[...]
-
-    let pagina = (await obtenerPagina('/v1/contact_requests', params)) as PaginaEB<ContactRequestEB>
-    let paginasLeidas = 1
-    let maxHappenedAt: string | null = null
-    let fallo = false
-
-    for (;;) {
-      const r = await procesarContactRequests(supabase, pagina.content, { agenciaId })
-      resultado.leads.procesados += r.procesados
-      resultado.leads.nuevos += r.nuevos
-      resultado.leads.duplicados += r.duplicados
-
-      if (r.errores.length > 0) {
-        resultado.errores.push(...r.errores)
-        fallo = true
-        break
-      }
-      if (r.maxHappenedAt && (!maxHappenedAt || r.maxHappenedAt > maxHappenedAt)) {
-        maxHappenedAt = r.maxHappenedAt
-      }
-
-      if (!pagina.pagination.next_page || paginasLeidas >= maxPaginas) break
-      await pausa(PAUSA_ENTRE_PAGINAS_MS)
-      pagina = (await obtenerPagina(pagina.pagination.next_page)) as PaginaEB<ContactRequestEB>
-      paginasLeidas += 1
-    }
-
-    if (fallo) {
-      await marcarError(supabase, 'leads', resultado.errores.join('; '))
-    } else {
-      if (maxHappenedAt) await avanzarCursor(supabase, 'leads', maxHappenedAt)
-      await marcarOk(supabase, 'leads')
-    }
-  } catch (error) {
-    const mensaje = `sync leads: ${mensajeDe(error)}`
-    resultado.errores.push(mensaje)
-    await marcarError(supabase, 'leads', mensaje).catch(() => {})
-  }
-
-  return resultado
 }

@@ -191,8 +191,8 @@ beforeAll(async () => {
   // Snapshot de sync_estado para restaurarlo al final (tabla compartida).
   const { data: estado, error: estadoError } = await svc
     .from('sync_estado')
-    .select('recurso, sync_cursor, ultimo_ok, ultimo_error')
-    .in('recurso', ['propiedades', 'leads']);
+    .select('recurso, sync_cursor, ultimo_ok, ultimo_error, lock_until')
+    .in('recurso', ['propiedades', 'leads', 'lock']);
   if (estadoError) throw new Error(`No se pudo leer sync_estado: ${estadoError.message}`);
   syncEstadoSnapshot = estado ?? [];
 }, 30_000);
@@ -219,7 +219,7 @@ afterAll(async () => {
   }
 
   // Restaurar sync_estado.
-  await svc.from('sync_estado').delete().in('recurso', ['propiedades', 'leads']);
+  await svc.from('sync_estado').delete().in('recurso', ['propiedades', 'leads', 'lock']);
   if (syncEstadoSnapshot.length > 0) {
     await svc.from('sync_estado').upsert(syncEstadoSnapshot, { onConflict: 'recurso' });
   }
@@ -360,16 +360,18 @@ describe('Sync EasyBroker Fase 1: idempotencia + dedup (Supabase real)', () => {
     const { data: porEbId } = await svc.from('leads').select('id').eq('easybroker_id', String(RUN + 1));
     expect(porEbId).toHaveLength(0);
 
-    // Seguimiento tipo sistema con la propiedad resuelta y autor null.
+    // Seguimiento tipo sistema con la propiedad resuelta, autor null y el
+    // easybroker_id del contact request (lo que hace idempotente el reingreso).
     const { data: segs, error: segsError } = await svc
       .from('seguimientos')
-      .select('tipo, nota, propiedad_id, autor_id')
+      .select('tipo, nota, propiedad_id, autor_id, easybroker_id')
       .eq('lead_id', lead1Id);
     expect(segsError).toBeNull();
     expect(segs).toHaveLength(1);
     expect(segs![0].tipo).toBe('sistema');
     expect(segs![0].autor_id).toBeNull();
     expect(segs![0].propiedad_id).toBe(propiedad1Id);
+    expect(segs![0].easybroker_id).toBe(String(RUN + 1));
     expect(segs![0].nota).toContain('volvió a preguntar');
     expect(segs![0].nota).toContain(`${MARK} propiedad P1`); // titulo de la propiedad
     expect(segs![0].nota).toContain('Pincali'); // source
@@ -387,6 +389,23 @@ describe('Sync EasyBroker Fase 1: idempotencia + dedup (Supabase real)', () => {
       expect(n.texto).toContain('volvió a preguntar');
       expect(n.url).toBe('/admin/bandeja');
     }
+
+    // Reintento del MISMO contact request (cron reintenta / invocacion doble):
+    // el seguimiento ya registrado con ese easybroker_id lo hace duplicado —
+    // ni seguimiento nuevo ni notificacion nueva.
+    const rRetry = await procesarContactRequests(svc, [cr], { agenciaId });
+    expect(rRetry.errores).toEqual([]);
+    expect(rRetry.nuevos).toBe(0);
+    expect(rRetry.duplicados).toBe(1);
+
+    const { data: segsRetry } = await svc.from('seguimientos').select('id').eq('lead_id', lead1Id);
+    expect(segsRetry).toHaveLength(1);
+    const { data: notifsRetry } = await svc
+      .from('notificaciones')
+      .select('id')
+      .eq('tipo', 'lead_reingreso')
+      .like('texto', `%${MARK}%`);
+    expect(notifsRetry).toHaveLength(adminIds.length);
   });
 
   it('5. lead asignado a un asesor + nueva consulta repetida -> notificacion al asesor, no a admins', async () => {
@@ -487,6 +506,62 @@ describe('Sync EasyBroker Fase 1: idempotencia + dedup (Supabase real)', () => {
     expect(estadoLeads!.ultimo_error).toBeNull();
   });
 
+  it('6b. lease: una segunda corrida concurrente se omite con "sync ya en curso"', async () => {
+    const paginaVacia: PaginaEB<unknown> = {
+      pagination: { limit: 50, page: 1, total: 0, next_page: null },
+      content: [],
+    };
+
+    // Corrida 1: su fetch se bloquea en un gate DESPUES de adquirir el lease.
+    let señalDentro!: () => void;
+    const dentro = new Promise<void>((resolve) => {
+      señalDentro = resolve;
+    });
+    let continuar!: () => void;
+    const gate = new Promise<void>((resolve) => {
+      continuar = resolve;
+    });
+
+    const corrida1 = sincronizarEasyBroker(svc, {
+      obtenerPagina: async () => {
+        señalDentro(); // el lease ya se adquirio si llegamos al fetch
+        await gate;
+        return paginaVacia;
+      },
+      maxPaginas: 1,
+    });
+
+    await dentro;
+    // Corrida 2 mientras la 1 sigue viva: debe omitirse sin tocar nada.
+    const corrida2 = await sincronizarEasyBroker(svc, {
+      obtenerPagina: async () => paginaVacia,
+      maxPaginas: 1,
+    });
+    expect(corrida2.omitido).toBe(true);
+    expect(corrida2.errores).toContain('sync ya en curso');
+    expect(corrida2.propiedades.procesadas).toBe(0);
+    expect(corrida2.leads.procesados).toBe(0);
+
+    continuar();
+    const r1 = await corrida1;
+    expect(r1.omitido).toBe(false);
+    expect(r1.errores).toEqual([]);
+
+    // El lease se libero en el finally: una tercera corrida SI entra.
+    const corrida3 = await sincronizarEasyBroker(svc, {
+      obtenerPagina: async () => paginaVacia,
+      maxPaginas: 1,
+    });
+    expect(corrida3.omitido).toBe(false);
+
+    const { data: lock } = await svc
+      .from('sync_estado')
+      .select('lock_until')
+      .eq('recurso', 'lock')
+      .single();
+    expect(lock!.lock_until).toBeNull();
+  });
+
   it('7. zona_interes: propiedad sin colonia -> se prellenan con la ciudad', async () => {
     const cr = contactRequest(RUN + 3, {
       name: `${MARK} Lead Dos`,
@@ -511,6 +586,64 @@ describe('Sync EasyBroker Fase 1: idempotencia + dedup (Supabase real)', () => {
     expect(lead!.propiedad_id).not.toBeNull();
   });
 
+  it('7b. email raro (comas/parentesis/mayusculas): se guarda en minusculas y dedup por email funciona', async () => {
+    // Sin telefono: el dedup solo puede ser por email. El email lleva coma y
+    // parentesis (habrian roto un filtro .or() de PostgREST) y mayusculas.
+    const emailRaro = `${RUN}-We,ird(+Raro)@Sync.TEST`;
+    const crNuevo = contactRequest(RUN + 4, {
+      name: `${MARK} Lead Tres`,
+      phone: null,
+      email: emailRaro,
+      property_id: null,
+      source: 'sitio propio',
+      happened_at: '2026-08-02T17:00:00-06:00',
+    });
+    const r1 = await procesarContactRequests(svc, [crNuevo], { agenciaId });
+    expect(r1.errores).toEqual([]);
+    expect(r1.nuevos).toBe(1);
+
+    const { data: lead, error } = await svc
+      .from('leads')
+      .select('id, email, telefono, asesor_id')
+      .eq('easybroker_id', String(RUN + 4))
+      .single();
+    expect(error).toBeNull();
+    expect(lead!.email).toBe(emailRaro.toLowerCase()); // normalizado en el mapeo
+    expect(lead!.telefono).toBeNull();
+    expect(lead!.asesor_id).toBeNull();
+
+    // Segundo contact request con el MISMO email (otra combinacion de caso):
+    // match por email -> seguimiento, sin lead nuevo.
+    const crRepetido = contactRequest(RUN + 5, {
+      name: `${MARK} Lead Tres bis`,
+      phone: null,
+      email: emailRaro.toUpperCase(),
+      property_id: null,
+      source: 'sitio propio',
+      happened_at: '2026-08-02T17:30:00-06:00',
+    });
+    const r2 = await procesarContactRequests(svc, [crRepetido], { agenciaId });
+    expect(r2.errores).toEqual([]);
+    expect(r2.nuevos).toBe(0);
+    expect(r2.duplicados).toBe(1);
+
+    const { data: leadsConEmail } = await svc
+      .from('leads')
+      .select('id')
+      .eq('email', emailRaro.toLowerCase());
+    expect(leadsConEmail).toHaveLength(1);
+
+    const { data: segs } = await svc
+      .from('seguimientos')
+      .select('tipo, nota, easybroker_id, propiedad_id')
+      .eq('lead_id', lead!.id);
+    expect(segs).toHaveLength(1);
+    expect(segs![0].tipo).toBe('sistema');
+    expect(segs![0].easybroker_id).toBe(String(RUN + 5));
+    expect(segs![0].propiedad_id).toBeNull(); // el CR no traia propiedad
+    expect(segs![0].nota).toContain('volvió a preguntar');
+  });
+
   it('8. smoke: sincronizarEasyBroker contra staging real (cursores en "ahora", maxPaginas 1)', async () => {
     if (!process.env.EASYBROKER_BASE_URL || !process.env.EASYBROKER_API_KEY) {
       throw new Error('Faltan EASYBROKER_BASE_URL / EASYBROKER_API_KEY en .env.local');
@@ -523,6 +656,7 @@ describe('Sync EasyBroker Fase 1: idempotencia + dedup (Supabase real)', () => {
 
     const resultado = await sincronizarEasyBroker(svc, { maxPaginas: 1 });
 
+    expect(resultado.omitido).toBe(false);
     expect(resultado.errores).toEqual([]);
     // Tolerante: staging es un sandbox vivo; solo se exige consistencia interna.
     expect(resultado.propiedades.procesadas).toBeGreaterThanOrEqual(0);

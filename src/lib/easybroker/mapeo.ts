@@ -191,7 +191,8 @@ export function mapearContactRequest(cr: ContactRequestEB): FilaLead {
     easybroker_id: String(cr.id),
     nombre: cr.name?.trim() || 'Sin nombre',
     telefono: normalizarTelefono(cr.phone),
-    email: cr.email?.trim() || null,
+    // Minusculas: el dedup por email del sync compara igualdad exacta.
+    email: cr.email?.trim().toLowerCase() || null,
     fuente: 'portal',
     fuente_detalle: cr.source ?? null,
     propiedad_eb_id: cr.property_id ?? null,

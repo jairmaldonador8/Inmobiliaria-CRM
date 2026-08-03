@@ -152,6 +152,11 @@ describe('mapearContactRequest', () => {
     expect(mapearContactRequest(cr).telefono).toBe('525512345678')
   })
 
+  it('normaliza el email a minúsculas (el dedup del sync compara igualdad exacta)', () => {
+    const cr: ContactRequestEB = { ...crContent[0], email: '  Elizabeth.Test@Gmail.COM ' }
+    expect(mapearContactRequest(cr).email).toBe('elizabeth.test@gmail.com')
+  })
+
   it('tolera phone y email null', () => {
     const cr: ContactRequestEB = { ...crContent[0], phone: null, email: null }
     const row = mapearContactRequest(cr)
