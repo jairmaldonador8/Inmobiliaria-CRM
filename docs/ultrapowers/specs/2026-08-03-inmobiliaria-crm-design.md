@@ -30,6 +30,8 @@ Webapp CRM para la inmobiliaria **Montana Realty** (cliente de Top Digital). Un 
 | Comisiones | **Completo**: monto de cierre, % comisión de agencia, reparto asesor/Montana |
 | Dashboard admin | Muy completo: actividad de asesores + pipeline global + números del negocio + estado del inventario |
 | Extras v1 | Calendario de visitas + notificaciones internas + chat interno (todo lo anterior) |
+| Inteligencia sin costo | Matching lead↔inventario, lead scoring por reglas, inteligencia de inventario, módulo de feedback interno, plantillas de WhatsApp — todo con lógica sobre datos propios, sin servicios de paga (sección 8) |
+| Asistente IA | Diferido a fase post-v1 (requiere API de LLM, costo ~centavos por uso) |
 | Arquitectura | Opción 1: stack probado de Top Digital (Next.js App Router + Supabase + Vercel), multi-tenancy **preparado pero no implementado** |
 | Dominio | Sin subdominio por ahora; se conecta después |
 | Workflow | Auto-commit ON, auto-push ON, commit de design docs ON |
@@ -47,18 +49,20 @@ Webapp CRM para la inmobiliaria **Montana Realty** (cliente de Top Digital). Un 
 - **Multi-tenancy preparado, no implementado:** tabla `agencias` con Montana como única fila; las tablas de negocio llevan `agencia_id` desde el día 1. Si Top Digital vende el sistema a otras inmobiliarias, no hay migración dolorosa. En v1 no hay UI ni lógica multi-agencia.
 - **Secretos:** API key de EasyBroker en variables de entorno de Vercel; jamás llega al navegador.
 
-## 4. Modelo de datos (10 tablas)
+## 4. Modelo de datos (12 tablas)
 
 1. **agencias** — nombre, logo, configuración (% comisión default, reparto default, umbral de lead sin atender, umbral de propiedad estancada). Montana única fila en v1.
 2. **usuarios** — vinculado a Supabase Auth: rol (`admin` | `asesor`), `agencia_id`, nombre, teléfono, foto, activo.
-3. **propiedades** — `easybroker_id` (único), `agencia_id`, título, tipo (casa/departamento/terreno/local/oficina), operación (venta/renta), precio, moneda, ubicación (colonia, ciudad), estatus (publicada/pausada/vendida/rentada), asesor responsable (`usuario_id`, asignado en nuestro sistema), URLs de fotos, fecha de alta, `ultima_sync`.
+3. **propiedades** — `easybroker_id` (único), `agencia_id`, título, tipo (casa/departamento/terreno/local/oficina), operación (venta/renta), precio, moneda, ubicación (colonia, ciudad), **superficie en m² (construcción y/o terreno, según lo exponga la API de EasyBroker — validar en research)**, estatus (publicada/pausada/vendida/rentada), asesor responsable (`usuario_id`, asignado en nuestro sistema), URLs de fotos, fecha de alta, `ultima_sync`.
 4. **propiedad_portales** — `propiedad_id`, portal (Inmuebles24, Lamudi, Vivanuncios, Trovit, Clasco, sitio propio…), URL pública, estado de publicación. Se actualiza en cada sync.
-5. **leads** — `agencia_id`, nombre, teléfono, email opcional, fuente (portal vía EasyBroker / WhatsApp / referido / redes / walk-in), `propiedad_id` de interés opcional, `asesor_id` (null = bandeja del admin), etapa (embudo de la sección 2), tipo de interés (compra/renta), presupuesto aproximado opcional, notas, `easybroker_id` opcional (para dedup), timestamps de creación y asignación.
-6. **seguimientos** — `lead_id`, autor, tipo (llamada/WhatsApp/correo/visita/otro), nota, timestamp. **Inmutable** (sin update/delete): evidencia de quién trabaja sus leads.
+5. **leads** — `agencia_id`, nombre, teléfono, email opcional, fuente (portal vía EasyBroker / WhatsApp / referido / redes / walk-in), `propiedad_id` de interés opcional, `asesor_id` (null = bandeja del admin), etapa (embudo de la sección 2), tipo de interés (compra/renta), presupuesto aproximado opcional, **zona de interés opcional (se prellena con la zona de la propiedad de interés cuando existe; editable por el asesor)**, notas, `easybroker_id` opcional (para dedup), timestamps de creación y asignación.
+6. **seguimientos** — `lead_id`, autor, tipo (llamada/WhatsApp/correo/visita/otro), **`propiedad_id` opcional (a qué propiedad se refiere el seguimiento — lo usa el matching para marcar "ya mostrada" y el dedup de EasyBroker para registrar "preguntó por otra propiedad")**, nota, timestamp. **Inmutable** (sin update/delete): evidencia de quién trabaja sus leads.
 7. **visitas** — `lead_id`, `propiedad_id`, `asesor_id`, fecha/hora, estado (agendada/realizada/cancelada), nota de resultado.
 8. **operaciones** — `lead_id`, `propiedad_id`, `asesor_id`, tipo (venta/renta), monto, % comisión de agencia, monto de comisión total, % reparto del asesor, comisión del asesor, comisión de Montana, fecha de cierre, registrada/aprobada por (`usuario_id` admin).
 9. **notificaciones** — destinatario (`usuario_id`), tipo, texto, leída/no leída, timestamp.
 10. **mensajes** — chat: un hilo por asesor (asesor ↔ admins), autor, texto, timestamp, leído.
+11. **sugerencias** — feedback interno: autor, pantalla donde estaba (capturada automáticamente), texto, estado (nueva/revisada/implementada), timestamp.
+12. **plantillas_mensajes** — plantillas de WhatsApp: nombre, texto con variables (`{nombre}`, `{propiedad}`, `{zona}`, `{precio}`, `{asesor}`), activa. CRUD por admins; uso por todos.
 
 ## 5. Pantallas
 
@@ -86,7 +90,8 @@ Webapp CRM para la inmobiliaria **Montana Realty** (cliente de Top Digital). Un 
 6. **Operaciones** — registrar/aprobar cierres con montos y comisiones.
 7. **Calendario global** — todas las visitas de todos los asesores.
 8. **Chats** — inbox con hilos de todos los asesores y badge de no leídos.
-9. **Ajustes** — % comisión default, reparto default, umbral de lead sin atender, umbral de propiedad estancada.
+9. **Sugerencias** — panel de feedback interno: lista de sugerencias con autor, pantalla de origen y estado (nueva/revisada/implementada).
+10. **Ajustes** — % comisión default, reparto default, umbral de lead sin atender, umbral de propiedad estancada, y CRUD de plantillas de WhatsApp.
 
 ## 6. Integración con EasyBroker
 
@@ -111,7 +116,19 @@ Webapp CRM para la inmobiliaria **Montana Realty** (cliente de Top Digital). Un 
 - **Métricas:** tasa de cierre = ganados ÷ (ganados + perdidos); comisión de Montana = comisión total − comisión del asesor; ranking de asesores por comisiones del mes; tiempo de primera respuesta = asignación → primer seguimiento.
 - **Nada se borra:** asesores se desactivan (sus leads regresan a la bandeja; sus visitas agendadas se cancelan con notificación a admins; sus propiedades quedan sin responsable, listas para reasignar), leads perdidos se archivan, seguimientos son inmutables, propiedades removidas de EasyBroker se marcan inactivas (no se eliminan).
 
-## 8. Manejo de errores
+## 8. Inteligencia integrada (v1, sin costo externo)
+
+Cinco capacidades que elevan la experiencia usando únicamente lógica sobre los datos propios del sistema — sin servicios de paga:
+
+1. **Matching lead ↔ inventario** — en el detalle de cada lead, el sistema cruza tipo de interés (compra/renta), presupuesto (±15%) y zona de interés del lead contra el inventario activo y muestra "propiedades que le quedan", marcando cuáles ya se le mostraron (según visitas y seguimientos con `propiedad_id`). Notifica al asesor cuando una propiedad nueva sincronizada hace match con alguno de sus leads activos.
+2. **Lead scoring por reglas** — puntaje de "calor" explicable: presupuesto definido (+), fuente portal (+), visita agendada (++), interés repetido — el lead volvió a preguntar por otra propiedad vía EasyBroker (+), días sin contacto (−). Todas las señales salen de datos que el sistema sí captura. El kanban del asesor ordena cada columna por score y muestra badge 🔥 en los calientes. Siempre con el desglose visible de por qué.
+3. **Inteligencia de inventario** — además de "estancada", el *por qué*: precio por m² comparado contra propiedades similares del propio inventario (mismo tipo/operación/zona) que sí generan leads, y leads generados por portal por propiedad. Vive en el bloque de inventario del dashboard admin y en el detalle de propiedad.
+4. **Módulo de feedback interno** — botón "💡 Sugerencia" visible en toda la app; captura automáticamente la pantalla, el usuario escribe su idea/problema. Panel en `/admin` para revisar sugerencias y marcarlas (nueva/revisada/implementada). Diseñado para el piloto interno: los asesores detectan áreas de mejora y alimentan la fase 2.
+5. **Plantillas de WhatsApp** — plantillas con variables que se rellenan con los datos del lead/propiedad y abren WhatsApp (`wa.me`) con el texto listo para enviar. Los admins gestionan las plantillas; los asesores las usan desde el detalle del lead con un toque.
+
+**Asistente IA (futuro, post-v1):** resumen del lead antes de llamar, sugerencia de siguiente paso y borradores personalizados de mensajes vía API de LLM (modelo económico; costo estimado en centavos por uso). Queda explícitamente fuera de v1.
+
+## 9. Manejo de errores
 
 - Validación de formularios con mensajes en español.
 - Chat/notificaciones: reconexión automática de Realtime; los mensajes persisten en la base de datos.
@@ -119,17 +136,19 @@ Webapp CRM para la inmobiliaria **Montana Realty** (cliente de Top Digital). Un 
 - Estados vacíos y de carga diseñados (primer uso sin datos, bandeja vacía, sin visitas hoy).
 - Sin acciones destructivas irreversibles (sección 7, "nada se borra").
 
-## 9. Testing
+## 10. Testing
 
 - **Crítico — RLS:** pruebas de integración que garanticen que un asesor jamás lee/escribe leads, visitas, operaciones, comisiones o chats de otro asesor, y que el rol asesor no accede a datos administrativos. (Mismo patrón `test:rls` del repo de referencia.)
-- Pruebas unitarias de cálculos: comisiones y repartos, semáforo, métricas del dashboard, detección de lead sin atender y propiedad estancada.
+- Pruebas unitarias de cálculos: comisiones y repartos, semáforo, métricas del dashboard, detección de lead sin atender y propiedad estancada, lead scoring, reglas de matching lead↔inventario y comparación de precio por m².
 - Pruebas del mapeo/dedup de datos de EasyBroker (fixtures con respuestas simuladas de la API).
 - Prueba de flujo principal: lead entra (sync o manual) → bandeja → asignación → seguimientos → visita → operación cerrada → se refleja en dashboard y comisiones.
 
-## 10. Fases de entrega
+## 11. Fases de entrega
 
 Cada fase termina en algo usable y desplegado en Vercel (URL `*.vercel.app` hasta que se conecte el subdominio).
 
-1. **Fase 1 — El corazón:** login con roles y redirección, alta de asesores, CRM de leads completo (bandeja, asignación, kanban, captura rápida, seguimientos), sync de propiedades y leads desde EasyBroker.
-2. **Fase 2 — Control:** dashboard completo del admin (4 bloques), calendario de visitas, operaciones y comisiones.
-3. **Fase 3 — Comunicación:** chat interno en tiempo real, notificaciones, PWA instalable, ajustes y pulido visual.
+1. **Fase 1 — El corazón:** login con roles y redirección, alta de asesores, CRM de leads completo (bandeja, asignación, kanban, captura rápida, seguimientos), sync de propiedades y leads desde EasyBroker, **módulo de feedback interno** y **plantillas de WhatsApp** (listos desde el día uno del piloto). La tabla y el mecanismo de `notificaciones` existen desde esta fase (las genera el sync y la asignación de leads).
+2. **Fase 2 — Control e inteligencia:** dashboard completo del admin (4 bloques), calendario de visitas, operaciones y comisiones, **matching lead↔inventario**, **lead scoring** e **inteligencia de inventario**.
+3. **Fase 3 — Comunicación:** chat interno en tiempo real, UI completa de notificaciones (campanita con historial y tiempo real), PWA instalable, ajustes y pulido visual. En fases 1–2 las notificaciones se acumulan en la base y se muestran en una lista simple; aquí se pulen.
+
+**Post-v1 (backlog):** asistente IA, integración WhatsApp API, Meta Lead Ads, multi-tenancy activo.
