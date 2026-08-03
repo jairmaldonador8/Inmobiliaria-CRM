@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
+    "test:rls": "vitest run --config vitest.integration.config.ts",
     "seed": "tsx scripts/seed.ts"
   },
   "dependencies": {
