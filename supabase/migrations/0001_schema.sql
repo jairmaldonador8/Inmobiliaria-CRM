@@ -20,8 +20,8 @@ create type tipo_operacion as enum ('venta','renta');
 create table agencias (
   id uuid primary key default gen_random_uuid(),
   nombre text not null,
-  comision_pct numeric(5,2) not null default 5.0,
-  reparto_asesor_pct numeric(5,2) not null default 50.0,
+  comision_pct numeric(5,2) not null default 5.0 check (comision_pct between 0 and 100),
+  reparto_asesor_pct numeric(5,2) not null default 50.0 check (reparto_asesor_pct between 0 and 100),
   umbral_sin_atender_horas int not null default 24,
   umbral_estancada_dias int not null default 30,
   creada_en timestamptz not null default now()
@@ -44,8 +44,9 @@ create table propiedades (
   easybroker_id text not null unique,
   titulo text not null,
   tipo text,
+  -- operacion es text (vocabulario crudo de EasyBroker: sale/rental); el enum tipo_operacion aplica solo a operaciones internas
   operacion text,
-  precio numeric(14,2), moneda text,
+  precio numeric(14,2), moneda text not null default 'MXN',
   ubicacion text,
   colonia text, ciudad text, lat double precision, lng double precision,
   superficie_construccion numeric(10,2), superficie_terreno numeric(10,2),
@@ -118,15 +119,16 @@ create table operaciones (
   propiedad_id uuid references propiedades(id),
   asesor_id uuid not null references usuarios(user_id),
   tipo tipo_operacion not null,
-  monto numeric(14,2) not null,
-  comision_pct numeric(5,2) not null,
+  monto numeric(14,2) not null check (monto >= 0),
+  comision_pct numeric(5,2) not null check (comision_pct between 0 and 100),
   comision_total numeric(14,2) not null,
-  reparto_asesor_pct numeric(5,2) not null,
+  reparto_asesor_pct numeric(5,2) not null check (reparto_asesor_pct between 0 and 100),
   comision_asesor numeric(14,2) not null,
   comision_agencia numeric(14,2) not null,
   fecha_cierre date not null,
   registrada_por uuid not null references usuarios(user_id),
-  creada_en timestamptz not null default now()
+  creada_en timestamptz not null default now(),
+  check (comision_asesor + comision_agencia = comision_total)
 );
 
 create table notificaciones (
@@ -179,7 +181,7 @@ create table push_suscripciones (
 -- Tabla interna de sincronizacion con EasyBroker
 create table sync_estado (
   recurso text primary key,
-  cursor timestamptz,
+  sync_cursor timestamptz,
   ultimo_ok timestamptz,
   ultimo_error text,
   actualizado_en timestamptz not null default now()
@@ -193,6 +195,7 @@ create index on leads (agencia_id);
 create index on leads (etapa);
 create index on leads (telefono);
 create index on leads (email);
+create index on leads (propiedad_id);
 create index on seguimientos (lead_id);
 create index on propiedades (agencia_id);
 create index on propiedades (asesor_id);
@@ -200,5 +203,7 @@ create index on notificaciones (destinatario_id) where not leida;
 create index on visitas (asesor_id);
 create index on visitas (fecha);
 create index on mensajes (hilo_asesor_id);
+create index on mensajes (hilo_asesor_id) where not leido;
 create index on operaciones (asesor_id);
 create index on sugerencias (estado);
+create index on push_suscripciones (usuario_id);
