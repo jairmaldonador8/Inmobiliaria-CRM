@@ -1,0 +1,545 @@
+// @vitest-environment node
+/**
+ * Tests de integracion del sync EasyBroker (Fase 1, Task 10) — CRM Montana Realty.
+ *
+ * Corren contra el proyecto Supabase REAL (cloud, credenciales en .env.local)
+ * usando el service-role (el sync corre server-side con RLS bypaseado, igual
+ * que en produccion via cron). NADA de nuestra base se mockea; lo unico que
+ * se inyecta son fixtures de EasyBroker (obtenerPagina / obtenerDetalle) para
+ * no depender de la red — salvo el smoke test final, que SI pega al sandbox
+ * de staging con cursores fijados a "ahora" (0 items esperados).
+ *
+ * Los tests de este archivo son SECUENCIALES y dependen entre si (el describe
+ * construye estado paso a paso: propiedades -> lead nuevo -> dedup -> repeat).
+ *
+ * Higiene de fixtures:
+ *  - leads creados: se ARCHIVAN (seguimientos es append-only e imborrable,
+ *    asi que un lead con seguimiento no se puede borrar por FK; ver la nota
+ *    equivalente en rls.integration.test.ts).
+ *  - notificaciones creadas: se borran (texto like %marker%).
+ *  - propiedades TEST-SYNC-%: se intenta borrar fila por fila; las que tengan
+ *    referencias FK (leads/seguimientos archivados) se quedan — aceptable en
+ *    base de desarrollo, documentado a proposito.
+ *  - sync_estado: se hace snapshot en beforeAll y se restaura en afterAll.
+ *
+ * Ejecutar con: npm run test:rls (excluido del `npm test` normal)
+ */
+import path from 'node:path';
+import { config as loadEnv } from 'dotenv';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+
+import {
+  avanzarCursor,
+  procesarContactRequests,
+  procesarPaginaPropiedades,
+  sincronizarEasyBroker,
+} from '@/lib/easybroker/sync';
+import type { PaginaEB } from '@/lib/easybroker/cliente';
+import type { ContactRequestEB, PropiedadDetalleEB, PropiedadListaEB } from '@/lib/easybroker/mapeo';
+
+loadEnv({ path: path.resolve(__dirname, '../../.env.local') });
+
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const SECRET_KEY = process.env.SUPABASE_SECRET_KEY;
+
+// Marcador unico por corrida.
+const RUN = Date.now();
+const MARK = `TEST-SYNC-${RUN}`;
+
+// Telefonos ficticios unicos por corrida (10 digitos); normalizados = 52 + estos.
+const TEL_UNO = `55${String(RUN).slice(-8)}`;
+const TEL_DOS = `56${String(RUN).slice(-8)}`;
+
+let svc: SupabaseClient;
+let agenciaId: string;
+let adminIds: string[];
+let asesorId: string;
+let syncEstadoSnapshot: Array<Record<string, unknown>> = [];
+
+// Estado que los tests construyen secuencialmente.
+let propiedad1Id: string; // uuid de `${MARK}-P1`
+let lead1Id: string; // lead creado en el test 2
+
+// ---------------------------------------------------------------------------
+// Fixtures EasyBroker (formas verificadas en src/test/fixtures/easybroker/*)
+// ---------------------------------------------------------------------------
+
+function itemPropiedad(sufijo: string, overrides: Partial<PropiedadListaEB> = {}): PropiedadListaEB {
+  return {
+    public_id: `${MARK}-${sufijo}`,
+    title: `${MARK} propiedad ${sufijo}`,
+    title_image_full: 'https://assets.example.test/portada.jpg',
+    title_image_thumb: 'https://assets.example.test/portada-thumb.jpg',
+    location: 'Del Valle, San Pedro Garza García, Nuevo León',
+    operations: [{ type: 'sale', amount: 1_000_000, currency: 'MXN' }],
+    bedrooms: 3,
+    bathrooms: 2,
+    parking_spaces: 2,
+    property_type: 'Casa',
+    lot_size: 200,
+    construction_size: 180,
+    updated_at: '2026-08-01T10:00:00-06:00',
+    ...overrides,
+  };
+}
+
+const DETALLES: Record<string, PropiedadDetalleEB> = {
+  [`${MARK}-P1`]: {
+    public_id: `${MARK}-P1`,
+    description: 'Casa de prueba con detalle completo',
+    location: {
+      name: 'Del Valle, San Pedro Garza García, Nuevo León',
+      latitude: 25.65,
+      longitude: -100.36,
+    },
+    public_url: 'https://www.stagingeb.com/mx/listings/test-sync-p1',
+    images: [
+      { title: null, url: 'https://assets.example.test/p1-1.jpg' },
+      { title: null, url: 'https://assets.example.test/p1-2.jpg' },
+    ],
+  },
+  [`${MARK}-P2`]: {
+    public_id: `${MARK}-P2`,
+    description: 'Departamento de prueba sin colonia',
+    // 2 partes -> colonia null, ciudad 'Monterrey' (ver parsearUbicacion)
+    location: { name: 'Monterrey, Nuevo León', latitude: null, longitude: null },
+    public_url: null,
+    images: [{ title: null, url: 'https://assets.example.test/p2-1.jpg' }],
+  },
+  [`${MARK}-P3`]: {
+    public_id: `${MARK}-P3`,
+    description: 'Propiedad para el test de cursor',
+    location: { name: 'Cumbres, Monterrey, Nuevo León', latitude: null, longitude: null },
+    public_url: null,
+    images: [],
+  },
+  [`${MARK}-P4`]: {
+    public_id: `${MARK}-P4`,
+    description: 'Propiedad para el test de cursor',
+    location: { name: 'Cumbres, Monterrey, Nuevo León', latitude: null, longitude: null },
+    public_url: null,
+    images: [],
+  },
+};
+
+const llamadasDetalle: string[] = [];
+
+async function obtenerDetalleFixture(publicId: string): Promise<PropiedadDetalleEB> {
+  llamadasDetalle.push(publicId);
+  const detalle = DETALLES[publicId];
+  if (!detalle) throw new Error(`fixture de detalle no definido para ${publicId}`);
+  return detalle;
+}
+
+function contactRequest(id: number, overrides: Partial<ContactRequestEB> = {}): ContactRequestEB {
+  return {
+    id,
+    name: `${MARK} Lead Uno`,
+    phone: `+52 ${TEL_UNO}`,
+    email: `${RUN}-uno@sync.test`,
+    contact_id: null,
+    property_id: `${MARK}-P1`,
+    message: 'Hola, me interesa esta propiedad.',
+    source: 'inmuebles24.com',
+    happened_at: '2026-08-02T09:30:00-06:00',
+    ...overrides,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Setup / teardown
+// ---------------------------------------------------------------------------
+
+beforeAll(async () => {
+  if (!SUPABASE_URL || !SECRET_KEY) {
+    throw new Error(
+      'Faltan variables en .env.local: se requieren NEXT_PUBLIC_SUPABASE_URL y SUPABASE_SECRET_KEY'
+    );
+  }
+  svc = createClient(SUPABASE_URL, SECRET_KEY, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+
+  const { data: agencia, error: agenciaError } = await svc.from('agencias').select('id').limit(1).single();
+  if (agenciaError || !agencia) {
+    throw new Error(`No se pudo resolver la agencia: ${agenciaError?.message}. Corre npm run seed.`);
+  }
+  agenciaId = agencia.id;
+
+  const { data: admins, error: adminsError } = await svc
+    .from('usuarios')
+    .select('user_id')
+    .eq('rol', 'admin')
+    .eq('activo', true);
+  if (adminsError || !admins || admins.length === 0) {
+    throw new Error(`No hay admins activos: ${adminsError?.message}. Corre npm run seed.`);
+  }
+  adminIds = admins.map((a) => a.user_id);
+
+  const { data: asesores, error: asesoresError } = await svc
+    .from('usuarios')
+    .select('user_id')
+    .eq('rol', 'asesor')
+    .eq('activo', true)
+    .limit(1);
+  if (asesoresError || !asesores || asesores.length === 0) {
+    throw new Error(`No hay asesores activos: ${asesoresError?.message}. Corre npm run seed.`);
+  }
+  asesorId = asesores[0].user_id;
+
+  // Snapshot de sync_estado para restaurarlo al final (tabla compartida).
+  const { data: estado, error: estadoError } = await svc
+    .from('sync_estado')
+    .select('recurso, sync_cursor, ultimo_ok, ultimo_error')
+    .in('recurso', ['propiedades', 'leads']);
+  if (estadoError) throw new Error(`No se pudo leer sync_estado: ${estadoError.message}`);
+  syncEstadoSnapshot = estado ?? [];
+}, 30_000);
+
+afterAll(async () => {
+  if (!svc) return;
+
+  // Leads de prueba (de esta corrida y de corridas previas): archivar (no se
+  // pueden borrar si tienen seguimientos) y soltar la referencia a la
+  // propiedad de prueba para poder borrarla abajo.
+  await svc.from('leads').update({ archivado: true, propiedad_id: null }).like('nombre', 'TEST-SYNC-%');
+
+  // Notificaciones de esta corrida: borrar.
+  await svc.from('notificaciones').delete().like('texto', `%${MARK}%`);
+
+  // Propiedades TEST-SYNC-% (de esta corrida y de corridas previas): borrar
+  // fila por fila, tolerando FKs historicas. Nota: la propiedad referida por
+  // un seguimiento (test 4) NO se puede borrar jamas — seguimientos es
+  // append-only e imborrable — asi que una propiedad de prueba por corrida
+  // queda residente; aceptable en base de desarrollo, documentado a proposito.
+  const { data: props } = await svc.from('propiedades').select('id').like('easybroker_id', 'TEST-SYNC-%');
+  for (const p of props ?? []) {
+    await svc.from('propiedades').delete().eq('id', p.id); // error de FK se ignora a proposito
+  }
+
+  // Restaurar sync_estado.
+  await svc.from('sync_estado').delete().in('recurso', ['propiedades', 'leads']);
+  if (syncEstadoSnapshot.length > 0) {
+    await svc.from('sync_estado').upsert(syncEstadoSnapshot, { onConflict: 'recurso' });
+  }
+}, 30_000);
+
+// ---------------------------------------------------------------------------
+// Tests (secuenciales)
+// ---------------------------------------------------------------------------
+
+describe('Sync EasyBroker Fase 1: idempotencia + dedup (Supabase real)', () => {
+  it('1. procesarPaginaPropiedades: idempotente (0 nuevas en la 2a corrida) y refleja cambio de precio', async () => {
+    const items = [
+      itemPropiedad('P1'),
+      itemPropiedad('P2', {
+        property_type: 'Departamento',
+        operations: [{ type: 'rental', amount: 25_000, currency: 'MXN' }],
+        location: 'Monterrey, Nuevo León',
+        updated_at: '2026-08-01T11:00:00-06:00',
+      }),
+    ];
+
+    const ctx = { agenciaId, obtenerDetalle: obtenerDetalleFixture };
+
+    const r1 = await procesarPaginaPropiedades(svc, items, ctx);
+    expect(r1.errores).toEqual([]);
+    expect(r1.procesadas).toBe(2);
+    expect(r1.nuevas).toBe(2);
+    expect(r1.actualizadas).toBe(0);
+    // El detalle se pidio exactamente una vez por propiedad NUEVA.
+    expect(llamadasDetalle.sort()).toEqual([`${MARK}-P1`, `${MARK}-P2`].sort());
+    // maxActualizadaEb = max updated_at de la pagina, normalizado a UTC.
+    expect(r1.maxActualizadaEb).toBe(new Date('2026-08-01T11:00:00-06:00').toISOString());
+
+    // 2a corrida: mismos public_ids, P1 con precio nuevo.
+    const items2 = [
+      itemPropiedad('P1', { operations: [{ type: 'sale', amount: 1_250_000, currency: 'MXN' }] }),
+      items[1],
+    ];
+    const r2 = await procesarPaginaPropiedades(svc, items2, ctx);
+    expect(r2.errores).toEqual([]);
+    expect(r2.nuevas).toBe(0);
+    expect(r2.actualizadas).toBe(2);
+    // Sin re-fetch de detalle para propiedades existentes.
+    expect(llamadasDetalle).toHaveLength(2);
+
+    const { data: p1, error } = await svc
+      .from('propiedades')
+      .select('id, precio, colonia, ciudad, descripcion, fotos, ultima_sync')
+      .eq('easybroker_id', `${MARK}-P1`)
+      .single();
+    expect(error).toBeNull();
+    expect(Number(p1!.precio)).toBe(1_250_000);
+    // Los campos de detalle NO se degradan al actualizar desde el listado.
+    expect(p1!.colonia).toBe('Del Valle');
+    expect(p1!.ciudad).toBe('San Pedro Garza García');
+    expect(p1!.descripcion).toBe('Casa de prueba con detalle completo');
+    expect(p1!.fotos).toHaveLength(2);
+    expect(p1!.ultima_sync).not.toBeNull();
+    propiedad1Id = p1!.id;
+  });
+
+  it('2. contact request nuevo -> lead en bandeja (asesor null, zona_interes de la propiedad) + notificacion a admins', async () => {
+    const r = await procesarContactRequests(svc, [contactRequest(RUN)], { agenciaId });
+    expect(r.errores).toEqual([]);
+    expect(r.procesados).toBe(1);
+    expect(r.nuevos).toBe(1);
+    expect(r.duplicados).toBe(0);
+    expect(r.maxHappenedAt).toBe(new Date('2026-08-02T09:30:00-06:00').toISOString());
+
+    const { data: lead, error } = await svc
+      .from('leads')
+      .select('id, nombre, telefono, email, fuente, fuente_detalle, propiedad_id, asesor_id, zona_interes, easybroker_id, mensaje_original, creado_en, archivado')
+      .eq('easybroker_id', String(RUN))
+      .single();
+    expect(error).toBeNull();
+    expect(lead!.nombre).toBe(`${MARK} Lead Uno`);
+    expect(lead!.telefono).toBe(`52${TEL_UNO}`);
+    expect(lead!.email).toBe(`${RUN}-uno@sync.test`);
+    expect(lead!.fuente).toBe('portal');
+    expect(lead!.fuente_detalle).toBe('inmuebles24.com');
+    expect(lead!.propiedad_id).toBe(propiedad1Id);
+    expect(lead!.asesor_id).toBeNull(); // bandeja
+    expect(lead!.zona_interes).toBe('Del Valle'); // colonia de P1
+    expect(lead!.mensaje_original).toBe('Hola, me interesa esta propiedad.');
+    expect(new Date(lead!.creado_en).toISOString()).toBe(new Date('2026-08-02T09:30:00-06:00').toISOString());
+    expect(lead!.archivado).toBe(false);
+    lead1Id = lead!.id;
+
+    const { data: notifs, error: notifsError } = await svc
+      .from('notificaciones')
+      .select('destinatario_id, tipo, texto, url')
+      .eq('tipo', 'lead_nuevo')
+      .like('texto', `%${MARK} Lead Uno%`);
+    expect(notifsError).toBeNull();
+    expect(notifs!.map((n) => n.destinatario_id).sort()).toEqual([...adminIds].sort());
+    for (const n of notifs!) {
+      expect(n.texto).toContain('Nuevo lead');
+      expect(n.texto).toContain('inmuebles24.com');
+      expect(n.url).toBe('/admin/bandeja');
+    }
+  });
+
+  it('3. mismo contact request otra vez (mismo easybroker_id) -> duplicado, sin lead ni notificacion nuevos', async () => {
+    const r = await procesarContactRequests(svc, [contactRequest(RUN)], { agenciaId });
+    expect(r.errores).toEqual([]);
+    expect(r.procesados).toBe(1);
+    expect(r.nuevos).toBe(0);
+    expect(r.duplicados).toBe(1);
+
+    const { data: leads } = await svc.from('leads').select('id').eq('telefono', `52${TEL_UNO}`);
+    expect(leads).toHaveLength(1);
+
+    const { data: notifs } = await svc
+      .from('notificaciones')
+      .select('id')
+      .like('texto', `%${MARK}%`);
+    expect(notifs).toHaveLength(adminIds.length); // solo las del test 2
+
+    const { data: segs } = await svc.from('seguimientos').select('id').eq('lead_id', lead1Id);
+    expect(segs).toHaveLength(0);
+  });
+
+  it('4. contact request distinto pero mismo telefono -> seguimiento sistema en el lead existente + notificacion a admins (bandeja)', async () => {
+    const cr = contactRequest(RUN + 1, {
+      name: `${MARK} Lead Uno Bis`,
+      email: `${RUN}-uno-alt@sync.test`,
+      source: 'Pincali',
+      happened_at: '2026-08-02T12:00:00-06:00',
+    });
+    const r = await procesarContactRequests(svc, [cr], { agenciaId });
+    expect(r.errores).toEqual([]);
+    expect(r.nuevos).toBe(0);
+    expect(r.duplicados).toBe(1);
+
+    // No se creo lead nuevo.
+    const { data: leads } = await svc.from('leads').select('id').eq('telefono', `52${TEL_UNO}`);
+    expect(leads).toHaveLength(1);
+    const { data: porEbId } = await svc.from('leads').select('id').eq('easybroker_id', String(RUN + 1));
+    expect(porEbId).toHaveLength(0);
+
+    // Seguimiento tipo sistema con la propiedad resuelta y autor null.
+    const { data: segs, error: segsError } = await svc
+      .from('seguimientos')
+      .select('tipo, nota, propiedad_id, autor_id')
+      .eq('lead_id', lead1Id);
+    expect(segsError).toBeNull();
+    expect(segs).toHaveLength(1);
+    expect(segs![0].tipo).toBe('sistema');
+    expect(segs![0].autor_id).toBeNull();
+    expect(segs![0].propiedad_id).toBe(propiedad1Id);
+    expect(segs![0].nota).toContain('volvió a preguntar');
+    expect(segs![0].nota).toContain(`${MARK} propiedad P1`); // titulo de la propiedad
+    expect(segs![0].nota).toContain('Pincali'); // source
+
+    // Lead en bandeja (asesor null) -> notificacion a TODOS los admins.
+    const { data: notifs, error: notifsError } = await svc
+      .from('notificaciones')
+      .select('destinatario_id, texto, url')
+      .eq('tipo', 'lead_reingreso')
+      .like('texto', `%${MARK}%`);
+    expect(notifsError).toBeNull();
+    expect(notifs!.map((n) => n.destinatario_id).sort()).toEqual([...adminIds].sort());
+    for (const n of notifs!) {
+      expect(n.texto).toContain(`${MARK} Lead Uno`); // nombre del lead EXISTENTE
+      expect(n.texto).toContain('volvió a preguntar');
+      expect(n.url).toBe('/admin/bandeja');
+    }
+  });
+
+  it('5. lead asignado a un asesor + nueva consulta repetida -> notificacion al asesor, no a admins', async () => {
+    const { error: asignaError } = await svc
+      .from('leads')
+      .update({ asesor_id: asesorId, asignado_en: new Date().toISOString() })
+      .eq('id', lead1Id);
+    expect(asignaError).toBeNull();
+
+    const cr = contactRequest(RUN + 2, {
+      email: `${RUN}-uno-tris@sync.test`,
+      source: 'lamudi.com.mx',
+      happened_at: '2026-08-02T15:00:00-06:00',
+    });
+    const r = await procesarContactRequests(svc, [cr], { agenciaId });
+    expect(r.errores).toEqual([]);
+    expect(r.nuevos).toBe(0);
+    expect(r.duplicados).toBe(1);
+
+    // Segundo seguimiento en el mismo lead.
+    const { data: segs } = await svc.from('seguimientos').select('id').eq('lead_id', lead1Id);
+    expect(segs).toHaveLength(2);
+
+    // Notificacion dirigida al asesor asignado ("Tu lead ...").
+    const { data: notifsAsesor, error: nError } = await svc
+      .from('notificaciones')
+      .select('destinatario_id, texto')
+      .eq('tipo', 'lead_reingreso')
+      .eq('destinatario_id', asesorId)
+      .like('texto', `%${MARK}%`);
+    expect(nError).toBeNull();
+    expect(notifsAsesor).toHaveLength(1);
+    expect(notifsAsesor![0].texto).toContain('Tu lead');
+    expect(notifsAsesor![0].texto).toContain(`${MARK} Lead Uno`);
+
+    // Los admins NO recibieron notificacion nueva (siguen solo las del test 4).
+    const { data: notifsAdmin } = await svc
+      .from('notificaciones')
+      .select('id')
+      .eq('tipo', 'lead_reingreso')
+      .in('destinatario_id', adminIds)
+      .like('texto', `%${MARK}%`);
+    expect(notifsAdmin).toHaveLength(adminIds.length);
+  });
+
+  it('6. cursor: avanza por pagina procesada y NO avanza cuando la pagina siguiente falla', async () => {
+    // Cursor limpio para el recurso propiedades.
+    await svc.from('sync_estado').delete().in('recurso', ['propiedades', 'leads']);
+
+    const paginaProps: PaginaEB<PropiedadListaEB> = {
+      pagination: { limit: 50, page: 1, total: 100, next_page: 'https://fake.easybroker.test/v2pagina' },
+      content: [
+        itemPropiedad('P3', { updated_at: '2026-08-02T08:00:00-06:00' }),
+        itemPropiedad('P4', { updated_at: '2026-08-02T09:00:00-06:00' }),
+      ],
+    };
+    const paginaVacia: PaginaEB<ContactRequestEB> = {
+      pagination: { limit: 50, page: 1, total: 0, next_page: null },
+      content: [],
+    };
+
+    const paginasPedidas: string[] = [];
+    const resultado = await sincronizarEasyBroker(svc, {
+      obtenerPagina: async (path) => {
+        paginasPedidas.push(path);
+        if (path.includes('/v1/properties')) return paginaProps as PaginaEB<unknown>;
+        if (path.includes('v2pagina')) throw new Error('fallo simulado en pagina 2');
+        return paginaVacia as PaginaEB<unknown>;
+      },
+      obtenerDetalle: obtenerDetalleFixture,
+      maxPaginas: 5,
+    });
+
+    // La pagina 1 se proceso; la 2 fallo.
+    expect(resultado.propiedades.nuevas).toBe(2);
+    expect(resultado.errores.some((e) => e.includes('fallo simulado en pagina 2'))).toBe(true);
+
+    // El cursor quedo en el max updated_at de la pagina 1 (progreso conservado),
+    // y ultimo_error registrado.
+    const { data: estadoProps, error: estadoError } = await svc
+      .from('sync_estado')
+      .select('sync_cursor, ultimo_ok, ultimo_error')
+      .eq('recurso', 'propiedades')
+      .single();
+    expect(estadoError).toBeNull();
+    expect(new Date(estadoProps!.sync_cursor).toISOString()).toBe(
+      new Date('2026-08-02T09:00:00-06:00').toISOString()
+    );
+    expect(estadoProps!.ultimo_error).toContain('fallo simulado');
+
+    // La fase de leads (pagina vacia) termino OK y marco ultimo_ok.
+    const { data: estadoLeads } = await svc
+      .from('sync_estado')
+      .select('ultimo_ok, ultimo_error')
+      .eq('recurso', 'leads')
+      .single();
+    expect(estadoLeads!.ultimo_ok).not.toBeNull();
+    expect(estadoLeads!.ultimo_error).toBeNull();
+  });
+
+  it('7. zona_interes: propiedad sin colonia -> se prellenan con la ciudad', async () => {
+    const cr = contactRequest(RUN + 3, {
+      name: `${MARK} Lead Dos`,
+      phone: `81 ${TEL_DOS}`,
+      email: `${RUN}-dos@sync.test`,
+      property_id: `${MARK}-P2`,
+      source: 'sitio propio',
+      happened_at: '2026-08-02T16:00:00-06:00',
+    });
+    const r = await procesarContactRequests(svc, [cr], { agenciaId });
+    expect(r.errores).toEqual([]);
+    expect(r.nuevos).toBe(1);
+
+    const { data: lead, error } = await svc
+      .from('leads')
+      .select('zona_interes, propiedad_id, asesor_id')
+      .eq('easybroker_id', String(RUN + 3))
+      .single();
+    expect(error).toBeNull();
+    expect(lead!.zona_interes).toBe('Monterrey'); // P2 no tiene colonia -> ciudad
+    expect(lead!.asesor_id).toBeNull();
+    expect(lead!.propiedad_id).not.toBeNull();
+  });
+
+  it('8. smoke: sincronizarEasyBroker contra staging real (cursores en "ahora", maxPaginas 1)', async () => {
+    if (!process.env.EASYBROKER_BASE_URL || !process.env.EASYBROKER_API_KEY) {
+      throw new Error('Faltan EASYBROKER_BASE_URL / EASYBROKER_API_KEY en .env.local');
+    }
+    // Cursores fijados a ahora: se ejercita el HTTP real + parsing del envelope
+    // sin traer (ni insertar) el historico completo de staging.
+    const ahora = new Date().toISOString();
+    await avanzarCursor(svc, 'propiedades', ahora);
+    await avanzarCursor(svc, 'leads', ahora);
+
+    const resultado = await sincronizarEasyBroker(svc, { maxPaginas: 1 });
+
+    expect(resultado.errores).toEqual([]);
+    // Tolerante: staging es un sandbox vivo; solo se exige consistencia interna.
+    expect(resultado.propiedades.procesadas).toBeGreaterThanOrEqual(0);
+    expect(resultado.propiedades.procesadas).toBe(
+      resultado.propiedades.nuevas + resultado.propiedades.actualizadas
+    );
+    expect(resultado.leads.procesados).toBe(resultado.leads.nuevos + resultado.leads.duplicados);
+
+    const { data: estados, error } = await svc
+      .from('sync_estado')
+      .select('recurso, ultimo_ok, ultimo_error')
+      .in('recurso', ['propiedades', 'leads']);
+    expect(error).toBeNull();
+    expect(estados).toHaveLength(2);
+    for (const estado of estados!) {
+      expect(estado.ultimo_ok).not.toBeNull();
+      expect(estado.ultimo_error).toBeNull();
+    }
+  });
+});
