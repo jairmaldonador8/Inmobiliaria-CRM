@@ -1,6 +1,8 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
+import { supabasePublishableKey, supabaseUrl } from '@/lib/env'
+
 type Rol = 'admin' | 'asesor'
 
 /** Área raíz de cada rol. */
@@ -33,8 +35,8 @@ export async function proxy(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request })
 
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
+    supabaseUrl(),
+    supabasePublishableKey(),
     {
       cookies: {
         getAll() {
@@ -56,7 +58,11 @@ export async function proxy(request: NextRequest) {
   // IMPORTANTE: sin lógica entre createServerClient y getClaims —
   // getClaims refresca el token; interponer código causa cierres de
   // sesión aleatorios.
-  const { data } = await supabase.auth.getClaims()
+  const { data, error: getClaimsError } = await supabase.auth.getClaims()
+
+  if (getClaimsError) {
+    console.warn('[proxy] getClaims error:', getClaimsError.message)
+  }
 
   const claims = data?.claims
   const rol = rolDesdeClaims(claims)
@@ -84,8 +90,22 @@ export async function proxy(request: NextRequest) {
   if (claims && !rol) {
     // scope 'local': invalida solo la sesión de este navegador; no
     // cierra las sesiones del usuario en otros dispositivos.
-    await supabase.auth.signOut({ scope: 'local' })
-    return path === '/' ? supabaseResponse : redirigir('/')
+    const { error: signOutError } = await supabase.auth.signOut({ scope: 'local' })
+    const response = path === '/' ? supabaseResponse : redirigir('/')
+
+    if (signOutError) {
+      console.error('[proxy] signOut falló:', signOutError.message)
+      // El signOut remoto falló: expirar las cookies de sesión
+      // directamente en la respuesta para garantizar que la sesión
+      // muere del lado del cliente de todas formas.
+      request.cookies.getAll().forEach(({ name }) => {
+        if (name.startsWith('sb-')) {
+          response.cookies.set(name, '', { maxAge: 0 })
+        }
+      })
+    }
+
+    return response
   }
 
   if (rol) {
@@ -122,6 +142,6 @@ export const config = {
      * nuevo que no deba llevar sesión (p. ej. otro webhook público) hay
      * que agregarlo explícitamente aquí.
      */
-    '/((?!_next/static|_next/image|favicon.ico|manifest.webmanifest|api/cron/|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)',
+    '/((?!_next/static|_next/image|favicon.ico|manifest.webmanifest|api/cron|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)',
   ],
 }

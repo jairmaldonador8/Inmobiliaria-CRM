@@ -10,10 +10,13 @@ import 'server-only'
 
 import { createClient } from '@supabase/supabase-js'
 
+import { supabaseUrl } from '@/lib/env'
+import { supabaseSecretKey } from '@/lib/env-server'
+
 export function createAdminClient() {
   return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SECRET_KEY!,
+    supabaseUrl(),
+    supabaseSecretKey(),
     {
       auth: {
         persistSession: false,
