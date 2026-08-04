@@ -1,6 +1,7 @@
 import { requireAdmin } from '@/lib/auth/usuario-actual'
 import { BarraMovilAdmin, NavAdmin, PieSesion } from '@/components/nav/nav-admin'
 import { Campana } from '@/components/notificaciones/campana'
+import { BotonSugerencia } from '@/components/sugerencias/boton-sugerencia'
 
 export default async function AdminLayout({
   children,
@@ -46,6 +47,8 @@ export default async function AdminLayout({
       <main className="flex-1 px-4 py-6 lg:ml-60 lg:px-10 lg:py-8">
         {children}
       </main>
+
+      <BotonSugerencia className="bottom-6" />
     </div>
   )
 }

@@ -1,6 +1,7 @@
 import { requireAsesor } from '@/lib/auth/usuario-actual'
 import { NavAsesor } from '@/components/nav/nav-asesor'
 import { Campana } from '@/components/notificaciones/campana'
+import { BotonSugerencia } from '@/components/sugerencias/boton-sugerencia'
 
 export default async function AsesorLayout({
   children,
@@ -23,6 +24,7 @@ export default async function AsesorLayout({
         {children}
       </main>
 
+      <BotonSugerencia />
       <NavAsesor />
     </div>
   )
