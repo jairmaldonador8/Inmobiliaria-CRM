@@ -1,5 +1,127 @@
-import { Proximamente } from '@/components/proximamente'
+import { formatDistanceToNow } from 'date-fns'
+import { es } from 'date-fns/locale'
+import { Building2 } from 'lucide-react'
 
-export default function PaginaBandeja() {
-  return <Proximamente titulo="Bandeja" />
+import { requireAdmin } from '@/lib/auth/usuario-actual'
+import { createAdminClient } from '@/lib/supabase/admin'
+import { leadsBandeja } from '@/lib/leads/consultas'
+import { etiquetaFuenteConDetalle, formatearTelefono } from '@/lib/leads/formato'
+import { Badge } from '@/components/ui/badge'
+import { AsignarLead } from '@/components/leads/asignar-lead'
+import { DialogRegistrarLead } from '@/components/leads/dialog-registrar-lead'
+
+// NOTA: el contador de bandeja en el sidebar (chip junto a «Bandeja» en
+// nav-admin) queda diferido: requiere pasar el conteo desde el layout de
+// servidor al nav de cliente. Por ahora el conteo vive en este encabezado.
+
+const HORA_MS = 60 * 60 * 1000
+
+/**
+ * Urgencia visual por tiempo de espera: verde < 1 h, ámbar 1–24 h,
+ * rojo > 24 h (punto de color + texto «hace X»).
+ */
+function urgencia(creadoEn: string): { punto: string; texto: string } {
+  const horas = (Date.now() - new Date(creadoEn).getTime()) / HORA_MS
+  if (horas < 1) return { punto: 'bg-emerald-500', texto: 'text-emerald-600' }
+  if (horas < 24) return { punto: 'bg-amber-500', texto: 'text-amber-600' }
+  return { punto: 'bg-red-500', texto: 'text-red-600' }
+}
+
+export default async function PaginaBandeja() {
+  await requireAdmin()
+  const supabase = createAdminClient()
+
+  const [leads, { data: asesores }, { data: propiedades }] = await Promise.all([
+    leadsBandeja(),
+    supabase
+      .from('usuarios')
+      .select('user_id, nombre')
+      .eq('rol', 'asesor')
+      .eq('activo', true)
+      .order('nombre', { ascending: true }),
+    supabase
+      .from('propiedades')
+      .select('id, titulo')
+      .eq('activa', true)
+      .order('titulo', { ascending: true }),
+  ])
+
+  const opcionesAsesor = (asesores ?? []).map((a) => ({ userId: a.user_id, nombre: a.nombre }))
+  const opcionesPropiedad = (propiedades ?? []).map((p) => ({ id: p.id, titulo: p.titulo }))
+
+  return (
+    <section className="flex flex-col gap-6">
+      <header className="flex flex-wrap items-start justify-between gap-4">
+        <div className="flex flex-col gap-1">
+          <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Bandeja</h1>
+          <p className="text-sm text-slate-500">
+            {leads.length === 0
+              ? 'Sin leads pendientes de asignar'
+              : `${leads.length} lead${leads.length === 1 ? '' : 's'} pendiente${leads.length === 1 ? '' : 's'} de asignar`}
+          </p>
+        </div>
+        <DialogRegistrarLead asesores={opcionesAsesor} propiedades={opcionesPropiedad} />
+      </header>
+
+      {leads.length === 0 ? (
+        <div className="flex min-h-44 flex-col items-center justify-center gap-1 rounded-xl border border-dashed border-slate-300 bg-white/60">
+          <p className="text-2xl" aria-hidden>
+            🎉
+          </p>
+          <p className="text-sm text-slate-500">Sin leads pendientes</p>
+        </div>
+      ) : (
+        <ul className="grid gap-3">
+          {leads.map((lead) => {
+            const { punto, texto } = urgencia(lead.creado_en)
+            const espera = formatDistanceToNow(new Date(lead.creado_en), {
+              addSuffix: true,
+              locale: es,
+            })
+            return (
+              <li
+                key={lead.id}
+                className="flex flex-col gap-3 rounded-xl bg-white p-4 ring-1 ring-slate-200 md:flex-row md:items-center md:justify-between"
+              >
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="font-medium text-slate-900">{lead.nombre}</p>
+                    <Badge variant="secondary">
+                      {etiquetaFuenteConDetalle(lead.fuente, lead.fuente_detalle)}
+                    </Badge>
+                    <span className={`inline-flex items-center gap-1.5 text-xs ${texto}`}>
+                      <span aria-hidden className={`size-2 rounded-full ${punto}`} />
+                      {espera}
+                    </span>
+                  </div>
+                  <p className="mt-1 text-sm text-slate-600">
+                    {formatearTelefono(lead.telefono)}
+                    {lead.email ? <span className="text-slate-400"> · {lead.email}</span> : null}
+                  </p>
+                  {lead.propiedad ? (
+                    <p className="mt-1 flex items-center gap-1.5 truncate text-sm text-slate-500">
+                      <Building2 aria-hidden className="size-3.5 shrink-0" />
+                      <span className="truncate">{lead.propiedad.titulo}</span>
+                    </p>
+                  ) : lead.zona_interes ? (
+                    <p className="mt-1 truncate text-sm text-slate-500">
+                      Zona de interés: {lead.zona_interes}
+                    </p>
+                  ) : null}
+                </div>
+
+                <div className="shrink-0">
+                  <AsignarLead
+                    leadId={lead.id}
+                    leadNombre={lead.nombre}
+                    asesores={opcionesAsesor}
+                  />
+                </div>
+              </li>
+            )
+          })}
+        </ul>
+      )}
+    </section>
+  )
 }
