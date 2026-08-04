@@ -267,6 +267,48 @@ describe('RLS Fase 1: aislamiento admin/asesor (Supabase real)', () => {
     expect(after!.nota).toBe(MARK_SEGUIMIENTO);
   });
 
+  it('asesor1 NO puede insertar seguimiento con easybroker_id forjado, pero SI sin el (0006: grant de columnas)', async () => {
+    // Migracion 0006: el grant de insert de authenticated sobre seguimientos
+    // se restringe a (lead_id, autor_id, tipo, propiedad_id, nota).
+    // easybroker_id queda fuera a proposito — solo service-role (el sync)
+    // puede escribirla — para que un asesor no pueda forjarla y hacer que
+    // contactRequestYaVisto() trate un contact request real como duplicado
+    // y descarte el lead silenciosamente. Sin columna revocada, esto SI
+    // regresa error (a diferencia de una denegacion por policy USING, que
+    // regresa 0 filas).
+    const { error: forjadoError } = await asesor1.from('seguimientos').insert({
+      lead_id: lead1Id,
+      autor_id: asesor1Id,
+      tipo: 'sistema',
+      nota: `${MARK_SEGUIMIENTO}-easybroker-id-forjado`,
+      easybroker_id: `TEST-RLS-${RUN}-easybroker-id-forjado`,
+    });
+    expect(forjadoError).not.toBeNull();
+
+    // Verificacion (service-role): la fila con easybroker_id forjado nunca se creo.
+    const { data: check, error: checkError } = await svc
+      .from('seguimientos')
+      .select('id')
+      .eq('easybroker_id', `TEST-RLS-${RUN}-easybroker-id-forjado`);
+    expect(checkError).toBeNull();
+    expect(check).toEqual([]);
+
+    // Sin easybroker_id (columna permitida), el mismo insert SI funciona.
+    const { data: ok, error: okError } = await asesor1
+      .from('seguimientos')
+      .insert({
+        lead_id: lead1Id,
+        autor_id: asesor1Id,
+        tipo: 'otro',
+        nota: `${MARK_SEGUIMIENTO}-sin-easybroker-id`,
+      })
+      .select('id, nota, easybroker_id')
+      .single();
+    expect(okError).toBeNull();
+    expect(ok!.nota).toBe(`${MARK_SEGUIMIENTO}-sin-easybroker-id`);
+    expect(ok!.easybroker_id).toBeNull();
+  });
+
   it('asesor1 NO puede insertar un seguimiento en el lead de asesor2', async () => {
     const { error } = await asesor1
       .from('seguimientos')

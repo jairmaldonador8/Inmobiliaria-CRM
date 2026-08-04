@@ -1,0 +1,51 @@
+-- Migracion 0006: endurece el insert de seguimientos por authenticated
+-- (hardening de seguridad, post-T16).
+--
+-- Vector cerrado: la policy de insert de 0002 exige with-check
+-- (lead_id propio o admin) AND autor_id = auth.uid(), pero NO restringe
+-- columnas. Via PostgREST, un asesor podia insertar un seguimiento en su
+-- propio lead con:
+--   (a) easybroker_id forjado -> contactRequestYaVisto() (sync.ts) lo lee
+--       para dedup; una fila forjada con el easybroker_id de un contact
+--       request real lo marcaria "ya visto" y el sync saltaria ese lead
+--       silenciosamente en corridas futuras (perdida de lead real).
+--   (b) tipo='sistema' forjado -> nota de sistema falsa en su propio
+--       timeline.
+--
+-- Fix: restringir las columnas insertables por authenticated a las que la
+-- UI realmente necesita (lead_id, autor_id, tipo, propiedad_id, nota).
+-- easybroker_id queda fuera del grant: solo service-role (que ignora RLS
+-- y column grants) puede escribirla, que es exactamente el sync. id y
+-- creado_en tambien quedan fuera (server-managed / default).
+--
+-- Decision documentada sobre tipo='sistema' (vector b): NO se agrega un
+-- CHECK ni trigger adicional para restringir tipo por rol en esta
+-- migracion. Razon:
+--   - Funciones no-immutable (is_admin(), que lee auth.uid() y consulta
+--     usuarios) no pueden usarse en un CHECK constraint.
+--   - Un BEFORE INSERT trigger que replique esa logica es la alternativa
+--     correcta, pero el insert ya exige with-check autor_id = auth.uid()
+--     (verificado arriba, 0002 seccion "seguimientos"): el asesor NO puede
+--     forjar autor_id (columna incluida en el with-check, no revocada como
+--     columna insertable — autor_id SI esta en la lista de columnas
+--     permitidas abajo porque el with-check ya la ancla al usuario logueado).
+--     Es decir: cualquier fila tipo='sistema' insertada por un asesor queda
+--     marcada con su propio autor_id real, nunca con el de otro usuario ni
+--     con autor_id null. No hay forma de impersonar al sistema o a otro
+--     usuario via este vector.
+--   - Precedente en datos reales: T14/T16 crean seguimientos tipo='sistema'
+--     autoria por un admin humano (p.ej. "Asignado a X por Admin",
+--     "Reasignado..."), asi que tipo='sistema' con autor_id no-null ya es
+--     un patron legitimo del producto — un CHECK que lo bloqueara rompería
+--     esas filas existentes y ese flujo.
+--   - Alcance restante: un asesor podria insertar una nota propia con
+--     tipo='sistema' en vez de 'nota'/'llamada'/etc. Efecto: cosmetico
+--     (badge de tipo incorrecto en SU PROPIO timeline, visible solo para
+--     el/la asesor y admin). La capa de aplicacion (Server Actions) ya
+--     rechaza esto al construir el insert. Se documenta aqui como riesgo
+--     aceptado en vez de anadir complejidad (trigger) por un vector de bajo
+--     impacto y ya mitigado en la capa de app.
+
+revoke insert on public.seguimientos from authenticated;
+grant insert (lead_id, autor_id, tipo, propiedad_id, nota)
+  on public.seguimientos to authenticated;
