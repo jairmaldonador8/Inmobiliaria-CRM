@@ -1,5 +1,6 @@
 import { formatDistanceToNow } from 'date-fns'
 import { es } from 'date-fns/locale'
+import { CloudDownload } from 'lucide-react'
 
 import { requireAdmin } from '@/lib/auth/usuario-actual'
 import { createAdminClient } from '@/lib/supabase/admin'
@@ -83,6 +84,10 @@ export default async function PaginaPropiedadesAdmin({
     ? formatDistanceToNow(new Date(sync.ultimo_ok), { addSuffix: true, locale: es })
     : null
 
+  // Sin filtros activos + cero propiedades = inventario nunca sincronizado
+  // (distinto de "esos filtros no encontraron nada").
+  const hayFiltros = Boolean(filtros.q || filtros.operacion || filtros.estatus || filtros.asesor)
+
   return (
     <section className="flex flex-col gap-6">
       <header className="flex flex-wrap items-start justify-between gap-4">
@@ -106,8 +111,17 @@ export default async function PaginaPropiedadesAdmin({
       />
 
       {filas.length === 0 ? (
-        <div className="flex min-h-44 items-center justify-center rounded-xl border border-dashed border-slate-300 bg-white/60">
-          <p className="text-sm text-slate-500">Sin resultados con esos filtros</p>
+        <div className="flex min-h-44 flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-slate-300 bg-white/60 px-4 text-center">
+          {hayFiltros ? (
+            <p className="text-sm text-slate-500">Sin resultados con esos filtros</p>
+          ) : (
+            <>
+              <CloudDownload aria-hidden className="size-6 text-slate-400" />
+              <p className="text-sm text-slate-500">
+                Aún no hay propiedades. Sincroniza con EasyBroker para traer tu inventario.
+              </p>
+            </>
+          )}
         </div>
       ) : (
         <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">

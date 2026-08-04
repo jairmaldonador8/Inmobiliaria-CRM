@@ -1,5 +1,278 @@
-import { Proximamente } from '@/components/proximamente'
+import Link from 'next/link'
+import { formatDistanceToNow } from 'date-fns'
+import { es } from 'date-fns/locale'
+import { AlertTriangle, Building2, ChevronRight, Inbox, RefreshCw, UserRound, Users } from 'lucide-react'
 
-export default function PaginaDashboardAdmin() {
-  return <Proximamente titulo="Dashboard" />
+import { requireAdmin } from '@/lib/auth/usuario-actual'
+import { createClient } from '@/lib/supabase/server'
+import { ETAPAS_CERRADAS, claseBadgeEtapa, etiquetaEtapa } from '@/lib/leads/formato'
+import { Badge } from '@/components/ui/badge'
+
+const HORA_MS = 60 * 60 * 1000
+const MAX_SIN_ATENDER = 15
+
+type LeadSinAsesor = {
+  id: string
+  nombre: string
+  etapa: string
+  asignado_en: string | null
+  asesor: { nombre: string } | null
+}
+
+/**
+ * Dashboard admin F1 (Task 20): 4 KPIs + «Leads sin atender >24h» + estado
+ * de la última sincronización EasyBroker. El dashboard completo (métricas
+ * de comisiones, gráficas, etc.) llega en F2.
+ *
+ * Cliente de SESIÓN en todo: el admin ve todo vía RLS (private.is_admin()),
+ * igual que /admin/leads/[id].
+ */
+export default async function PaginaDashboardAdmin() {
+  const usuario = await requireAdmin()
+  const supabase = await createClient()
+
+  const inicioMes = new Date()
+  inicioMes.setDate(1)
+  inicioMes.setHours(0, 0, 0, 0)
+
+  const [
+    { count: leadsBandeja },
+    { count: leadsDelMes },
+    { count: asesoresActivos },
+    { count: propiedadesActivas },
+    { data: leadsAsignados, error: errorLeads },
+    { data: sync },
+  ] = await Promise.all([
+    supabase
+      .from('leads')
+      .select('id', { count: 'exact', head: true })
+      .is('asesor_id', null)
+      .eq('archivado', false),
+    supabase
+      .from('leads')
+      .select('id', { count: 'exact', head: true })
+      .eq('archivado', false)
+      .gte('creado_en', inicioMes.toISOString()),
+    supabase
+      .from('usuarios')
+      .select('user_id', { count: 'exact', head: true })
+      .eq('rol', 'asesor')
+      .eq('activo', true),
+    supabase
+      .from('propiedades')
+      .select('id', { count: 'exact', head: true })
+      .eq('activa', true),
+    // Leads asignados y activos: base de «sin atender» — el último
+    // seguimiento (o asignado_en si no tiene ninguno) determina la urgencia.
+    supabase
+      .from('leads')
+      .select('id, nombre, etapa, asignado_en, asesor:usuarios!asesor_id(nombre)')
+      .not('asesor_id', 'is', null)
+      .eq('archivado', false)
+      .not('etapa', 'in', `(${ETAPAS_CERRADAS.join(',')})`),
+    supabase
+      .from('sync_estado')
+      .select('recurso, ultimo_ok')
+      .in('recurso', ['propiedades', 'leads']),
+  ])
+
+  if (errorLeads) {
+    throw new Error(`No se pudieron cargar los leads sin atender: ${errorLeads.message}`)
+  }
+
+  const leads = (leadsAsignados ?? []) as unknown as LeadSinAsesor[]
+
+  // Último seguimiento por lead: mismo patrón que la cola del día del
+  // asesor — segunda consulta ordenada desc, primer registro visto por
+  // lead es el más reciente.
+  const ultimoSeguimiento = new Map<string, string>()
+  if (leads.length > 0) {
+    const { data: seguimientos } = await supabase
+      .from('seguimientos')
+      .select('lead_id, creado_en')
+      .in(
+        'lead_id',
+        leads.map((l) => l.id)
+      )
+      .order('creado_en', { ascending: false })
+
+    for (const s of seguimientos ?? []) {
+      if (!ultimoSeguimiento.has(s.lead_id)) {
+        ultimoSeguimiento.set(s.lead_id, s.creado_en)
+      }
+    }
+  }
+
+  const sinAtenderTodos = leads
+    .map((lead) => ({
+      lead,
+      referencia: ultimoSeguimiento.get(lead.id) ?? lead.asignado_en,
+    }))
+    .filter(
+      (item): item is { lead: LeadSinAsesor; referencia: string } =>
+        item.referencia !== null && Date.now() - new Date(item.referencia).getTime() > 24 * HORA_MS
+    )
+    .sort((a, b) => new Date(a.referencia).getTime() - new Date(b.referencia).getTime())
+
+  const sinAtender = sinAtenderTodos.slice(0, MAX_SIN_ATENDER)
+  const hayMas = sinAtenderTodos.length > MAX_SIN_ATENDER
+
+  const ultimoOkPorRecurso = new Map(
+    (sync ?? []).map((s) => [s.recurso, s.ultimo_ok as string | null])
+  )
+  const ultimaSyncPropiedades = ultimoOkPorRecurso.get('propiedades')
+  const ultimaSyncLeads = ultimoOkPorRecurso.get('leads')
+
+  const kpis = [
+    {
+      etiqueta: 'Leads en bandeja',
+      valor: leadsBandeja ?? 0,
+      Icono: Inbox,
+      href: '/admin/bandeja',
+    },
+    {
+      etiqueta: 'Leads del mes',
+      valor: leadsDelMes ?? 0,
+      Icono: Users,
+      href: null,
+    },
+    {
+      etiqueta: 'Asesores activos',
+      valor: asesoresActivos ?? 0,
+      Icono: UserRound,
+      href: null,
+    },
+    {
+      etiqueta: 'Propiedades activas',
+      valor: propiedadesActivas ?? 0,
+      Icono: Building2,
+      href: '/admin/propiedades',
+    },
+  ] as const
+
+  return (
+    <section className="flex flex-col gap-6">
+      <header className="flex flex-col gap-1">
+        <h1 className="text-2xl font-semibold tracking-tight text-slate-900">
+          Hola, {usuario.nombre.split(' ')[0]}
+        </h1>
+        <p className="text-sm text-slate-500">
+          {ultimaSyncPropiedades || ultimaSyncLeads ? (
+            <span className="inline-flex items-center gap-1.5 text-slate-400">
+              <RefreshCw aria-hidden className="size-3.5" />
+              Última sincronización EasyBroker
+              {ultimaSyncPropiedades ? (
+                <>
+                  {' '}
+                  · Propiedades{' '}
+                  {formatDistanceToNow(new Date(ultimaSyncPropiedades), {
+                    addSuffix: true,
+                    locale: es,
+                  })}
+                </>
+              ) : null}
+              {ultimaSyncLeads ? (
+                <>
+                  {' '}
+                  · Leads{' '}
+                  {formatDistanceToNow(new Date(ultimaSyncLeads), {
+                    addSuffix: true,
+                    locale: es,
+                  })}
+                </>
+              ) : null}
+            </span>
+          ) : (
+            'Aún no hay sincronizaciones con EasyBroker'
+          )}
+        </p>
+      </header>
+
+      {/* KPIs */}
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4">
+        {kpis.map(({ etiqueta, valor, Icono, href }) => {
+          const contenido = (
+            <div className="flex flex-col gap-3 rounded-xl bg-white p-4 ring-1 ring-slate-200 transition-shadow sm:p-5">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-sm text-slate-500">{etiqueta}</span>
+                <Icono aria-hidden className="size-4 shrink-0 text-slate-400" />
+              </div>
+              <p className="text-3xl font-semibold tracking-tight text-slate-900">{valor}</p>
+            </div>
+          )
+          return href ? (
+            <Link
+              key={etiqueta}
+              href={href}
+              data-testid={`kpi-${href.split('/').pop()}`}
+              className="hover:shadow-sm"
+            >
+              {contenido}
+            </Link>
+          ) : (
+            <div key={etiqueta}>{contenido}</div>
+          )
+        })}
+      </div>
+
+      {/* Leads sin atender >24h */}
+      <div className="flex flex-col gap-3">
+        <div className="flex items-center gap-2">
+          <AlertTriangle aria-hidden className="size-4 text-amber-500" />
+          <h2 className="text-base font-semibold text-slate-900">Leads sin atender &gt;24h</h2>
+          {sinAtenderTodos.length > 0 ? (
+            <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-700">
+              {sinAtenderTodos.length}
+            </span>
+          ) : null}
+        </div>
+
+        {sinAtender.length === 0 ? (
+          <div className="flex min-h-32 flex-col items-center justify-center gap-1 rounded-xl border border-dashed border-slate-300 bg-white/60">
+            <p className="text-2xl" aria-hidden>
+              🎉
+            </p>
+            <p className="text-sm text-slate-500">Ningún lead lleva más de 24 h sin atención</p>
+          </div>
+        ) : (
+          <>
+            <ul className="grid gap-2">
+              {sinAtender.map(({ lead, referencia }) => (
+                <li key={lead.id}>
+                  <Link
+                    href={`/admin/leads/${lead.id}`}
+                    className="flex items-center justify-between gap-3 rounded-xl bg-white p-3 shadow-xs ring-1 ring-slate-200 transition-colors hover:bg-slate-50 sm:p-4"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="truncate text-sm font-medium text-slate-900">
+                          {lead.nombre}
+                        </p>
+                        <Badge className={claseBadgeEtapa(lead.etapa)}>
+                          {etiquetaEtapa(lead.etapa)}
+                        </Badge>
+                      </div>
+                      <p className="mt-1 text-xs text-slate-500">
+                        {lead.asesor?.nombre ?? 'Sin asesor'} · Último contacto{' '}
+                        {formatDistanceToNow(new Date(referencia), {
+                          addSuffix: true,
+                          locale: es,
+                        })}
+                      </p>
+                    </div>
+                    <ChevronRight aria-hidden className="size-4 shrink-0 text-slate-400" />
+                  </Link>
+                </li>
+              ))}
+            </ul>
+            {hayMas ? (
+              <p className="text-center text-xs text-slate-400">
+                Mostrando {MAX_SIN_ATENDER} de {sinAtenderTodos.length} leads sin atender
+              </p>
+            ) : null}
+          </>
+        )}
+      </div>
+    </section>
+  )
 }

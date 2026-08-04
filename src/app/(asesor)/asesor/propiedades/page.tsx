@@ -1,3 +1,5 @@
+import { CloudDownload } from 'lucide-react'
+
 import { requireAsesor } from '@/lib/auth/usuario-actual'
 import { createClient } from '@/lib/supabase/server'
 import { filtroBusqueda } from '@/lib/propiedades/consultas'
@@ -37,6 +39,7 @@ export default async function PaginaPropiedadesAsesor({
     throw new Error(`No se pudieron cargar las propiedades: ${error.message}`)
   }
   const filas = (propiedades ?? []) as FilaPropiedad[]
+  const hayFiltros = Boolean(q)
 
   return (
     <section className="flex flex-col gap-4">
@@ -50,8 +53,18 @@ export default async function PaginaPropiedadesAsesor({
       <BusquedaPropiedades placeholder="Buscar por título o ubicación" />
 
       {filas.length === 0 ? (
-        <div className="flex min-h-44 items-center justify-center rounded-xl border border-dashed border-slate-300 bg-white/60">
-          <p className="text-sm text-slate-500">Sin resultados con esos filtros</p>
+        <div className="flex min-h-44 flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-slate-300 bg-white/60 px-4 text-center">
+          {hayFiltros ? (
+            <p className="text-sm text-slate-500">Sin resultados con esos filtros</p>
+          ) : (
+            <>
+              <CloudDownload aria-hidden className="size-6 text-slate-400" />
+              <p className="text-sm text-slate-500">
+                Aún no hay propiedades sincronizadas. Pide a un administrador que sincronice con
+                EasyBroker.
+              </p>
+            </>
+          )}
         </div>
       ) : (
         <div className="flex flex-col gap-4">
