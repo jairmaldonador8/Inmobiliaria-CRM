@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { formatDistanceToNow } from 'date-fns'
 import { es } from 'date-fns/locale'
 
@@ -20,9 +21,6 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { FiltrosLeads } from '@/components/leads/filtros-leads'
-
-// NOTA: el link al detalle del lead (/asesor/leads/[id]) se omite aquí:
-// esa ruta llega con la Task 16. Al existir, cada fila enlazará al detalle.
 
 export default async function PaginaLeadsAdmin({
   searchParams,
@@ -80,7 +78,12 @@ export default async function PaginaLeadsAdmin({
                 {leads.map((lead) => (
                   <TableRow key={lead.id}>
                     <TableCell>
-                      <p className="font-medium text-slate-900">{lead.nombre}</p>
+                      <Link
+                        href={`/admin/leads/${lead.id}`}
+                        className="font-medium text-slate-900 underline-offset-4 hover:underline"
+                      >
+                        {lead.nombre}
+                      </Link>
                       <p className="text-xs text-slate-500">{formatearTelefono(lead.telefono)}</p>
                     </TableCell>
                     <TableCell className="text-slate-600">
@@ -112,9 +115,10 @@ export default async function PaginaLeadsAdmin({
           {/* Tarjetas — móvil */}
           <div className="grid gap-3 lg:hidden">
             {leads.map((lead) => (
-              <div
+              <Link
                 key={lead.id}
-                className="flex flex-col gap-2 rounded-xl bg-white p-4 ring-1 ring-slate-200"
+                href={`/admin/leads/${lead.id}`}
+                className="flex flex-col gap-2 rounded-xl bg-white p-4 ring-1 ring-slate-200 transition-shadow hover:shadow-sm"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
@@ -138,7 +142,7 @@ export default async function PaginaLeadsAdmin({
                     })}
                   </span>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         </>

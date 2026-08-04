@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useMemo, useOptimistic, useTransition } from 'react'
 import { formatDistanceToNow } from 'date-fns'
 import { es } from 'date-fns/locale'
@@ -139,6 +140,9 @@ function TarjetaLead({ lead, onMover }: { lead: LeadKanban; onMover: MoverLead }
             <EllipsisVertical />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-40">
+            <DropdownMenuItem render={<Link href={`/asesor/leads/${lead.id}`} />}>
+              Ver detalle
+            </DropdownMenuItem>
             <DropdownMenuSub>
               <DropdownMenuSubTrigger>Mover a…</DropdownMenuSubTrigger>
               <DropdownMenuSubContent>

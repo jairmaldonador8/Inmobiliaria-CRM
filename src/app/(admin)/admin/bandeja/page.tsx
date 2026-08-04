@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { formatDistanceToNow } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { Building2 } from 'lucide-react'
@@ -85,7 +86,12 @@ export default async function PaginaBandeja() {
               >
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
-                    <p className="font-medium text-slate-900">{lead.nombre}</p>
+                    <Link
+                      href={`/admin/leads/${lead.id}`}
+                      className="font-medium text-slate-900 underline-offset-4 hover:underline"
+                    >
+                      {lead.nombre}
+                    </Link>
                     <Badge variant="secondary">
                       {etiquetaFuenteConDetalle(lead.fuente, lead.fuente_detalle)}
                     </Badge>
