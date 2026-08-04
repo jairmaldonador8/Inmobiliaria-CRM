@@ -18,6 +18,7 @@ import { normalizarTelefono } from '@/lib/easybroker/mapeo'
 import {
   ETAPAS_LEAD,
   FUENTES_LEAD,
+  NOTA_CIERRE,
   type EtapaLead,
   type FuenteLead,
 } from '@/lib/leads/formato'
@@ -38,17 +39,18 @@ export async function cambiarEtapa(
   leadId: string,
   etapa: string
 ): Promise<ResultadoAccionAsesor> {
-  await requireAsesor()
+  const asesor = await requireAsesor()
 
   if (!(ETAPAS_LEAD as readonly string[]).includes(etapa)) {
     return { error: 'La etapa no es válida' }
   }
+  const etapaTipada = etapa as EtapaLead
 
   const supabase = await createClient()
 
   const { data, error } = await supabase
     .from('leads')
-    .update({ etapa: etapa as EtapaLead })
+    .update({ etapa: etapaTipada })
     .eq('id', leadId)
     .eq('archivado', false)
     .select('id')
@@ -57,6 +59,23 @@ export async function cambiarEtapa(
   // asesor (RLS lo filtró). Mismo mensaje en todos los casos.
   if (error || !data || data.length === 0) {
     return { error: 'No se pudo mover el lead' }
+  }
+
+  // Al cerrar (ganado o perdido): registra un seguimiento de sistema con la
+  // fecha del cierre. `leads` no tiene columna de fecha de cierre — este
+  // registro es lo que permite calcular "cerrados ganados del mes" en la
+  // cola del día del asesor (Task 17) sin agregar una columna nueva. Best
+  // effort: si falla, NO revertimos el cambio de etapa que ya tuvo éxito.
+  if (etapaTipada === 'cerrado_ganado' || etapaTipada === 'cerrado_perdido') {
+    const { error: errorCierre } = await supabase.from('seguimientos').insert({
+      lead_id: leadId,
+      autor_id: asesor.user_id,
+      tipo: 'sistema',
+      nota: NOTA_CIERRE[etapaTipada],
+    })
+    if (errorCierre) {
+      console.error('No se pudo registrar el seguimiento de cierre:', errorCierre.message)
+    }
   }
 
   revalidatePath(RUTA_KANBAN)

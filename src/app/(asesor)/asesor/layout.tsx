@@ -1,5 +1,6 @@
 import { requireAsesor } from '@/lib/auth/usuario-actual'
 import { NavAsesor } from '@/components/nav/nav-asesor'
+import { Campana } from '@/components/notificaciones/campana'
 
 export default async function AsesorLayout({
   children,
@@ -8,10 +9,13 @@ export default async function AsesorLayout({
 
   return (
     <div className="flex min-h-dvh flex-1 flex-col bg-slate-50">
-      <header className="sticky top-0 z-30 flex h-14 items-center justify-center border-b border-slate-200 bg-white">
-        <span className="text-sm font-semibold tracking-tight text-slate-900">
-          Montana Realty
-        </span>
+      <header className="sticky top-0 z-30 flex h-14 items-center border-b border-slate-200 bg-white px-2">
+        <div className="mx-auto flex w-full max-w-md items-center justify-between px-2">
+          <span className="text-sm font-semibold tracking-tight text-slate-900">
+            Montana Realty
+          </span>
+          <Campana href="/asesor/notificaciones" />
+        </div>
       </header>
 
       {/* Columna angosta también en escritorio: los asesores trabajan desde el teléfono */}

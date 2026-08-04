@@ -22,6 +22,21 @@ export const FUENTES_LEAD = ['portal', 'whatsapp', 'referido', 'redes', 'walk_in
 
 export type FuenteLead = (typeof FUENTES_LEAD)[number]
 
+/** Etapas que ya no cuentan como trabajo activo del asesor. */
+export const ETAPAS_CERRADAS = ['cerrado_ganado', 'cerrado_perdido'] as const
+
+/**
+ * Texto exacto del seguimiento de sistema que registra `cambiarEtapa` al
+ * mover un lead a un estado cerrado (Task 17). `leads` no tiene una columna
+ * de fecha de cierre — este texto + `creado_en` del seguimiento es lo que
+ * permite calcular "cerrados ganados del mes" en la cola del día sin
+ * agregar una columna nueva.
+ */
+export const NOTA_CIERRE: Record<'cerrado_ganado' | 'cerrado_perdido', string> = {
+  cerrado_ganado: 'Marcado como cerrado ganado',
+  cerrado_perdido: 'Marcado como cerrado perdido',
+}
+
 const ETIQUETAS_ETAPA: Record<EtapaLead, string> = {
   nuevo: 'Nuevo',
   contactado: 'Contactado',

@@ -101,8 +101,20 @@ export function PieSesion({ nombre }: { nombre: string }) {
   )
 }
 
-/** Barra superior móvil con menú lateral (drawer). Oculta en escritorio. */
-export function BarraMovilAdmin({ nombre }: { nombre: string }) {
+/**
+ * Barra superior móvil con menú lateral (drawer). Oculta en escritorio.
+ *
+ * `campana` llega como nodo ya renderizado por el layout (Server
+ * Component): este archivo es 'use client' y no puede importar la Campana
+ * directo (es un Server Component que lee Supabase con 'server-only').
+ */
+export function BarraMovilAdmin({
+  nombre,
+  campana,
+}: {
+  nombre: string
+  campana?: React.ReactNode
+}) {
   const [abierto, setAbierto] = useState(false)
 
   return (
@@ -127,7 +139,10 @@ export function BarraMovilAdmin({ nombre }: { nombre: string }) {
           <PieSesion nombre={nombre} />
         </SheetContent>
       </Sheet>
-      <span className="text-sm font-semibold tracking-tight">Montana Realty</span>
+      <span className="flex-1 truncate text-sm font-semibold tracking-tight">
+        Montana Realty
+      </span>
+      {campana}
     </header>
   )
 }
