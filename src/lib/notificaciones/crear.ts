@@ -42,7 +42,13 @@ export async function crearNotificacion(
 
 /**
  * Inserta la misma notificacion para TODOS los admins activos (bulk insert) y
- * le empuja Web Push a cada uno. Devuelve cuantas notificaciones se crearon.
+ * le empuja Web Push a cada uno EN PARALELO (Promise.allSettled): un fallo en
+ * el push de un admin no debe demorar ni tumbar el de los demas, y esta ruta
+ * la puede llamar N veces por corrida el cron de EasyBroker (procesarContact
+ * Requests), asi que un fan-out secuencial seria innecesariamente lento en
+ * el hot path de Vercel. No hace falta try/catch por admin: allSettled ya
+ * aisla cada promesa y enviarPush nunca lanza por contrato. Devuelve cuantas
+ * notificaciones se crearon.
  */
 export async function notificarAdmins(
   supabase: SupabaseClient,
@@ -67,13 +73,9 @@ export async function notificarAdmins(
     throw new Error(`No se pudieron crear las notificaciones para admins: ${insertError.message}`)
   }
 
-  for (const admin of admins) {
-    try {
-      await enviarPush(supabase, admin.user_id, { titulo: 'Klo-Ser', cuerpo: texto, url })
-    } catch (err) {
-      console.error('notificarAdmins: fallo el push, se omite', err)
-    }
-  }
+  await Promise.allSettled(
+    admins.map((admin) => enviarPush(supabase, admin.user_id, { titulo: 'Klo-Ser', cuerpo: texto, url }))
+  )
 
   return filas.length
 }

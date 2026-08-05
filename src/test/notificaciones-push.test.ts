@@ -114,4 +114,40 @@ describe('notificarAdmins + push', () => {
       url: '/admin',
     })
   })
+
+  it('si el push al primer admin rechaza, el segundo admin igual recibe su push (aislamiento)', async () => {
+    const admins = [{ user_id: 'admin-1' }, { user_id: 'admin-2' }]
+    const { supabase } = crearSupabaseFakeAdmins(admins)
+    enviarPushMock.mockRejectedValueOnce(new Error('push boom')).mockResolvedValueOnce({ enviados: 1 })
+
+    const total = await notificarAdmins(supabase, {
+      tipo: 'aviso',
+      texto: 'Nueva solicitud',
+      url: '/admin',
+    })
+
+    expect(total).toBe(2)
+    expect(enviarPushMock).toHaveBeenCalledTimes(2)
+    expect(enviarPushMock).toHaveBeenNthCalledWith(1, supabase, 'admin-1', {
+      titulo: 'Klo-Ser',
+      cuerpo: 'Nueva solicitud',
+      url: '/admin',
+    })
+    expect(enviarPushMock).toHaveBeenNthCalledWith(2, supabase, 'admin-2', {
+      titulo: 'Klo-Ser',
+      cuerpo: 'Nueva solicitud',
+      url: '/admin',
+    })
+  })
+
+  it('si el INSERT masivo falla, lanza y NO llama a enviarPush', async () => {
+    const admins = [{ user_id: 'admin-1' }, { user_id: 'admin-2' }]
+    const { supabase } = crearSupabaseFakeAdmins(admins, { error: { message: 'boom' } })
+
+    await expect(
+      notificarAdmins(supabase, { tipo: 'aviso', texto: 'Nueva solicitud', url: '/admin' })
+    ).rejects.toThrow()
+
+    expect(enviarPushMock).not.toHaveBeenCalled()
+  })
 })
