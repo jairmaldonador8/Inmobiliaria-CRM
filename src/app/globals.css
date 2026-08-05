@@ -10,6 +10,22 @@
   --font-sans: var(--font-sans);
   --font-mono: var(--font-geist-mono);
   --font-heading: var(--font-sans);
+  --font-logo: var(--font-logo);
+  /* Escala «piedra»: slate y white remapeados a la rampa cálida del sistema
+     Muro (Klo-Ser). Los componentes existentes usan clases slate y white;
+     este remap adopta la paleta en toda la app desde un solo lugar. */
+  --color-white: #FAF7F1;
+  --color-slate-50: #E5DAC4;
+  --color-slate-100: #F0E8D8;
+  --color-slate-200: #DCCFB4;
+  --color-slate-300: #C9B896;
+  --color-slate-400: #8E7F68;
+  --color-slate-500: #6B5D4E;
+  --color-slate-600: #5A4B3C;
+  --color-slate-700: #453A2D;
+  --color-slate-800: #2E261B;
+  --color-slate-900: #221B14;
+  --color-slate-950: #171209;
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -48,73 +64,77 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
+/* Tema claro «Muro» (opción B): fondo arena profundo, tarjetas crema,
+   acentos café/ocre. Fuente: design-propuestas/sistema-klo-ser.html */
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --background: #E5DAC4;
+  --foreground: #221B14;
+  --card: #FAF7F1;
+  --card-foreground: #221B14;
+  --popover: #FAF7F1;
+  --popover-foreground: #221B14;
+  --primary: #6B4A33;
+  --primary-foreground: #F6F1E8;
+  --secondary: #F0E8D8;
+  --secondary-foreground: #503524;
+  --muted: #EDE3CD;
+  --muted-foreground: #6B5D4E;
+  --accent: #F0E8D8;
+  --accent-foreground: #221B14;
+  --destructive: #A34E28;
+  --border: rgba(34, 27, 20, 0.14);
+  --input: rgba(34, 27, 20, 0.18);
+  --ring: #6B4A33;
+  --chart-1: #6B4A33;
+  --chart-2: #C98A3B;
+  --chart-3: #9C6B4A;
+  --chart-4: #D8C9B0;
+  --chart-5: #7D8A5C;
+  --radius: 0.875rem;
+  --sidebar: #171209;
+  --sidebar-foreground: #EFE9DD;
+  --sidebar-primary: #C98A3B;
+  --sidebar-primary-foreground: #2A1D0C;
+  --sidebar-accent: #2E261B;
+  --sidebar-accent-foreground: #F2EDE4;
+  --sidebar-border: rgba(242, 237, 228, 0.1);
+  --sidebar-ring: #C98A3B;
 }
 
+/* Modo noche «tinta cálida»: la misma familia café/arena/ocre invertida
+   (sin neón). Espejo del toggle noche del mockup del sistema. */
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --background: #171209;
+  --foreground: #F2EDE4;
+  --card: #241D14;
+  --card-foreground: #F2EDE4;
+  --popover: #2C241A;
+  --popover-foreground: #F2EDE4;
+  --primary: #9C6B4A;
+  --primary-foreground: #F6F1E8;
+  --secondary: #2C241A;
+  --secondary-foreground: #E3D5BE;
+  --muted: #2C241A;
+  --muted-foreground: #C6B8A4;
+  --accent: #352B1E;
+  --accent-foreground: #F2EDE4;
+  --destructive: #C96A3F;
+  --border: rgba(242, 237, 228, 0.12);
+  --input: rgba(242, 237, 228, 0.16);
+  --ring: #C98A3B;
+  --chart-1: #9C6B4A;
+  --chart-2: #C98A3B;
+  --chart-3: #D8C9B0;
+  --chart-4: #453729;
+  --chart-5: #97A573;
+  --sidebar: #171209;
+  --sidebar-foreground: #EFE9DD;
+  --sidebar-primary: #C98A3B;
+  --sidebar-primary-foreground: #2A1D0C;
+  --sidebar-accent: #2E261B;
+  --sidebar-accent-foreground: #F2EDE4;
+  --sidebar-border: rgba(242, 237, 228, 0.1);
+  --sidebar-ring: #C98A3B;
 }
 
 @layer base {

@@ -18,6 +18,7 @@ import {
 
 import { cerrarSesion } from '@/lib/auth/acciones'
 import { cn } from '@/lib/utils'
+import { Wordmark } from '@/components/marca/wordmark'
 import {
   Sheet,
   SheetContent,
@@ -64,9 +65,9 @@ export function NavAdmin({ onNavigate }: { onNavigate?: () => void }) {
                 onClick={onNavigate}
                 aria-current={activo ? 'page' : undefined}
                 className={cn(
-                  'flex min-h-11 items-center gap-3 rounded-lg px-3 text-sm font-medium transition-colors lg:min-h-9',
+                  'flex min-h-11 items-center gap-3 rounded-full px-4 text-sm font-medium transition-colors lg:min-h-9',
                   activo
-                    ? 'bg-slate-800 text-white'
+                    ? 'bg-white font-semibold text-slate-900'
                     : 'text-slate-400 hover:bg-slate-900 hover:text-slate-100'
                 )}
               >
@@ -131,16 +132,24 @@ export function BarraMovilAdmin({
           className="w-72 gap-0 border-slate-800 bg-slate-950 p-0 text-slate-100 [&_[data-slot=sheet-close]]:text-slate-300 [&_[data-slot=sheet-close]]:hover:bg-slate-900 [&_[data-slot=sheet-close]]:hover:text-white"
         >
           <SheetHeader className="px-6 pt-6 pb-2">
-            <SheetTitle className="text-base font-semibold tracking-tight text-white">
-              Montana Realty
+            <SheetTitle className="text-white">
+              <span className="sr-only">Klo-Ser</span>
+              <Wordmark
+                aria-hidden
+                className="text-[15px] text-[#EFE9DD]"
+                dashClassName="bg-[#C98A3B]"
+              />
             </SheetTitle>
           </SheetHeader>
           <NavAdmin onNavigate={() => setAbierto(false)} />
           <PieSesion nombre={nombre} />
         </SheetContent>
       </Sheet>
-      <span className="flex-1 truncate text-sm font-semibold tracking-tight">
-        Montana Realty
+      <span className="flex-1 truncate">
+        <Wordmark
+          className="text-[14px] text-[#EFE9DD]"
+          dashClassName="bg-[#C98A3B]"
+        />
       </span>
       {campana}
     </header>

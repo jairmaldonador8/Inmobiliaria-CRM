@@ -1,4 +1,5 @@
 import { requireAdmin } from '@/lib/auth/usuario-actual'
+import { Wordmark } from '@/components/marca/wordmark'
 import { BarraMovilAdmin, NavAdmin, PieSesion } from '@/components/nav/nav-admin'
 import { Campana } from '@/components/notificaciones/campana'
 import { BotonSugerencia } from '@/components/sugerencias/boton-sugerencia'
@@ -13,16 +14,14 @@ export default async function AdminLayout({
       {/* Sidebar de escritorio */}
       <aside className="fixed inset-y-0 left-0 z-40 hidden w-60 flex-col bg-slate-950 text-slate-100 lg:flex">
         <div className="flex items-center justify-between gap-2 px-6 pt-6 pb-4">
-          <div className="flex min-w-0 items-center gap-3">
-            <span
-              aria-hidden
-              className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-slate-800 text-xs font-semibold tracking-widest text-slate-50"
-            >
-              MR
-            </span>
-            <span className="truncate text-sm font-semibold tracking-tight text-white">
+          <div className="min-w-0">
+            <Wordmark
+              className="text-[15px] text-[#EFE9DD]"
+              dashClassName="bg-[#C98A3B]"
+            />
+            <p className="mt-1.5 text-[8.5px] font-semibold uppercase tracking-[0.22em] text-slate-400">
               Montana Realty
-            </span>
+            </p>
           </div>
           <Campana
             href="/admin/notificaciones"
