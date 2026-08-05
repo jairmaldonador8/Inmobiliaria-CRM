@@ -6,7 +6,9 @@
  * absolutos (p. ej. "▲ 3 leads"). La flecha va acompañada de texto
  * sr-only ("subió"/"bajó") para que la semántica no dependa solo del
  * color/glifo, y de `data-tendencia="sube"|"baja"` para poder engancharse
- * desde tests o CSS sin depender de las clases de color.
+ * desde tests o CSS sin depender de las clases de color. El glifo ▲/▼
+ * visible va marcado `aria-hidden="true"` para no duplicar la vocalización
+ * (el sr-only ya la cubre).
  * Acepta `className` (fusionada con `cn()`) y reenvía el resto de props
  * estándar de `<div>` a la TarjetaGlass raíz.
  */
@@ -50,7 +52,7 @@ export default function StatCard({
             data-tendencia={sube ? 'sube' : 'baja'}
           >
             <span className="sr-only">{sube ? 'subió' : 'bajó'} </span>
-            {sube ? '▲' : '▼'} {Math.abs(delta)}
+            <span aria-hidden="true">{sube ? '▲' : '▼'}</span> {Math.abs(delta)}
             {sufijo}
           </span>
         )}
