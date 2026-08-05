@@ -6,7 +6,7 @@ description: Use when implementing or debugging PWA installability, the service 
 # PWA + Web Push (free, no paid services)
 
 ## Overview
-Official Next.js 16 pattern: `app/manifest.ts` + hand-rolled `public/sw.js` + `web-push` npm (3.6.7) with VAPID keys in Server Actions. No PWA library (`next-pwa` is dead; Serwist only if offline caching is ever needed). Push delivery is free — Google/Apple/Mozilla run the push services. Verified 2026-08-03.
+Official Next.js 16 pattern: `app/manifest.ts` + hand-rolled `public/sw.js` + `web-push` npm (3.6.7) with VAPID keys in Server Actions. No PWA library (`next-pwa` is dead; Serwist only if offline caching is ever needed). Push delivery is free — Google/Apple/Mozilla run the push services. Verified 2026-08-03; reliability findings added 2026-08-05 (see research brief `docs/ultrapowers/research/2026-08-05-guardias-push-research.md`).
 
 ## Setup
 
@@ -26,7 +26,14 @@ const results = await Promise.allSettled(subs.map(s => webpush.sendNotification(
 // Delete subscriptions that return 404/410 (stale).
 ```
 
-Store subscriptions per user in Postgres (`push_suscripciones`: usuario_id, endpoint, p256dh, auth). Scheduled pushes (visit reminders) go through the cron, not waitUntil.
+Store subscriptions per user in Postgres (`push_suscripciones`: usuario_id, endpoint UNIQUE, p256dh, auth — multiple rows per user, one per device). Scheduled pushes (visit reminders) go through the cron, not waitUntil.
+
+## Subscription lifecycle (load-bearing)
+
+- **`pushsubscriptionchange` is NOT reliable (2026):** Chrome effectively never fires it on expiry; iOS drops subscriptions without firing it. Implement the handler as a bonus, but the real mechanism is **re-sync on every app open**: `pushManager.getSubscription()` → compare endpoint with what the server has → upsert; if permission is `granted` but subscription is null, re-subscribe silently.
+- **iOS silent-push penalty:** EVERY `push` event MUST end in `event.waitUntil(self.registration.showNotification(...))`. After ~3 pushes with no visible notification, iOS silently revokes the subscription. Never send data-only pushes.
+- **Declarative Web Push (iOS 18.4+):** shaping the payload as the declarative JSON (`{"web_push": 8030, "notification": {title, body, navigate, ...}}`) lets new iOS render it without waking the SW and exempts it from the silent-push penalty; keep the SW `push` handler as fallback for everything else. Optional but cheap resilience.
+- Real-world delivery: iOS ~70–85%, Android ~90–95% — push is a nudge, not a guarantee; the campanita (in-app) remains source of truth.
 
 ## Platform reality
 
@@ -53,3 +60,6 @@ iOS quirks: permission prompt requires a user gesture; the installed app has a S
 - Not cleaning 404/410 subscriptions → growing dead list, slow sends.
 - Requesting permission on page load (guaranteed denial) or in the Safari tab on iOS (doesn't carry to the installed app).
 - Adding Serwist/offline caching "just in case" — YAGNI; the official guide's minimal setup is the target.
+- Data-only/silent pushes on iOS (subscription revoked after ~3) — always `showNotification`.
+- Trusting `pushsubscriptionchange` to keep the subscription table fresh — re-sync on app open instead.
+- Rotating VAPID keys casually — it invalidates EVERY subscription; treat them as permanent.
