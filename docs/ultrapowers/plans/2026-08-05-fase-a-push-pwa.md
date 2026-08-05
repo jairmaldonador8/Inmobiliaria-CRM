@@ -258,6 +258,10 @@ async headers() {
 },
 ```
 
+- [ ] **Step 2.5 (agregado por revisión de Task 5):** crear `src/app/apple-icon.png`
+  (180×180, redimensionado del master `icon-ventana-1024.png` con el mismo método
+  System.Drawing de Task 5) — iOS ignora los iconos del manifest; esta convención
+  de Next genera el `<link rel="apple-touch-icon">` automáticamente.
 - [ ] **Step 3:** `npm run build` → OK. **Commit** `feat: service worker de push con deep-link` y push.
 
 ### Task 7: Suscripción — server actions + registro con re-sync
