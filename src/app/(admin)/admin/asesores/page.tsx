@@ -1,5 +1,5 @@
 import { requireAdmin } from '@/lib/auth/usuario-actual'
-import { createAdminClient } from '@/lib/supabase/admin'
+import { obtenerAsesores } from '@/lib/asesores/consultas'
 import { Badge } from '@/components/ui/badge'
 import {
   Table,
@@ -11,62 +11,6 @@ import {
 } from '@/components/ui/table'
 import { DialogCrearAsesor } from '@/components/asesores/dialog-crear-asesor'
 import { MenuAccionesAsesor } from '@/components/asesores/menu-acciones-asesor'
-
-/** Etapas que ya no cuentan como trabajo activo del asesor. */
-const ETAPAS_CERRADAS = ['cerrado_ganado', 'cerrado_perdido']
-
-type FilaAsesor = {
-  userId: string
-  nombre: string
-  email: string
-  telefono: string | null
-  activo: boolean
-  leadsActivos: number
-}
-
-async function obtenerAsesores(): Promise<FilaAsesor[]> {
-  const supabase = createAdminClient()
-
-  const { data: usuarios } = await supabase
-    .from('usuarios')
-    .select('user_id, nombre, telefono, activo, creado_en')
-    .eq('rol', 'asesor')
-    .order('creado_en', { ascending: true })
-
-  const asesores = usuarios ?? []
-  if (asesores.length === 0) return []
-
-  const ids = asesores.map((a) => a.user_id)
-
-  // Conteo de leads activos por asesor: una sola consulta filtrada,
-  // agregada en memoria (no hay `group by` directo en supabase-js).
-  const { data: leadsActivos } = await supabase
-    .from('leads')
-    .select('asesor_id')
-    .in('asesor_id', ids)
-    .eq('archivado', false)
-    .not('etapa', 'in', `(${ETAPAS_CERRADAS.join(',')})`)
-
-  const conteoPorAsesor = new Map<string, number>()
-  for (const lead of leadsActivos ?? []) {
-    if (!lead.asesor_id) continue
-    conteoPorAsesor.set(lead.asesor_id, (conteoPorAsesor.get(lead.asesor_id) ?? 0) + 1)
-  }
-
-  // El correo no vive en `usuarios`: se obtiene de auth.admin.listUsers()
-  // y se mapea por id. Suficiente a esta escala (decenas de asesores).
-  const { data: listado } = await supabase.auth.admin.listUsers({ perPage: 200 })
-  const emailPorId = new Map((listado?.users ?? []).map((u) => [u.id, u.email ?? '—']))
-
-  return asesores.map((a) => ({
-    userId: a.user_id,
-    nombre: a.nombre,
-    email: emailPorId.get(a.user_id) ?? '—',
-    telefono: a.telefono,
-    activo: a.activo,
-    leadsActivos: conteoPorAsesor.get(a.user_id) ?? 0,
-  }))
-}
 
 export default async function PaginaAsesores() {
   await requireAdmin()
@@ -107,9 +51,14 @@ export default async function PaginaAsesores() {
                     <TableCell className="text-slate-600">{asesor.email}</TableCell>
                     <TableCell className="text-slate-600">{asesor.telefono ?? '—'}</TableCell>
                     <TableCell>
-                      <Badge variant={asesor.activo ? 'secondary' : 'outline'}>
-                        {asesor.activo ? 'Activo' : 'Inactivo'}
-                      </Badge>
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <Badge variant={asesor.activo ? 'secondary' : 'outline'}>
+                          {asesor.activo ? 'Activo' : 'Inactivo'}
+                        </Badge>
+                        {asesor.activo && !asesor.tienePush && (
+                          <Badge className="bg-amber-100 text-amber-700">Sin notificaciones</Badge>
+                        )}
+                      </div>
                     </TableCell>
                     <TableCell className="text-slate-600">{asesor.leadsActivos}</TableCell>
                     <TableCell>
@@ -139,6 +88,9 @@ export default async function PaginaAsesores() {
                   <Badge variant={asesor.activo ? 'secondary' : 'outline'}>
                     {asesor.activo ? 'Activo' : 'Inactivo'}
                   </Badge>
+                  {asesor.activo && !asesor.tienePush && (
+                    <Badge className="bg-amber-100 text-amber-700">Sin notificaciones</Badge>
+                  )}
                   <span>{asesor.telefono ?? 'Sin teléfono'}</span>
                   <span>
                     {asesor.leadsActivos} lead{asesor.leadsActivos === 1 ? '' : 's'} activo
