@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Share, SquarePlus, X } from 'lucide-react'
 
 import { activarAvisos } from '@/lib/push/cliente'
@@ -57,6 +57,20 @@ function permisoActual(): PermisoNotificacion {
   return 'Notification' in window ? Notification.permission : 'no-soportado'
 }
 
+/** Botón «×» repetido en las cuatro variantes del banner. */
+function BotonCerrar({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label="Cerrar aviso"
+      className="shrink-0 rounded-full p-1 text-muted-foreground hover:bg-muted"
+    >
+      <X aria-hidden className="size-4" />
+    </button>
+  )
+}
+
 /**
  * Banner de instalación PWA + pre-prompt de notificaciones (Task 8, plan
  * push-PWA Fase A). Ver skill `pwa-web-push`, sección «UX pattern», y la
@@ -73,6 +87,22 @@ export default function BannerInstalacion() {
   const [deferredPrompt, setDeferredPrompt] = useState<EventoAntesDeInstalar | null>(null)
   const [activando, setActivando] = useState(false)
   const [errorActivar, setErrorActivar] = useState<string | null>(null)
+
+  // El efecto de montaje registra `alCambiarVisibilidad` UNA sola vez
+  // (deps `[recalcular]`, memoizado con `[]`) — si ese callback leyera
+  // `deferredPrompt` directo del estado, quedaría cerrado sobre el valor
+  // que tenía al montar (null) para siempre. Un `visibilitychange`
+  // disparado DESPUÉS de que `beforeinstallprompt` ya llegó degradaría el
+  // banner (deferredPromptDisponible: false) aunque el prompt siga vivo.
+  // La ref se actualiza en cada `setDeferredPrompt` y el callback la lee
+  // en vez del estado, esquivando el closure congelado.
+  const deferredPromptRef = useRef<EventoAntesDeInstalar | null>(null)
+
+  /** Único punto de escritura de `deferredPrompt`: mantiene la ref sincronizada con el estado. */
+  const actualizarDeferredPrompt = useCallback((prompt: EventoAntesDeInstalar | null) => {
+    deferredPromptRef.current = prompt
+    setDeferredPrompt(prompt)
+  }, [])
 
   const recalcular = useCallback(
     (promptDisponible: boolean, descartes: Descartes) => {
@@ -98,27 +128,36 @@ export default function BannerInstalacion() {
   )
 
   useEffect(() => {
-    // queueMicrotask: el cálculo inicial lee window/navigator (matchMedia,
-    // userAgent, Notification.permission), pero react-hooks/set-state-in-effect
-    // no permite un setState síncrono como primera línea del efecto — solo
-    // dentro de un callback (evento, promesa, suscripción). Diferirlo un
-    // microtask satisface esa regla sin cambiar el comportamiento real: en
-    // la práctica se resuelve en el mismo ciclo, antes del primer paint.
-    queueMicrotask(() => recalcular(false, leerDescartes()))
+    // El cálculo inicial lee window/navigator (matchMedia, userAgent,
+    // Notification.permission) y solo puede ejecutarse en el cliente, así
+    // que necesita vivir en un efecto — pero llamar a `recalcular` (que
+    // hace `setEstado`) como primera línea síncrona del efecto dispara
+    // react-hooks/set-state-in-effect. Es un falso positivo real para este
+    // caso (no hay forma de derivarlo en el render sin romper SSR/hidratación:
+    // el server no tiene `window`), así que se documenta y se silencia
+    // explícitamente en vez de esquivarlo con un queueMicrotask.
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- ver comentario arriba
+    recalcular(false, leerDescartes())
 
     function alBeforeInstallPrompt(evento: Event) {
       evento.preventDefault()
       const bip = evento as EventoAntesDeInstalar
-      setDeferredPrompt(bip)
+      actualizarDeferredPrompt(bip)
       recalcular(true, leerDescartes())
     }
 
     // El permiso o el modo de visualización pueden cambiar mientras la
     // pestaña está en segundo plano (p. ej. el usuario instala la app y
-    // vuelve); se recalcula al retomar el foco.
+    // vuelve); se recalcula al retomar el foco. Lee `deferredPromptRef`,
+    // NO el estado `deferredPrompt`: este listener se registra una sola
+    // vez (deps `[recalcular]`, memoizado con `[]`) y de leer el estado
+    // quedaría cerrado sobre el valor que tenía al montar (null) para
+    // siempre — un visibilitychange después de que ya llegó el
+    // beforeinstallprompt degradaría el banner igual, aunque el prompt
+    // siguiera vivo.
     function alCambiarVisibilidad() {
       if (document.visibilityState === 'visible') {
-        recalcular(deferredPrompt !== null, leerDescartes())
+        recalcular(deferredPromptRef.current !== null, leerDescartes())
       }
     }
 
@@ -128,12 +167,6 @@ export default function BannerInstalacion() {
       window.removeEventListener('beforeinstallprompt', alBeforeInstallPrompt)
       document.removeEventListener('visibilitychange', alCambiarVisibilidad)
     }
-    // Deliberado: solo al montar/desmontar. `deferredPrompt` se lee dentro
-    // del closure de alCambiarVisibilidad vía clausura mutable de React no
-    // aplica aquí (usamos el valor capturado al registrar el listener),
-    // pero como el listener se reinstala solo una vez, para el caso de uso
-    // real (visibilitychange tras volver de instalar) basta con el estado
-    // del localStorage, que sí se relee siempre.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [recalcular])
 
@@ -141,12 +174,12 @@ export default function BannerInstalacion() {
     if (!deferredPrompt) return
     await deferredPrompt.prompt()
     await deferredPrompt.userChoice
-    setDeferredPrompt(null)
+    actualizarDeferredPrompt(null)
     recalcular(false, leerDescartes())
   }
 
   function alDescartarInstalar() {
-    recalcular(deferredPrompt !== null, guardarDescarte('descartadoInstalarEn'))
+    recalcular(deferredPromptRef.current !== null, guardarDescarte('descartadoInstalarEn'))
   }
 
   async function alTocarActivarAvisos() {
@@ -158,11 +191,11 @@ export default function BannerInstalacion() {
       setErrorActivar(resultado.error)
       return
     }
-    recalcular(deferredPrompt !== null, leerDescartes())
+    recalcular(deferredPromptRef.current !== null, leerDescartes())
   }
 
   function alDescartarAvisos() {
-    recalcular(deferredPrompt !== null, guardarDescarte('descartadoAvisosEn'))
+    recalcular(deferredPromptRef.current !== null, guardarDescarte('descartadoAvisosEn'))
   }
 
   if (estado === 'ninguno') return null
@@ -171,6 +204,7 @@ export default function BannerInstalacion() {
     <div
       role="region"
       aria-label="Aviso de instalación y notificaciones"
+      aria-live="polite"
       className={cn(
         // bottom-20: por encima de la barra inferior del asesor (h-16) y
         // deliberadamente por encima (z-50) del botón «+ Registrar lead»
@@ -204,14 +238,7 @@ export default function BannerInstalacion() {
               </Button>
             </div>
           </div>
-          <button
-            type="button"
-            onClick={alDescartarInstalar}
-            aria-label="Cerrar aviso"
-            className="shrink-0 rounded-full p-1 text-muted-foreground hover:bg-muted"
-          >
-            <X aria-hidden className="size-4" />
-          </button>
+          <BotonCerrar onClick={alDescartarInstalar} />
         </div>
       ) : null}
 
@@ -235,14 +262,7 @@ export default function BannerInstalacion() {
               </li>
             </ol>
           </div>
-          <button
-            type="button"
-            onClick={alDescartarInstalar}
-            aria-label="Cerrar aviso"
-            className="shrink-0 rounded-full p-1 text-muted-foreground hover:bg-muted"
-          >
-            <X aria-hidden className="size-4" />
-          </button>
+          <BotonCerrar onClick={alDescartarInstalar} />
         </div>
       ) : null}
 
@@ -255,14 +275,7 @@ export default function BannerInstalacion() {
               “…” y elige <strong>Abrir en Safari</strong>.
             </p>
           </div>
-          <button
-            type="button"
-            onClick={alDescartarInstalar}
-            aria-label="Cerrar aviso"
-            className="shrink-0 rounded-full p-1 text-muted-foreground hover:bg-muted"
-          >
-            <X aria-hidden className="size-4" />
-          </button>
+          <BotonCerrar onClick={alDescartarInstalar} />
         </div>
       ) : null}
 
@@ -287,14 +300,7 @@ export default function BannerInstalacion() {
               </Button>
             </div>
           </div>
-          <button
-            type="button"
-            onClick={alDescartarAvisos}
-            aria-label="Cerrar aviso"
-            className="shrink-0 rounded-full p-1 text-muted-foreground hover:bg-muted"
-          >
-            <X aria-hidden className="size-4" />
-          </button>
+          <BotonCerrar onClick={alDescartarAvisos} />
         </div>
       ) : null}
     </div>
