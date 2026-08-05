@@ -52,7 +52,7 @@ export default async function AdminLayout({
       </main>
 
       <BotonSugerencia className="bottom-24 lg:bottom-6" />
-      <TabBarAdmin />
+      <TabBarAdmin nombre={usuario.nombre} />
     </div>
   )
 }

@@ -6,10 +6,11 @@ import { usePathname } from 'next/navigation'
 import {
   Bell,
   Building2,
+  Ellipsis,
   House,
   Inbox,
   Lightbulb,
-  Menu,
+  LogOut,
   MessageSquareText,
   Settings,
   UserRound,
@@ -17,6 +18,7 @@ import {
   type LucideIcon,
 } from 'lucide-react'
 
+import { cerrarSesion } from '@/lib/auth/acciones'
 import { cn } from '@/lib/utils'
 import {
   Sheet,
@@ -41,6 +43,9 @@ const PESTANAS: Pestana[] = [
   { href: '/admin/propiedades', etiqueta: 'Propiedades', Icono: Building2 },
 ]
 
+/** Los destinos de la hoja «Más» nunca necesitan match exacto (ver esActiva). */
+type PestanaMas = Omit<Pestana, 'exacta'>
+
 /**
  * Destinos que no caben en la barra y viven en la hoja «Más».
  *
@@ -48,7 +53,7 @@ const PESTANAS: Pestana[] = [
  * dentro de /admin/ajustes (ver PaginaAjustes), así que apunta ahí — es el
  * destino real más cercano al que describe NavAdmin.
  */
-const DESTINOS_MAS: { href: string; etiqueta: string; Icono: LucideIcon }[] = [
+const DESTINOS_MAS: PestanaMas[] = [
   { href: '/admin/asesores', etiqueta: 'Asesores', Icono: UserRound },
   { href: '/admin/ajustes', etiqueta: 'Plantillas', Icono: MessageSquareText },
   { href: '/admin/sugerencias', etiqueta: 'Sugerencias', Icono: Lightbulb },
@@ -67,9 +72,10 @@ function esActiva(pathname: string, href: string, exacta?: boolean): boolean {
  * vive en el hijo (pill) para evitar el jank de iOS al hacer scroll debajo
  * de un `fixed` con `backdrop-filter` (ver skill fintech-muro-ui).
  */
-export function TabBarAdmin() {
+export function TabBarAdmin({ nombre }: { nombre: string }) {
   const pathname = usePathname()
   const [abierto, setAbierto] = useState(false)
+  const masActiva = DESTINOS_MAS.some((destino) => esActiva(pathname, destino.href))
 
   return (
     <nav
@@ -104,16 +110,20 @@ export function TabBarAdmin() {
         <Sheet open={abierto} onOpenChange={setAbierto}>
           <SheetTrigger
             aria-label="Más"
-            className="flex min-h-12 min-w-14 flex-1 flex-col items-center justify-center gap-0.5 rounded-full px-1.5 py-1.5 text-[10px] leading-none font-medium text-slate-500 transition-colors"
+            aria-current={masActiva ? 'page' : undefined}
+            className={cn(
+              'flex min-h-12 min-w-14 flex-1 flex-col items-center justify-center gap-0.5 rounded-full px-1.5 py-1.5 text-[10px] leading-none font-medium transition-colors',
+              masActiva ? 'bg-[#6B4A33]/10 font-semibold text-[#6B4A33]' : 'text-slate-500'
+            )}
           >
-            <Menu className="size-5" aria-hidden strokeWidth={2} />
+            <Ellipsis className="size-5" aria-hidden strokeWidth={masActiva ? 2.25 : 2} />
             Más
           </SheetTrigger>
           <SheetContent side="bottom" className="gap-0 p-0">
             <SheetHeader className="px-6 pt-6 pb-2">
               <SheetTitle>Más opciones</SheetTitle>
             </SheetHeader>
-            <ul className="flex flex-col gap-1 px-3 pb-6">
+            <ul className="flex flex-col gap-1 px-3 pb-3">
               {DESTINOS_MAS.map(({ href, etiqueta, Icono }) => (
                 <li key={etiqueta}>
                   <Link
@@ -127,6 +137,30 @@ export function TabBarAdmin() {
                 </li>
               ))}
             </ul>
+
+            {/*
+              Control de cierre de sesión: el drawer viejo lo tenía vía
+              <PieSesion> (fondo oscuro). Esta hoja usa el fondo claro por
+              defecto de <SheetContent>, así que se reconstruye la fila con
+              la misma server action (`cerrarSesion`) en vez de reusar
+              <PieSesion> tal cual — sus clases (border-slate-800,
+              text-slate-200) están pensadas para el sidebar oscuro y
+              perderían contraste aquí.
+            */}
+            <div className="border-t border-slate-200 px-3 pt-3 pb-6">
+              <p className="truncate px-3 pb-1 text-xs font-medium text-slate-400" title={nombre}>
+                {nombre}
+              </p>
+              <form action={cerrarSesion}>
+                <button
+                  type="submit"
+                  className="flex min-h-12 w-full items-center gap-3 rounded-lg px-3 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-100"
+                >
+                  <LogOut className="size-5 shrink-0" aria-hidden />
+                  Cerrar sesión
+                </button>
+              </form>
+            </div>
           </SheetContent>
         </Sheet>
       </div>

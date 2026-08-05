@@ -27,10 +27,12 @@ afterEach(() => {
   vi.clearAllMocks()
 })
 
+const NOMBRE = 'Ana Pérez'
+
 describe('TabBarAdmin — pestaña activa', () => {
   it('en /admin, Inicio está activo (match exacto) y aria-current="page"', () => {
     mockUsePathname.mockReturnValue('/admin')
-    render(<TabBarAdmin />)
+    render(<TabBarAdmin nombre={NOMBRE} />)
 
     const inicio = screen.getByRole('link', { name: /inicio/i })
     expect(inicio).toHaveAttribute('aria-current', 'page')
@@ -41,7 +43,7 @@ describe('TabBarAdmin — pestaña activa', () => {
 
   it('en /admin/leads, Inicio NO está activo (exige match exacto)', () => {
     mockUsePathname.mockReturnValue('/admin/leads')
-    render(<TabBarAdmin />)
+    render(<TabBarAdmin nombre={NOMBRE} />)
 
     expect(screen.getByRole('link', { name: /inicio/i })).not.toHaveAttribute('aria-current')
     expect(screen.getByRole('link', { name: /^leads$/i })).toHaveAttribute('aria-current', 'page')
@@ -49,14 +51,14 @@ describe('TabBarAdmin — pestaña activa', () => {
 
   it('en /admin/leads/123, Leads sigue activo (prefix-match para subrutas)', () => {
     mockUsePathname.mockReturnValue('/admin/leads/123')
-    render(<TabBarAdmin />)
+    render(<TabBarAdmin nombre={NOMBRE} />)
 
     expect(screen.getByRole('link', { name: /^leads$/i })).toHaveAttribute('aria-current', 'page')
   })
 
   it('en /admin/propiedades/45, Propiedades está activo', () => {
     mockUsePathname.mockReturnValue('/admin/propiedades/45')
-    render(<TabBarAdmin />)
+    render(<TabBarAdmin nombre={NOMBRE} />)
 
     expect(screen.getByRole('link', { name: /propiedades/i })).toHaveAttribute(
       'aria-current',
@@ -68,7 +70,7 @@ describe('TabBarAdmin — pestaña activa', () => {
 describe('TabBarAdmin — hoja «Más»', () => {
   it('el botón «Más» abre una hoja con Asesores, Plantillas, Sugerencias, Notificaciones y Ajustes', async () => {
     mockUsePathname.mockReturnValue('/admin')
-    render(<TabBarAdmin />)
+    render(<TabBarAdmin nombre={NOMBRE} />)
 
     fireEvent.click(screen.getByRole('button', { name: /más/i }))
 
@@ -78,12 +80,35 @@ describe('TabBarAdmin — hoja «Más»', () => {
     expect(screen.getByRole('link', { name: /notificaciones/i })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: /ajustes/i })).toBeInTheDocument()
   })
+
+  it('la hoja «Más» trae un control de cerrar sesión (regresión: el drawer viejo sí lo tenía)', async () => {
+    mockUsePathname.mockReturnValue('/admin')
+    render(<TabBarAdmin nombre={NOMBRE} />)
+
+    fireEvent.click(screen.getByRole('button', { name: /más/i }))
+
+    expect(await screen.findByRole('button', { name: /cerrar sesión/i })).toBeInTheDocument()
+  })
+
+  it('la hoja «Más» está activa (aria-current) cuando el pathname es uno de sus destinos (/admin/ajustes)', async () => {
+    mockUsePathname.mockReturnValue('/admin/ajustes')
+    render(<TabBarAdmin nombre={NOMBRE} />)
+
+    expect(screen.getByRole('button', { name: /más/i })).toHaveAttribute('aria-current', 'page')
+  })
+
+  it('«Más» NO está activa cuando el pathname es uno de los 4 slots fijos', () => {
+    mockUsePathname.mockReturnValue('/admin/leads')
+    render(<TabBarAdmin nombre={NOMBRE} />)
+
+    expect(screen.getByRole('button', { name: /más/i })).not.toHaveAttribute('aria-current')
+  })
 })
 
 describe('TabBarAdmin — anti-jank del blur (wrapper transparente, hijo con glass)', () => {
   it('el wrapper fixed NO trae backdrop-blur/backdrop-filter', () => {
     mockUsePathname.mockReturnValue('/admin')
-    const { container } = render(<TabBarAdmin />)
+    const { container } = render(<TabBarAdmin nombre={NOMBRE} />)
 
     const wrapper = container.querySelector('nav[aria-label="Navegación principal"]')
     expect(wrapper).not.toBeNull()
@@ -93,7 +118,7 @@ describe('TabBarAdmin — anti-jank del blur (wrapper transparente, hijo con gla
 
   it('el hijo (pill) SÍ trae backdrop-blur-glass, el -webkit- prefijado e isolate', () => {
     mockUsePathname.mockReturnValue('/admin')
-    const { container } = render(<TabBarAdmin />)
+    const { container } = render(<TabBarAdmin nombre={NOMBRE} />)
 
     const wrapper = container.querySelector('nav[aria-label="Navegación principal"]')
     const pill = wrapper?.firstElementChild as HTMLElement | undefined
@@ -107,7 +132,7 @@ describe('TabBarAdmin — anti-jank del blur (wrapper transparente, hijo con gla
 describe('TabBarAdmin — safe area inferior', () => {
   it('el wrapper usa max(..., env(safe-area-inset-bottom)) para el padding inferior', () => {
     mockUsePathname.mockReturnValue('/admin')
-    const { container } = render(<TabBarAdmin />)
+    const { container } = render(<TabBarAdmin nombre={NOMBRE} />)
 
     const wrapper = container.querySelector('nav[aria-label="Navegación principal"]')
     expect(wrapper?.className).toMatch(/max\([^)]*env\(safe-area-inset-bottom\)\)/)
