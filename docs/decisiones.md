@@ -24,3 +24,12 @@
 - Llaves VAPID cargadas en Vercel production vía bash/`printf` (privada como Sensitive). Son PERMANENTES: rotarlas invalida todas las suscripciones.
 - Descubrimiento: la tabla `push_suscripciones` existía desde 0001/0002; la migración `0007_push_update_policy.sql` solo agrega la policy UPDATE que necesita el upsert del re-sync. Aplicada el 2026-08-05 via Management API (access token del usuario); las 4 policies verificadas en pg_policies.
 - Cierre T10 (2026-08-05): 0007 aplicada; E2E verificado en iPhone real del dueño (push llegó con la app instalada); test RLS de update agregado. Fase A completa. OJO: el access token de Supabase se pegó en el chat — revocarlo y regenerar directo a .env.local.
+
+## 2026-08-05 — Rediseño móvil «Fintech Muro»: Fase 0+1 desplegada
+
+- Kit visual nuevo (tokens @theme, FondoFintech, TarjetaGlass, TarjetaTinta, StatCard, GraficaLinea SVG con Catmull-Rom, TabBarAdmin) + dashboard y bandeja del admin rediseñados SOLO en móvil; escritorio byte-idéntico (verificado por diff en cada tarea). Spec: `2026-08-05-mobile-first-fintech-muro-design.md`; plan F0+F1 ejecutado completo.
+- `viewportFit: 'cover'` activado — los safe-areas que la app ya usaba por fin funcionan en iPhone; headers con `pt-[env(safe-area-inset-top)]`.
+- Decisiones registradas: hamburguesa ELIMINADA en móvil (tab bar inferior glass + hoja «Más» con cerrar sesión); pipeline de cápsulas incluido; chip flotante descartado (cifra en header); cifra del héroe = suma de la serie de 30 días; frontera de urgencia unificada en `src/lib/leads/urgencia.ts` (>=24h).
+- Datos nuevos: `src/lib/dashboard/consultas.ts` (serie 30 días, cierres del mes, citas hoy) con días calendario de America/Monterrey vía Intl (sin dependencias nuevas).
+- Regla de rendimiento aplicada: blur real SOLO en la tab bar; las tarjetas fingen cristal con tinte (presupuesto de blur del skill `fintech-muro-ui`).
+- Pendiente (plan F2-F4): leads/detalle, propiedades/asesores/ajustes, pulido asesor — plan propio al retomar.
