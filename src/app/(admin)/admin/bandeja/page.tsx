@@ -1,15 +1,19 @@
 import Link from 'next/link'
 import { formatDistanceToNow } from 'date-fns'
 import { es } from 'date-fns/locale'
-import { Building2 } from 'lucide-react'
+import { Building2, ChevronRight } from 'lucide-react'
 
 import { requireAdmin } from '@/lib/auth/usuario-actual'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { leadsBandeja } from '@/lib/leads/consultas'
 import { etiquetaFuenteConDetalle, formatearTelefono } from '@/lib/leads/formato'
+import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { AsignarLead } from '@/components/leads/asignar-lead'
+import { HojaAsignarLead } from '@/components/leads/hoja-asignar-lead'
 import { DialogRegistrarLead } from '@/components/leads/dialog-registrar-lead'
+import FondoFintech from '@/components/fintech/fondo-fintech'
+import TarjetaGlass from '@/components/fintech/tarjeta-glass'
 
 // NOTA: el contador de bandeja en el sidebar (chip junto a «Bandeja» en
 // nav-admin) queda diferido: requiere pasar el conteo desde el layout de
@@ -26,6 +30,11 @@ function urgencia(creadoEn: string): { punto: string; texto: string } {
   if (horas < 1) return { punto: 'bg-emerald-500', texto: 'text-emerald-600' }
   if (horas < 24) return { punto: 'bg-amber-500', texto: 'text-amber-600' }
   return { punto: 'bg-red-500', texto: 'text-red-600' }
+}
+
+/** Urgencia binaria del móvil: café-rojizo + negritas si lleva más de 24h esperando. */
+function esUrgente(creadoEn: string): boolean {
+  return Date.now() - new Date(creadoEn).getTime() > 24 * HORA_MS
 }
 
 export default async function PaginaBandeja() {
@@ -51,7 +60,91 @@ export default async function PaginaBandeja() {
   const opcionesPropiedad = (propiedades ?? []).map((p) => ({ id: p.id, titulo: p.titulo }))
 
   return (
-    <section className="flex flex-col gap-6">
+    <>
+      {/* Móvil — estética «Fintech Muro» (Task FM7) */}
+      <div className="lg:hidden">
+        <FondoFintech className="px-4 pt-6 pb-8">
+          <div className="flex flex-col gap-4">
+            <header className="flex flex-wrap items-start justify-between gap-3">
+              <div className="flex flex-col gap-1">
+                <h1 className="text-xl font-semibold tracking-tight text-[#221B14]">Bandeja</h1>
+                <p className="text-sm text-[#8E7F68]">
+                  {leads.length === 0
+                    ? 'Sin leads pendientes de asignar'
+                    : `${leads.length} lead${leads.length === 1 ? '' : 's'} esperando asignación`}
+                </p>
+              </div>
+              <DialogRegistrarLead asesores={opcionesAsesor} propiedades={opcionesPropiedad} />
+            </header>
+
+            {leads.length === 0 ? (
+              <TarjetaGlass className="flex min-h-44 flex-col items-center justify-center gap-1 text-center">
+                <p className="text-2xl" aria-hidden>
+                  🎉
+                </p>
+                <p className="text-sm text-[#8E7F68]">Sin leads pendientes</p>
+              </TarjetaGlass>
+            ) : (
+              <ul className="flex flex-col gap-3">
+                {leads.map((lead) => {
+                  const espera = formatDistanceToNow(new Date(lead.creado_en), {
+                    addSuffix: true,
+                    locale: es,
+                  })
+                  const urgente = esUrgente(lead.creado_en)
+                  return (
+                    <li key={lead.id}>
+                      <TarjetaGlass className="flex flex-col gap-3">
+                        <div className="min-w-0">
+                          <p className="truncate font-semibold text-[#221B14]">{lead.nombre}</p>
+                          {lead.propiedad ? (
+                            <p className="mt-0.5 flex items-center gap-1.5 truncate text-sm text-[#8E7F68]">
+                              <Building2 aria-hidden className="size-3.5 shrink-0" />
+                              <span className="truncate">{lead.propiedad.titulo}</span>
+                            </p>
+                          ) : lead.zona_interes ? (
+                            <p className="mt-0.5 truncate text-sm text-[#8E7F68]">
+                              Zona de interés: {lead.zona_interes}
+                            </p>
+                          ) : null}
+                          <span
+                            suppressHydrationWarning
+                            className={cn(
+                              'mt-1 inline-block text-xs',
+                              urgente ? 'font-semibold text-[#A34E28]' : 'text-[#8E7F68]'
+                            )}
+                          >
+                            {espera}
+                          </span>
+                        </div>
+
+                        <div className="flex items-center justify-between gap-3">
+                          <Link
+                            href={`/admin/leads/${lead.id}`}
+                            className="inline-flex items-center gap-0.5 text-sm font-medium text-[#6B4A33] underline-offset-4 hover:underline"
+                          >
+                            Ver
+                            <ChevronRight aria-hidden className="size-3.5" />
+                          </Link>
+                          <HojaAsignarLead
+                            leadId={lead.id}
+                            leadNombre={lead.nombre}
+                            asesores={opcionesAsesor}
+                          />
+                        </div>
+                      </TarjetaGlass>
+                    </li>
+                  )
+                })}
+              </ul>
+            )}
+          </div>
+        </FondoFintech>
+      </div>
+
+      {/* Escritorio — intacto */}
+      <div className="hidden lg:block">
+        <section className="flex flex-col gap-6">
       <header className="flex flex-wrap items-start justify-between gap-4">
         <div className="flex flex-col gap-1">
           <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Bandeja</h1>
@@ -128,6 +221,8 @@ export default async function PaginaBandeja() {
           })}
         </ul>
       )}
-    </section>
+        </section>
+      </div>
+    </>
   )
 }
