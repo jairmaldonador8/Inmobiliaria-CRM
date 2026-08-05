@@ -2,34 +2,8 @@
 
 import { useEffect } from 'react'
 
-import { vapidPublicKey } from '@/lib/env'
 import { guardarSuscripcion, type SuscripcionPush } from '@/lib/push/acciones'
-
-/**
- * Convierte una clave VAPID en base64url (formato que exponen las
- * variables de entorno) al Uint8Array que `pushManager.subscribe` espera
- * como `applicationServerKey`. Helper estándar de la documentación de
- * Web Push.
- */
-function decodificarBase64Url(base64Url: string): Uint8Array {
-  const padding = '='.repeat((4 - (base64Url.length % 4)) % 4)
-  const base64 = (base64Url + padding).replace(/-/g, '+').replace(/_/g, '/')
-  const raw = atob(base64)
-  const outputArray = new Uint8Array(raw.length)
-  for (let i = 0; i < raw.length; i++) {
-    outputArray[i] = raw.charCodeAt(i)
-  }
-  return outputArray
-}
-
-/** Suscribe fresco en `reg` y sube la nueva suscripción; devuelve el resultado de guardarSuscripcion. */
-async function suscribirYGuardar(reg: ServiceWorkerRegistration) {
-  const nuevaSub = await reg.pushManager.subscribe({
-    userVisibleOnly: true,
-    applicationServerKey: decodificarBase64Url(vapidPublicKey()) as BufferSource,
-  })
-  return guardarSuscripcion(nuevaSub.toJSON() as unknown as SuscripcionPush, navigator.userAgent)
-}
+import { suscribirYGuardar } from '@/lib/push/cliente'
 
 /**
  * Registra el service worker y re-sincroniza la suscripción push en CADA
