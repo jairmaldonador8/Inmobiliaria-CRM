@@ -55,20 +55,20 @@ describe('StatCard', () => {
     expect(screen.getByText('24')).toBeInTheDocument()
   })
 
-  it('tendencia positiva muestra ▲ y clase verde (#65A30D)', () => {
+  it('tendencia positiva muestra ▲ y data-tendencia="sube"', () => {
     render(<StatCard etiqueta="Leads" valor="24" tendencia={{ delta: 12 }} />)
 
     const tendencia = screen.getByText(/▲/)
     expect(tendencia.textContent).toContain('▲')
-    expect(tendencia.className).toMatch(/#65A30D/)
+    expect(tendencia).toHaveAttribute('data-tendencia', 'sube')
   })
 
-  it('tendencia negativa muestra ▼ y clase de barro (#A34E28)', () => {
+  it('tendencia negativa muestra ▼ y data-tendencia="baja"', () => {
     render(<StatCard etiqueta="Leads" valor="24" tendencia={{ delta: -8 }} />)
 
     const tendencia = screen.getByText(/▼/)
     expect(tendencia.textContent).toContain('▼')
-    expect(tendencia.className).toMatch(/#A34E28/)
+    expect(tendencia).toHaveAttribute('data-tendencia', 'baja')
   })
 
   it('sin tendencia (o delta 0) no renderiza flecha alguna', () => {
@@ -76,6 +76,34 @@ describe('StatCard', () => {
 
     expect(screen.queryByText(/▲/)).not.toBeInTheDocument()
     expect(screen.queryByText(/▼/)).not.toBeInTheDocument()
+  })
+
+  it('la tendencia trae texto sr-only con la dirección semántica (subió/bajó)', () => {
+    render(<StatCard etiqueta="Leads" valor="24" tendencia={{ delta: 12 }} />)
+    expect(screen.getByText('subió')).toHaveClass('sr-only')
+
+    cleanup()
+
+    render(<StatCard etiqueta="Leads" valor="24" tendencia={{ delta: -8 }} />)
+    expect(screen.getByText('bajó')).toHaveClass('sr-only')
+  })
+
+  it('el sufijo de la tendencia es configurable (por defecto "%", pero admite deltas absolutos)', () => {
+    render(<StatCard etiqueta="Leads" valor="24" tendencia={{ delta: 3, sufijo: ' leads' }} />)
+
+    const tendencia = screen.getByText(/▲/)
+    // El texto sr-only ("subió") es hermano/anidado pero no visible — se
+    // comprueba que el sufijo personalizado aparezca, sin exigir igualdad
+    // exacta con el textContent completo (que también incluye el sr-only).
+    expect(tendencia.textContent?.replace(/\s+/g, ' ').trim()).toContain('▲ 3 leads')
+  })
+
+  it('acepta className (fusionada) y reenvía props estándar de div', () => {
+    render(<StatCard etiqueta="Leads" valor="24" className="mi-clase-extra" data-testid="stat" />)
+
+    const tarjeta = screen.getByTestId('stat')
+    expect(tarjeta.className).toMatch(/mi-clase-extra/)
+    expect(tarjeta.className).toMatch(/rounded-2xl/)
   })
 })
 
@@ -95,6 +123,18 @@ describe('TarjetaTinta', () => {
     render(<TarjetaTinta etiqueta="Cierres del mes">$4.2M</TarjetaTinta>)
 
     expect(screen.queryByRole('link')).not.toBeInTheDocument()
+  })
+
+  it('acepta className (fusionada) y reenvía props estándar de div', () => {
+    render(
+      <TarjetaTinta etiqueta="Cierres del mes" className="mi-clase-extra" data-testid="tinta">
+        $4.2M
+      </TarjetaTinta>
+    )
+
+    const tarjeta = screen.getByTestId('tinta')
+    expect(tarjeta.className).toMatch(/mi-clase-extra/)
+    expect(tarjeta.className).toMatch(/rounded-2xl/)
   })
 })
 
