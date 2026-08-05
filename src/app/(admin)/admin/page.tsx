@@ -7,9 +7,21 @@ import { requireAdmin } from '@/lib/auth/usuario-actual'
 import { createClient } from '@/lib/supabase/server'
 import { ETAPAS_CERRADAS, claseBadgeEtapa, etiquetaEtapa } from '@/lib/leads/formato'
 import { Badge } from '@/components/ui/badge'
+import { cn } from '@/lib/utils'
+import { cierresGanadosMes, citasHoy, serieLeads30Dias } from '@/lib/dashboard/consultas'
+import { agruparPorEtapa } from '@/lib/dashboard/pipeline'
+import FondoFintech from '@/components/fintech/fondo-fintech'
+import TarjetaGlass from '@/components/fintech/tarjeta-glass'
+import TarjetaTinta from '@/components/fintech/tarjeta-tinta'
+import StatCard from '@/components/fintech/stat-card'
+import GraficaLinea from '@/components/fintech/grafica-linea'
 
 const HORA_MS = 60 * 60 * 1000
 const MAX_SIN_ATENDER = 15
+/** Cap del móvil, más chico que el de escritorio: la pantalla es angosta. */
+const MAX_SIN_ATENDER_MOVIL = 5
+/** Colores del pipeline de cápsulas, en orden — cicla si hay más etapas activas que colores. */
+const COLORES_PIPELINE = ['bg-chart-1', 'bg-chart-2', 'bg-chart-3', 'bg-chart-4'] as const
 
 type LeadSinAsesor = {
   id: string
@@ -26,6 +38,12 @@ type LeadSinAsesor = {
  *
  * Cliente de SESIÓN en todo: el admin ve todo vía RLS (private.is_admin()),
  * igual que /admin/leads/[id].
+ *
+ * Task FM6: par móvil (estética «Fintech Muro», `lg:hidden`) / escritorio
+ * (`hidden lg:block`, JSX intacto de F1). El móvil suma tres consultas
+ * nuevas (serieLeads30Dias, cierresGanadosMes, citasHoy) al mismo
+ * Promise.all — el pipeline de cápsulas por etapa sale gratis de
+ * `leadsAsignados`, que la página ya trae para «sin atender».
  */
 export default async function PaginaDashboardAdmin() {
   const usuario = await requireAdmin()
@@ -42,6 +60,9 @@ export default async function PaginaDashboardAdmin() {
     { count: propiedadesActivas },
     { data: leadsAsignados, error: errorLeads },
     { data: sync },
+    serieLeads,
+    cierresGanados,
+    citasDeHoy,
   ] = await Promise.all([
     supabase
       .from('leads')
@@ -74,6 +95,9 @@ export default async function PaginaDashboardAdmin() {
       .from('sync_estado')
       .select('recurso, ultimo_ok')
       .in('recurso', ['propiedades', 'leads']),
+    serieLeads30Dias(supabase),
+    cierresGanadosMes(supabase),
+    citasHoy(supabase),
   ])
 
   if (errorLeads) {
@@ -150,8 +174,164 @@ export default async function PaginaDashboardAdmin() {
     },
   ] as const
 
+  // Solo para el móvil: pipeline de cápsulas (gratis de `leads`, ya
+  // traído arriba) y un cap más chico de la lista de «sin atender».
+  const segmentosPipeline = agruparPorEtapa(leads)
+  const sinAtenderMovil = sinAtenderTodos.slice(0, MAX_SIN_ATENDER_MOVIL)
+  const hayMasMovil = sinAtenderTodos.length > MAX_SIN_ATENDER_MOVIL
+
   return (
-    <section className="flex flex-col gap-6">
+    <>
+      {/* Móvil — estética «Fintech Muro» (Task FM6) */}
+      <div className="lg:hidden">
+        <FondoFintech className="px-4 pt-6 pb-8">
+          <div className="flex flex-col gap-4">
+            <header className="flex flex-col gap-1">
+              <h1 className="text-xl font-semibold tracking-tight text-[#221B14]">
+                Hola, {usuario.nombre.split(' ')[0]}
+              </h1>
+            </header>
+
+            {/* Héroe: leads del mes + tendencia de 30 días */}
+            <TarjetaGlass variant="hero">
+              <div className="text-[11px] uppercase tracking-wide text-[#8E7F68]">
+                Leads · 30 días
+              </div>
+              <p className="text-3xl font-bold text-[#221B14]">{leadsDelMes ?? 0}</p>
+              <GraficaLinea datos={serieLeads} color="#C98A3B" className="mt-2" />
+            </TarjetaGlass>
+
+            {/* Fila de estadísticas */}
+            <div className="grid grid-cols-3 gap-2">
+              <TarjetaGlass>
+                <div className="text-[11px] uppercase tracking-wide text-slate-500">
+                  Sin atender
+                </div>
+                <p
+                  className={cn(
+                    'text-2xl font-bold',
+                    sinAtenderTodos.length > 0 ? 'text-[#A34E28]' : 'text-slate-900'
+                  )}
+                >
+                  {sinAtenderTodos.length}
+                </p>
+              </TarjetaGlass>
+              <StatCard etiqueta="Citas hoy" valor={String(citasDeHoy)} />
+              <StatCard etiqueta="Asesores" valor={String(asesoresActivos ?? 0)} />
+            </div>
+
+            {/* Cierres del mes */}
+            <TarjetaTinta etiqueta="Cierres del mes" cta={{ texto: 'Ver leads', href: '/admin/leads' }}>
+              {cierresGanados}
+            </TarjetaTinta>
+
+            {/* Pipeline de cápsulas por etapa */}
+            <TarjetaGlass>
+              <div className="text-[11px] uppercase tracking-wide text-[#8E7F68]">
+                Pipeline activo
+              </div>
+              {segmentosPipeline.length === 0 ? (
+                <p className="py-3 text-sm text-[#8E7F68]">
+                  Todavía no hay leads activos en el pipeline
+                </p>
+              ) : (
+                <>
+                  <div className="mt-2 flex h-3 gap-1 overflow-hidden rounded-full bg-[#221B14]/5">
+                    {segmentosPipeline.map((segmento, indice) => (
+                      <div
+                        key={segmento.etapa}
+                        className={cn(
+                          'rounded-full',
+                          COLORES_PIPELINE[indice % COLORES_PIPELINE.length]
+                        )}
+                        style={{ flexGrow: segmento.cantidad }}
+                      />
+                    ))}
+                  </div>
+                  <ul className="mt-3 flex flex-wrap gap-x-3 gap-y-1.5">
+                    {segmentosPipeline.map((segmento, indice) => (
+                      <li
+                        key={segmento.etapa}
+                        className="flex items-center gap-1.5 text-xs text-[#5B4C3A]"
+                      >
+                        <span
+                          aria-hidden
+                          className={cn(
+                            'size-2 rounded-full',
+                            COLORES_PIPELINE[indice % COLORES_PIPELINE.length]
+                          )}
+                        />
+                        {segmento.etiqueta}{' '}
+                        <span className="font-semibold text-[#221B14]">{segmento.cantidad}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              )}
+            </TarjetaGlass>
+
+            {/* Sin atender >24h */}
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center gap-2">
+                <AlertTriangle aria-hidden className="size-4 text-[#A34E28]" />
+                <h2 className="text-sm font-semibold text-[#221B14]">Sin atender &gt;24h</h2>
+                {sinAtenderTodos.length > 0 ? (
+                  <span className="rounded-full bg-[#A34E28]/10 px-2 py-0.5 text-xs font-semibold text-[#A34E28]">
+                    {sinAtenderTodos.length}
+                  </span>
+                ) : null}
+              </div>
+
+              {sinAtenderMovil.length === 0 ? (
+                <TarjetaGlass className="flex flex-col items-center gap-1 py-6 text-center">
+                  <p className="text-xl" aria-hidden>
+                    🎉
+                  </p>
+                  <p className="text-xs text-[#8E7F68]">Ningún lead lleva más de 24 h sin atención</p>
+                </TarjetaGlass>
+              ) : (
+                <>
+                  <ul className="flex flex-col gap-2">
+                    {sinAtenderMovil.map(({ lead, referencia }) => (
+                      <li key={lead.id}>
+                        <Link
+                          href={`/admin/leads/${lead.id}`}
+                          className="flex items-center justify-between gap-3 rounded-2xl border border-white/80 bg-[#FAF7F1]/65 p-3 shadow-glass-sm"
+                        >
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-sm font-medium text-[#221B14]">
+                              {lead.nombre}
+                            </p>
+                            <p className="mt-0.5 text-xs text-[#8E7F68]">
+                              {lead.asesor?.nombre ?? 'Sin asesor'} ·{' '}
+                              <span className="text-[#A34E28]">
+                                {formatDistanceToNow(new Date(referencia), {
+                                  addSuffix: true,
+                                  locale: es,
+                                })}
+                              </span>
+                            </p>
+                          </div>
+                          <ChevronRight aria-hidden className="size-4 shrink-0 text-[#8E7F68]" />
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                  {hayMasMovil ? (
+                    <p className="text-center text-xs text-[#8E7F68]">
+                      Mostrando {MAX_SIN_ATENDER_MOVIL} de {sinAtenderTodos.length} leads sin atender
+                    </p>
+                  ) : null}
+                </>
+              )}
+            </div>
+          </div>
+        </FondoFintech>
+      </div>
+
+      {/* Escritorio — intacto (F1) */}
+      <div className="hidden lg:block">
+        <section className="flex flex-col gap-6">
       <header className="flex flex-col gap-1">
         <h1 className="text-2xl font-semibold tracking-tight text-slate-900">
           Hola, {usuario.nombre.split(' ')[0]}
@@ -273,6 +453,8 @@ export default async function PaginaDashboardAdmin() {
           </>
         )}
       </div>
-    </section>
+        </section>
+      </div>
+    </>
   )
 }
