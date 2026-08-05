@@ -64,6 +64,15 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
+/* ── Kit Fintech Muro (rediseño móvil) ─────────────────────────── */
+@theme {
+  --shadow-glass: 0 10px 30px rgb(107 74 51 / 0.2);
+  --shadow-glass-sm: 0 4px 16px rgb(107 74 51 / 0.1);
+  --blur-glass: 12px;
+  --radius-hero: 1.5rem;
+}
+@custom-variant standalone (@media (display-mode: standalone));
+
 /* Tema claro «Muro» (opción B): fondo arena profundo, tarjetas crema,
    acentos café/ocre. Fuente: design-propuestas/sistema-klo-ser.html */
 :root {

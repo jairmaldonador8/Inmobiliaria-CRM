@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist_Mono, Jost, Poppins } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
@@ -23,6 +23,14 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Klo-Ser · Montana Realty",
   description: "El CRM de Montana Realty — del lead al cierre",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  // Sin cover, TODOS los env(safe-area-inset-*) valen 0 en iPhone — la app ya
+  // los usa (nav asesor, bottom sheets); esto los enciende de verdad.
+  viewportFit: "cover",
 };
 
 export default function RootLayout({
