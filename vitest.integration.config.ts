@@ -11,6 +11,9 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
+      // `server-only` lanza fuera de Next; los módulos de push lo importan y
+      // ahora forman parte del grafo del sync → stub inofensivo en integración.
+      'server-only': path.resolve(__dirname, './src/test/stubs/server-only.ts'),
     },
   },
   test: {
