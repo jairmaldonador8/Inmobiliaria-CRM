@@ -1,6 +1,7 @@
 import { requireAdmin } from '@/lib/auth/usuario-actual'
 import { Wordmark } from '@/components/marca/wordmark'
 import { BarraMovilAdmin, NavAdmin, PieSesion } from '@/components/nav/nav-admin'
+import { TabBarAdmin } from '@/components/nav/tab-bar-admin'
 import { Campana } from '@/components/notificaciones/campana'
 import BannerInstalacion from '@/components/push/banner-instalacion'
 import RegistroPush from '@/components/push/registro-push'
@@ -36,9 +37,8 @@ export default async function AdminLayout({
         <PieSesion nombre={usuario.nombre} />
       </aside>
 
-      {/* Barra superior móvil (con drawer) */}
+      {/* Barra superior móvil */}
       <BarraMovilAdmin
-        nombre={usuario.nombre}
         campana={
           <Campana
             href="/admin/notificaciones"
@@ -47,11 +47,12 @@ export default async function AdminLayout({
         }
       />
 
-      <main className="flex-1 px-4 py-6 lg:ml-60 lg:px-10 lg:py-8">
+      <main className="flex-1 px-4 pt-6 pb-28 lg:ml-60 lg:px-10 lg:py-8">
         {children}
       </main>
 
-      <BotonSugerencia className="bottom-6" />
+      <BotonSugerencia className="bottom-24 lg:bottom-6" />
+      <TabBarAdmin />
     </div>
   )
 }

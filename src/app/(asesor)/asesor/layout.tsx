@@ -15,7 +15,7 @@ export default async function AsesorLayout({
     <div className="flex min-h-dvh flex-1 flex-col bg-slate-50">
       <RegistroPush />
       <BannerInstalacion />
-      <header className="sticky top-0 z-30 flex h-14 items-center border-b border-slate-200 bg-white px-2">
+      <header className="sticky top-0 z-30 flex min-h-14 items-center border-b border-slate-200 bg-white px-2 pt-[env(safe-area-inset-top)]">
         <div className="mx-auto flex w-full max-w-md items-center justify-between px-2">
           <Wordmark className="text-[14px] text-slate-900" />
           <Campana href="/asesor/notificaciones" />

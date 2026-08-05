@@ -1,6 +1,5 @@
 'use client'
 
-import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
@@ -9,7 +8,6 @@ import {
   LayoutDashboard,
   Lightbulb,
   LogOut,
-  Menu,
   Settings,
   UserRound,
   Users,
@@ -19,13 +17,6 @@ import {
 import { cerrarSesion } from '@/lib/auth/acciones'
 import { cn } from '@/lib/utils'
 import { Wordmark } from '@/components/marca/wordmark'
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from '@/components/ui/sheet'
 
 type Enlace = {
   href: string
@@ -103,48 +94,20 @@ export function PieSesion({ nombre }: { nombre: string }) {
 }
 
 /**
- * Barra superior móvil con menú lateral (drawer). Oculta en escritorio.
+ * Barra superior móvil: wordmark + campanita. Oculta en escritorio.
+ *
+ * La navegación móvil vive ahora en la tab bar inferior (ver
+ * `TabBarAdmin`), así que esta barra ya no necesita el drawer lateral ni
+ * `nombre` (se dejó de pasar `PieSesion` aquí — la sesión se cierra desde
+ * la hoja «Más»/el sidebar de escritorio).
  *
  * `campana` llega como nodo ya renderizado por el layout (Server
  * Component): este archivo es 'use client' y no puede importar la Campana
  * directo (es un Server Component que lee Supabase con 'server-only').
  */
-export function BarraMovilAdmin({
-  nombre,
-  campana,
-}: {
-  nombre: string
-  campana?: React.ReactNode
-}) {
-  const [abierto, setAbierto] = useState(false)
-
+export function BarraMovilAdmin({ campana }: { campana?: React.ReactNode }) {
   return (
-    <header className="sticky top-0 z-40 flex h-14 items-center gap-2 border-b border-slate-800 bg-slate-950 px-2 text-slate-100 lg:hidden">
-      <Sheet open={abierto} onOpenChange={setAbierto}>
-        <SheetTrigger
-          aria-label="Abrir menú"
-          className="flex size-11 items-center justify-center rounded-lg text-slate-300 transition-colors hover:bg-slate-900 hover:text-white"
-        >
-          <Menu className="size-5" aria-hidden />
-        </SheetTrigger>
-        <SheetContent
-          side="left"
-          className="w-72 gap-0 border-slate-800 bg-slate-950 p-0 text-slate-100 [&_[data-slot=sheet-close]]:text-slate-300 [&_[data-slot=sheet-close]]:hover:bg-slate-900 [&_[data-slot=sheet-close]]:hover:text-white"
-        >
-          <SheetHeader className="px-6 pt-6 pb-2">
-            <SheetTitle className="text-white">
-              <span className="sr-only">Klo-Ser</span>
-              <Wordmark
-                aria-hidden
-                className="text-[15px] text-[#EFE9DD]"
-                dashClassName="bg-[#C98A3B]"
-              />
-            </SheetTitle>
-          </SheetHeader>
-          <NavAdmin onNavigate={() => setAbierto(false)} />
-          <PieSesion nombre={nombre} />
-        </SheetContent>
-      </Sheet>
+    <header className="sticky top-0 z-40 flex min-h-14 items-center gap-2 border-b border-slate-800 bg-slate-950 px-2 pt-[env(safe-area-inset-top)] text-slate-100 lg:hidden">
       <span className="flex-1 truncate">
         <Wordmark
           className="text-[14px] text-[#EFE9DD]"
