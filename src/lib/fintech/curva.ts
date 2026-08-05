@@ -77,6 +77,7 @@ function calcularSegmentos(puntos: Punto[]): Segmento[] {
 /**
  * Path `d` de la línea (sin cerrar) que pasa suavemente por `puntos`.
  * Devuelve `''` con 0 o 1 puntos (no hay curva que trazar).
+ * Asume `puntos` ordenados ascendentemente por x.
  */
 export function dLinea(puntos: Punto[]): string {
   if (puntos.length < 2) return ''
@@ -92,6 +93,7 @@ export function dLinea(puntos: Punto[]): string {
  * Path `d` del área bajo la curva: la misma línea de `dLinea`, cerrada
  * hasta `baseline` (típicamente el fondo del viewBox). Devuelve `''` con
  * 0 o 1 puntos.
+ * Asume `puntos` ordenados ascendentemente por x.
  */
 export function dArea(puntos: Punto[], baseline: number): string {
   if (puntos.length < 2) return ''

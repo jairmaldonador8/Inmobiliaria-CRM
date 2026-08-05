@@ -1,3 +1,5 @@
+'use client'
+
 /**
  * Gráfica de línea SVG (sparkline) del kit Fintech Muro: normaliza una
  * serie de números a un viewBox `0 0 100 {alto}`, traza una curva suave
@@ -15,7 +17,6 @@
  *   la conclusión (p. ej. "Leads subieron 12% en 30 días") y el SVG se
  *   expone como `role="img"` con un `<title>`.
  */
-'use client'
 
 import { useId } from 'react'
 
