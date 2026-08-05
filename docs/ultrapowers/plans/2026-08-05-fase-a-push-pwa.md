@@ -62,40 +62,33 @@ export function vapidPublicKey(): string {
 - [ ] **Step 4:** En `src/lib/env-server.ts` agregar `vapidPrivateKey()` y `vapidSubject()` con el mismo patrón del módulo.
 - [ ] **Step 5:** `npm run build` — debe compilar. **Commit** `feat: dependencias y env de web push (VAPID)` y push.
 
-### Task 2: Migración `push_suscripciones` + RLS + test de integración
+### Task 2: Policy UPDATE de `push_suscripciones` + tests de integración
 
-**Files:** Create: `supabase/migrations/0007_push_suscripciones.sql` · Modify: `src/test/rls.integration.test.ts`
+> **CORREGIDA tras descubrimiento en ejecución:** la tabla `push_suscripciones`
+> YA existe (0001:171-179, índice 0001:210) con RLS y policies de dueño
+> select/insert/delete (0002:244-255, nombres «usuario lee/inserta/elimina sus
+> suscripciones push»). Lo ÚNICO faltante es la policy de UPDATE, que el upsert
+> del re-sync (Task 7) necesita. Sin cascade en el FK: el sistema usa
+> soft-delete de usuarios, YAGNI.
 
-- [ ] **Step 1:** Escribir la migración:
+**Files:** Create: `supabase/migrations/0007_push_update_policy.sql` · Modify: `src/test/rls.integration.test.ts`
+
+- [ ] **Step 1:** Escribir la migración (solo esto):
 
 ```sql
--- 0007: suscripciones de Web Push (varias por usuario: una por dispositivo)
-create table push_suscripciones (
-  id uuid primary key default gen_random_uuid(),
-  usuario_id uuid not null references usuarios(user_id) on delete cascade,
-  endpoint text not null unique,
-  p256dh text not null,
-  auth text not null,
-  user_agent text,
-  creada_en timestamptz not null default now()
-);
-create index on push_suscripciones (usuario_id);
-
-alter table push_suscripciones enable row level security;
-
--- Cada usuario administra SOLO sus suscripciones; service role (cron/envíos) brinca RLS.
-create policy push_select_propias on push_suscripciones
-  for select to authenticated using (usuario_id = (select auth.uid()));
-create policy push_insert_propias on push_suscripciones
-  for insert to authenticated with check (usuario_id = (select auth.uid()));
-create policy push_update_propias on push_suscripciones
-  for update to authenticated using (usuario_id = (select auth.uid()))
+-- 0007: policy UPDATE faltante en push_suscripciones — el upsert del re-sync
+-- de suscripciones (ON CONFLICT (endpoint) DO UPDATE) la requiere. La tabla
+-- existe desde 0001; RLS y policies select/insert/delete desde 0002.
+create policy "usuario actualiza sus suscripciones push" on public.push_suscripciones
+  for update to authenticated
+  using (usuario_id = (select auth.uid()))
   with check (usuario_id = (select auth.uid()));
-create policy push_delete_propias on push_suscripciones
-  for delete to authenticated using (usuario_id = (select auth.uid()));
 ```
 
-- [ ] **Step 2:** Aplicarla igual que 0001–0006 (`npx supabase db push`; si el CLI no está ligado, correr el SQL en el editor de Supabase y dejar el archivo commiteado igual).
+- [ ] **Step 2:** Aplicación PENDIENTE de acceso (CLI sin autenticar en esta
+  máquina): cuando el usuario corra `npx supabase login`, aplicar con
+  `npx supabase db push`. Los tests a–c de abajo NO dependen de esta policy;
+  el caso de update se agrega al aplicarla (verificación en Task 7/10).
 - [ ] **Step 3 (test primero para el caso nuevo):** en `src/test/rls.integration.test.ts` agregar describe `push_suscripciones` siguiendo el patrón existente del archivo: (a) asesor1 inserta la suya y la lee; (b) asesor1 NO ve la de asesor2 (select regresa 0 filas); (c) asesor1 NO puede insertar con `usuario_id` de asesor2 (error de policy). Correr: `npm run test:rls` → los 3 casos pasan.
 - [ ] **Step 4:** **Commit** `feat: tabla push_suscripciones con RLS de dueño (0007)` y push.
 

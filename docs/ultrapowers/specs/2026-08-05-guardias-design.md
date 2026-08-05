@@ -50,7 +50,9 @@ y que la asignación, los recordatorios y el escalamiento corran solos.
   mensaje). Seguir el skill del proyecto `pwa-web-push`.
 - Tabla `push_suscripciones`: usuario, endpoint, llaves p256dh/auth, user-agent,
   creada_en. Un usuario puede tener varios dispositivos. RLS: cada quien sus
-  filas.
+  filas. **(Corrección 2026-08-05: la tabla YA existe desde 0001 con RLS y
+  policies select/insert/delete en 0002 — solo falta la policy de UPDATE para
+  el upsert de re-sync; eso es lo único que agrega la migración 0007.)**
 - Helper de servidor `enviarPush(destinatarioId, {titulo, cuerpo, url})` con
   limpieza de suscripciones muertas (410 Gone). Es la primitiva que después
   usarán el resumen de las 8am y las alertas de citas.
