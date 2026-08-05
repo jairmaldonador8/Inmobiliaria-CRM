@@ -137,11 +137,14 @@ export const config = {
      *   <CRON_SECRET>` sin cookies de sesión; el propio route handler
      *   valida ese secreto. Vercel cron NO sigue redirects, así que si
      *   esta ruta pasara por el proxy moriría en un 307 silencioso a /)
+     * - sw.js (el service worker se re-descarga en cada registro,
+     *   `updateViaCache: 'none'`; pasarlo por el proxy gasta un
+     *   getClaims() en cada fetch y un redirect rompería la registración)
      *
      * El resto de /api SÍ pasa por el proxy; cualquier route handler
      * nuevo que no deba llevar sesión (p. ej. otro webhook público) hay
      * que agregarlo explícitamente aquí.
      */
-    '/((?!_next/static|_next/image|favicon.ico|manifest.webmanifest|api/cron|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)',
+    '/((?!_next/static|_next/image|favicon.ico|manifest.webmanifest|sw.js|api/cron|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)',
   ],
 }

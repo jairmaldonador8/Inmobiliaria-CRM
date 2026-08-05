@@ -105,7 +105,8 @@ describe('enviarPush', () => {
     expect(sendNotificationMock).toHaveBeenNthCalledWith(
       1,
       { endpoint: 'https://push.example/1', keys: { p256dh: 'k1', auth: 'a1' } },
-      expect.any(String)
+      expect.any(String),
+      expect.objectContaining({ urgency: 'high' })
     )
   })
 

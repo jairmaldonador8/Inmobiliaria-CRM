@@ -50,7 +50,8 @@ export async function enviarPush(
       subs.map((s) =>
         webpush.sendNotification(
           { endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } },
-          payload
+          payload,
+          { urgency: 'high' }
         )
       )
     )
