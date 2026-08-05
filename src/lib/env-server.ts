@@ -15,3 +15,11 @@ function requerida(valor: string | undefined, nombre: string): string {
 export function supabaseSecretKey(): string {
   return requerida(process.env.SUPABASE_SECRET_KEY, 'SUPABASE_SECRET_KEY')
 }
+
+export function vapidPrivateKey(): string {
+  return requerida(process.env.VAPID_PRIVATE_KEY, 'VAPID_PRIVATE_KEY')
+}
+
+export function vapidSubject(): string {
+  return requerida(process.env.VAPID_SUBJECT, 'VAPID_SUBJECT')
+}
