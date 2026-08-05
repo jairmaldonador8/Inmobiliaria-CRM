@@ -1,26 +1,27 @@
 <!DOCTYPE html>
 <html><head><meta charset="utf-8">
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
-  body { width:1080px; height:1350px; background:#F2EDE4; font-family:Poppins,sans-serif; color:#221B14; padding:100px 90px; display:flex; flex-direction:column; }
-  .regla { height:3px; background:#221B14; }
-  .titulo { font-size:76px; font-weight:600; text-transform:uppercase; line-height:1.15; margin:56px 0; }
+  body { width:1080px; height:1350px; overflow:hidden; position:relative; font-family:Poppins,sans-serif; background:linear-gradient(150deg,#F5F1E8 0%,#F3DCC2 32%,#EBBF9A 62%,#DFA987 100%); }
+  .orbe1 { position:absolute; width:640px; height:640px; border-radius:50%; background:radial-gradient(circle,rgba(201,138,59,0.38),transparent 70%); top:-160px; right:-160px; }
+  .orbe2 { position:absolute; width:520px; height:520px; border-radius:50%; background:radial-gradient(circle,rgba(163,78,40,0.22),transparent 70%); bottom:-110px; left:-150px; }
+  .cont { position:relative; height:100%; padding:100px 90px; display:flex; flex-direction:column; }
+  .titulo { font-size:78px; font-weight:600; text-transform:uppercase; color:#221B14; line-height:1.14; margin-bottom:70px; }
   .titulo em { font-style:normal; color:#6B4A33; }
-  .lista { margin-top:30px; display:flex; flex-direction:column; }
-  .item { display:flex; align-items:baseline; gap:34px; padding:44px 0; border-top:2px solid rgba(34,27,20,0.25); }
-  .num { font-size:34px; font-weight:300; color:#C98A3B; min-width:60px; }
-  .item p { font-size:40px; font-weight:300; line-height:1.35; }
-  .item strong { font-weight:600; }
-  .pie { margin-top:auto; display:flex; justify-content:space-between; align-items:center; font-size:26px; letter-spacing:0.24em; text-transform:uppercase; color:#6B4A33; }
+  .item { display:flex; align-items:center; gap:34px; border-radius:24px; border:2px solid rgba(255,255,255,0.85); background:rgba(250,247,241,0.68); box-shadow:0 12px 34px rgba(107,74,51,0.18); padding:40px 44px; margin-bottom:26px; }
+  .num { font-size:30px; font-weight:700; color:#F6F1E8; background:#6B4A33; min-width:74px; height:74px; border-radius:50%; display:flex; align-items:center; justify-content:center; }
+  .item p { font-size:38px; font-weight:300; line-height:1.35; color:#5A4B3C; }
+  .item strong { font-weight:600; color:#221B14; }
+  .pie { margin-top:auto; display:flex; justify-content:space-between; align-items:center; font-size:26px; letter-spacing:0.24em; text-transform:uppercase; color:#8E7F68; }
 </style></head>
 <body>
-  <div class="regla"></div>
-  <div class="titulo">Los leads no se pierden.<br><em>Se construyen.</em></div>
-  <div class="lista">
+  <div class="orbe1"></div><div class="orbe2"></div>
+  <div class="cont">
+    <div class="titulo">Los leads no se pierden.<br><em>Se construyen.</em></div>
     <div class="item"><span class="num">01</span><p><strong>Los leads llegan solos</strong> desde tus portales — nadie los captura a mano.</p></div>
     <div class="item"><span class="num">02</span><p><strong>Cada asesor sabe qué le toca hoy</strong> — y su teléfono le avisa al instante.</p></div>
     <div class="item"><span class="num">03</span><p><strong>La dirección lo ve todo</strong> sin pedir un solo reporte.</p></div>
+    <div class="pie"><span>KLO–SER</span><span>02 / 05</span></div>
   </div>
-  <div class="pie"><span>KLO–SER</span><span>02 / 05</span></div>
 </body></html>

@@ -1,9 +1,17 @@
 <!DOCTYPE html>
 <html><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Jost:wght@200&display=swap" rel="stylesheet">
 <style>
-  * { margin:0; padding:0; }
-  body { width:1080px; height:1080px; background:#6B4A33; display:flex; align-items:center; justify-content:center; overflow:hidden; }
-  /* «La ventana»: el guion de Klo-Ser como ícono — centrado para el recorte circular de IG */
-  .guion { width:400px; height:56px; background:#F2EDE4; border-radius:10px; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  /* Perfil IG: wordmark KLO-SER sobre el gradiente del sistema. El contenido
+     vive dentro del círculo seguro (~70% central) para el recorte de IG. */
+  body { width:1080px; height:1080px; overflow:hidden; position:relative; background:linear-gradient(150deg,#F5F1E8 0%,#F3DCC2 32%,#EBBF9A 62%,#DFA987 100%); display:flex; align-items:center; justify-content:center; }
+  .orbe1 { position:absolute; width:560px; height:560px; border-radius:50%; background:radial-gradient(circle,rgba(201,138,59,0.38),transparent 70%); top:-140px; right:-120px; }
+  .orbe2 { position:absolute; width:460px; height:460px; border-radius:50%; background:radial-gradient(circle,rgba(163,78,40,0.22),transparent 70%); bottom:-100px; left:-120px; }
+  .wordmark { position:relative; font-family:Jost,sans-serif; font-weight:200; font-size:118px; letter-spacing:0.34em; color:#221B14; display:flex; align-items:center; margin-left:0.34em; }
+  .guion { display:inline-block; width:80px; height:12px; background:#6B4A33; margin:0 22px; border-radius:3px; }
 </style></head>
-<body><div class="guion"></div></body></html>
+<body>
+  <div class="orbe1"></div><div class="orbe2"></div>
+  <div class="wordmark">KLO<span class="guion"></span>SER</div>
+</body></html>

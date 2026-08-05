@@ -3,30 +3,32 @@
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
-  body { width:1080px; height:1350px; background:#F2EDE4; font-family:Poppins,sans-serif; color:#221B14; padding:100px 90px; display:flex; flex-direction:column; }
-  .regla { height:3px; background:#221B14; }
-  .titulo { font-size:70px; font-weight:600; text-transform:uppercase; line-height:1.16; margin:56px 0 64px; }
+  body { width:1080px; height:1350px; overflow:hidden; position:relative; font-family:Poppins,sans-serif; background:linear-gradient(150deg,#F5F1E8 0%,#F3DCC2 32%,#EBBF9A 62%,#DFA987 100%); }
+  .orbe1 { position:absolute; width:640px; height:640px; border-radius:50%; background:radial-gradient(circle,rgba(201,138,59,0.38),transparent 70%); top:-160px; left:-160px; }
+  .orbe2 { position:absolute; width:520px; height:520px; border-radius:50%; background:radial-gradient(circle,rgba(163,78,40,0.22),transparent 70%); bottom:-110px; right:-150px; }
+  .cont { position:relative; height:100%; padding:100px 90px; display:flex; flex-direction:column; }
+  .titulo { font-size:72px; font-weight:600; text-transform:uppercase; color:#221B14; line-height:1.16; margin-bottom:64px; }
   .titulo em { font-style:normal; color:#6B4A33; }
-  .grid { display:grid; grid-template-columns:1fr 1fr; border:2px solid #221B14; }
-  .celda { padding:52px 44px; min-height:290px; display:flex; flex-direction:column; justify-content:space-between; }
-  .celda:nth-child(1) { border-right:2px solid #221B14; border-bottom:2px solid #221B14; }
-  .celda:nth-child(2) { border-bottom:2px solid #221B14; }
-  .celda:nth-child(3) { border-right:2px solid #221B14; }
-  .celda .icono { font-size:52px; }
-  .celda h3 { font-size:34px; font-weight:600; text-transform:uppercase; line-height:1.2; margin-top:20px; }
-  .celda p { font-size:26px; font-weight:300; color:#5A4B3C; margin-top:12px; line-height:1.4; }
-  .cafe { background:#6B4A33; color:#F2EDE4; }
-  .cafe p { color:#E7DCC8; }
-  .pie { margin-top:auto; display:flex; justify-content:space-between; align-items:center; font-size:26px; letter-spacing:0.24em; text-transform:uppercase; color:#6B4A33; }
+  .grid { display:grid; grid-template-columns:1fr 1fr; gap:26px; }
+  .celda { border-radius:24px; border:2px solid rgba(255,255,255,0.85); background:rgba(250,247,241,0.68); box-shadow:0 12px 34px rgba(107,74,51,0.18); padding:44px 40px; min-height:300px; display:flex; flex-direction:column; justify-content:space-between; }
+  .celda .icono { font-size:54px; }
+  .celda h3 { font-size:32px; font-weight:600; text-transform:uppercase; line-height:1.22; color:#221B14; margin-top:22px; }
+  .celda p { font-size:25px; font-weight:300; color:#5A4B3C; margin-top:12px; line-height:1.4; }
+  .tinta { background:rgba(34,27,20,0.92); border-color:rgba(34,27,20,0.92); }
+  .tinta h3 { color:#F2EDE4; }
+  .tinta p { color:#C9B896; }
+  .pie { margin-top:auto; display:flex; justify-content:space-between; align-items:center; font-size:26px; letter-spacing:0.24em; text-transform:uppercase; color:#8E7F68; }
 </style></head>
 <body>
-  <div class="regla"></div>
-  <div class="titulo">Hecho para inmobiliarias<br>que cierran <em>en serio</em></div>
-  <div class="grid">
-    <div class="celda"><span class="icono">🔔</span><div><h3>Avisos al teléfono</h3><p>El asesor se entera del lead nuevo al instante, no al día siguiente.</p></div></div>
-    <div class="celda cafe"><span class="icono">💬</span><div><h3>WhatsApp integrado</h3><p>Plantillas listas para responder en segundos.</p></div></div>
-    <div class="celda cafe"><span class="icono">🧭</span><div><h3>Cada quien lo suyo</h3><p>Asignación clara: nada se queda sin dueño ni sin seguimiento.</p></div></div>
-    <div class="celda"><span class="icono">📈</span><div><h3>Números sin pedirlos</h3><p>Las métricas se llenan solas mientras tu equipo trabaja.</p></div></div>
+  <div class="orbe1"></div><div class="orbe2"></div>
+  <div class="cont">
+    <div class="titulo">Hecho para inmobiliarias<br>que cierran <em>en serio</em></div>
+    <div class="grid">
+      <div class="celda"><span class="icono">🔔</span><div><h3>Avisos al teléfono</h3><p>El asesor se entera del lead nuevo al instante, no al día siguiente.</p></div></div>
+      <div class="celda tinta"><span class="icono">💬</span><div><h3>WhatsApp integrado</h3><p>Plantillas listas para responder en segundos.</p></div></div>
+      <div class="celda tinta"><span class="icono">🧭</span><div><h3>Cada quien lo suyo</h3><p>Asignación clara: nada se queda sin dueño ni sin seguimiento.</p></div></div>
+      <div class="celda"><span class="icono">📈</span><div><h3>Números sin pedirlos</h3><p>Las métricas se llenan solas mientras tu equipo trabaja.</p></div></div>
+    </div>
+    <div class="pie"><span>KLO–SER</span><span>04 / 05</span></div>
   </div>
-  <div class="pie"><span>KLO–SER</span><span>04 / 05</span></div>
 </body></html>
