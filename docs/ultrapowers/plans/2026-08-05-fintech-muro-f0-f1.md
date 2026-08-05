@@ -124,6 +124,14 @@ NO es visual: son las queries que el dashboard C2 necesita y hoy no existen.
 - [ ] **Step 2 (tests primero):** (a) marca activa la pestaña según pathname (mock `usePathname`); (b) la hoja «Más» lista asesores/plantillas/sugerencias/ajustes/notificaciones; (c) el contenedor flotante usa `bottom` con `max(...)` de safe-area y el elemento con blur es el HIJO del wrapper fijo (wrapper transparente — patrón anti-jank iOS del skill).
 - [ ] **Step 3:** Implementar: wrapper `fixed inset-x-0 bottom-0 z-40 lg:hidden` transparente con `pb-[max(0.75rem,env(safe-area-inset-bottom))]`; hijo: píldora centrada `mx-auto max-w-md rounded-full border border-white/80 bg-[#FAF7F1]/70 backdrop-blur-glass [-webkit-backdrop-filter:blur(12px)] isolate shadow-glass` con 5 items (Inicio `/admin` exacta, Bandeja, Leads, Propiedades, Más) — targets `min-h-12`, iconos lucide, etiqueta 10-11px. «Más» abre `Sheet side="bottom"` (componente ui existente) con los demás destinos + `PieSesion` si aplica.
 - [ ] **Step 4:** En `admin/layout.tsx`: montar `<TabBarAdmin />`; `<main>` móvil gana `pb-28` (deja pasar la píldora); desktop (`lg:*`) INTACTO. En `nav-admin.tsx`: `BarraMovilAdmin` pierde SheetTrigger/Sheet (queda wordmark + campanita); NO tocar `NavAdmin` (sidebar desktop).
+- [ ] **Step 4.5 (hallazgo de revisión FM1 — safe area SUPERIOR):** con
+  `viewport-fit=cover` activo, los dos headers sticky pueden quedar bajo la
+  barra de estado del iPhone en modo instalado. Agregar
+  `pt-[env(safe-area-inset-top)]` a: (a) `BarraMovilAdmin`
+  (`nav-admin.tsx:122`, el header sticky) y (b) el header del asesor en
+  `src/app/(asesor)/asesor/layout.tsx:18` — conservando la altura útil
+  (`h-14` pasa a `min-h-14` + padding, verificar visual). Verificación extra
+  en FM8: toasts de sonner (top-center) visibles bajo el notch.
 - [ ] **Step 5:** Suite + tsc + build; revisar en DevTools móvil que bandeja/leads/props navegan y el escritorio (≥1024px) se ve idéntico. **Commit** `feat: tab bar inferior glass del admin` y push.
 
 ### Task 6: Dashboard móvil Fintech Muro
