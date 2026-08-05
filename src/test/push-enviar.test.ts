@@ -140,6 +140,22 @@ describe('enviarPush', () => {
     expect(del).not.toHaveBeenCalled()
   })
 
+  it('si la consulta de suscripciones falla, loguea el error y devuelve enviados:0 sin lanzar', async () => {
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    const eq = vi.fn().mockResolvedValue({ data: null, error: { message: 'boom: select falló' } })
+    const select = vi.fn(() => ({ eq }))
+    const from = vi.fn(() => ({ select }))
+    const supabase = { from } as unknown as SupabaseClient
+
+    const resultado = await enviarPush(supabase, 'user-1', DATOS)
+
+    expect(resultado).toEqual({ enviados: 0 })
+    expect(sendNotificationMock).not.toHaveBeenCalled()
+    expect(consoleErrorSpy).toHaveBeenCalled()
+
+    consoleErrorSpy.mockRestore()
+  })
+
   it('el payload incluye title, body y data.url', async () => {
     const subs: FilaSuscripcion[] = [
       { id: 's1', endpoint: 'https://push.example/1', p256dh: 'k1', auth: 'a1' },

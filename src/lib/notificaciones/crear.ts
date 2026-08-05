@@ -3,8 +3,15 @@
  * requieren service-role (no hay policy de INSERT para authenticated), por lo
  * que estas funciones reciben el cliente por parametro (inyeccion de
  * dependencias): el cron pasa el admin client y los tests el suyo.
+ *
+ * Ademas de la campanita, cada notificacion empuja Web Push (enviarPush) al
+ * mismo destinatario. enviarPush ya tiene el contrato "nunca lanza", pero se
+ * envuelve en try/catch igual (defensa en profundidad: sus internals podrian
+ * cambiar) para que un fallo de push jamas tumbe la escritura de la
+ * notificacion, que es la fuente de verdad.
  */
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { enviarPush } from '@/lib/push/enviar'
 
 export interface DatosNotificacion {
   destinatarioId: string
@@ -13,7 +20,7 @@ export interface DatosNotificacion {
   url?: string | null
 }
 
-/** Inserta una notificacion para un destinatario especifico. */
+/** Inserta una notificacion para un destinatario especifico y le empuja Web Push. */
 export async function crearNotificacion(
   supabase: SupabaseClient,
   { destinatarioId, tipo, texto, url }: DatosNotificacion
@@ -25,11 +32,17 @@ export async function crearNotificacion(
     url: url ?? null,
   })
   if (error) throw new Error(`No se pudo crear la notificación: ${error.message}`)
+
+  try {
+    await enviarPush(supabase, destinatarioId, { titulo: 'Klo-Ser', cuerpo: texto, url })
+  } catch (err) {
+    console.error('crearNotificacion: fallo el push, se omite', err)
+  }
 }
 
 /**
- * Inserta la misma notificacion para TODOS los admins activos (bulk insert).
- * Devuelve cuantas notificaciones se crearon.
+ * Inserta la misma notificacion para TODOS los admins activos (bulk insert) y
+ * le empuja Web Push a cada uno. Devuelve cuantas notificaciones se crearon.
  */
 export async function notificarAdmins(
   supabase: SupabaseClient,
@@ -53,5 +66,14 @@ export async function notificarAdmins(
   if (insertError) {
     throw new Error(`No se pudieron crear las notificaciones para admins: ${insertError.message}`)
   }
+
+  for (const admin of admins) {
+    try {
+      await enviarPush(supabase, admin.user_id, { titulo: 'Klo-Ser', cuerpo: texto, url })
+    } catch (err) {
+      console.error('notificarAdmins: fallo el push, se omite', err)
+    }
+  }
+
   return filas.length
 }

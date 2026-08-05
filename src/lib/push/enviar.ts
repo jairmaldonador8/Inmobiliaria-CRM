@@ -36,7 +36,11 @@ export async function enviarPush(
       .from('push_suscripciones')
       .select('id, endpoint, p256dh, auth')
       .eq('usuario_id', destinatarioId)
-    if (error || !subs || subs.length === 0) return { enviados: 0 }
+    if (error) {
+      console.error('enviarPush: fallo la consulta de suscripciones', error)
+      return { enviados: 0 }
+    }
+    if (!subs || subs.length === 0) return { enviados: 0 }
 
     // iOS revoca la suscripción tras ~3 pushes sin notificación visible: el
     // SW SIEMPRE muestra showNotification con este payload.
