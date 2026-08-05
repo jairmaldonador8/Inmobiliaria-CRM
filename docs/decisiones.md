@@ -16,3 +16,11 @@
 - Smoke test en producción: login admin → dashboard con KPIs, login asesor (viewport móvil) → cola del día, propiedades cargan, cron 401 sin auth y 200 con Bearer; la primera corrida real importó 2 leads nuevos de EasyBroker.
 - Gotcha registrado: `vercel env add` alimentado por pipe de PowerShell agrega `\r` al valor (los 6 secrets quedaron corruptos y el Bearer daba 401); se recargaron con `printf '%s'` desde bash.
 - Pendientes para go-live real: crear usuarios reales y desactivar los seed (`*@montana.test`), conectar el subdominio de Montana en Vercel → Domains, y (opcional) rotar las keys de Supabase que se pegaron en el chat durante el setup.
+
+## 2026-08-05 — Fase A: Web Push PWA desplegada
+
+- Klo-Ser ya es PWA instalable con notificaciones push (Web Push + VAPID, sin costo por mensaje). Spec en `docs/ultrapowers/specs/2026-08-05-guardias-design.md`; plan ejecutado en `docs/ultrapowers/plans/2026-08-05-fase-a-push-pwa.md`.
+- Todo lo que campanea (`crearNotificacion`/`notificarAdmins`) ahora también empuja push al teléfono; el envío es best-effort y la campanita sigue siendo la fuente de verdad.
+- Llaves VAPID cargadas en Vercel production vía bash/`printf` (privada como Sensitive). Son PERMANENTES: rotarlas invalida todas las suscripciones.
+- Descubrimiento: la tabla `push_suscripciones` existía desde 0001/0002; la migración `0007_push_update_policy.sql` solo agrega la policy UPDATE que necesita el upsert del re-sync. **PENDIENTE de aplicar** (CLI de Supabase sin autenticar); mientras tanto el re-sync de suscripciones existentes se autocura re-suscribiendo (churn acotado y logueado).
+- Pendientes de cierre (T10): aplicar 0007 (`npx supabase login` + `db push`), prueba E2E en teléfono real (instalar → activar avisos → asignar lead de prueba → llega push), y agregar el caso de test RLS de update cruzado.
