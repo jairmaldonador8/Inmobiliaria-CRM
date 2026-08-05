@@ -17,11 +17,19 @@ vi.mock('@/lib/auth/usuario-actual', () => ({
   usuarioActual: usuarioActualMock,
 }))
 
-const { createClientMock, upsertMock, fromMock, deleteEqMock, deleteMock } = vi.hoisted(() => ({
+const {
+  createClientMock,
+  upsertMock,
+  fromMock,
+  deleteEqMock,
+  deleteEqUsuarioMock,
+  deleteMock,
+} = vi.hoisted(() => ({
   createClientMock: vi.fn(),
   upsertMock: vi.fn(),
   fromMock: vi.fn(),
   deleteEqMock: vi.fn(),
+  deleteEqUsuarioMock: vi.fn(),
   deleteMock: vi.fn(),
 }))
 
@@ -113,14 +121,16 @@ describe('eliminarSuscripcion', () => {
     createClientMock.mockReset()
     fromMock.mockReset()
     deleteEqMock.mockReset()
+    deleteEqUsuarioMock.mockReset()
     deleteMock.mockReset()
-    deleteEqMock.mockResolvedValue({ error: null })
+    deleteEqUsuarioMock.mockResolvedValue({ error: null })
+    deleteEqMock.mockImplementation(() => ({ eq: deleteEqUsuarioMock }))
     deleteMock.mockImplementation(() => ({ eq: deleteEqMock }))
     fromMock.mockImplementation(() => ({ delete: deleteMock }))
     createClientMock.mockResolvedValue({ from: fromMock })
   })
 
-  it('con sesión, borra la suscripción por endpoint', async () => {
+  it('con sesión, borra la suscripción por endpoint Y por usuario_id (defensa en profundidad)', async () => {
     usuarioActualMock.mockResolvedValue(USUARIO)
 
     const resultado = await eliminarSuscripcion('https://push.example/abc')
@@ -128,6 +138,7 @@ describe('eliminarSuscripcion', () => {
     expect(fromMock).toHaveBeenCalledWith('push_suscripciones')
     expect(deleteMock).toHaveBeenCalled()
     expect(deleteEqMock).toHaveBeenCalledWith('endpoint', 'https://push.example/abc')
+    expect(deleteEqUsuarioMock).toHaveBeenCalledWith('usuario_id', 'user-1')
     expect(resultado).toEqual({})
   })
 

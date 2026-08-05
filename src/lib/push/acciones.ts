@@ -47,7 +47,14 @@ export async function eliminarSuscripcion(endpoint: string) {
   if (!usuario) return { error: 'Sin sesión' }
 
   const supabase = await createClient()
-  await supabase.from('push_suscripciones').delete().eq('endpoint', endpoint)
+  // Defensa en profundidad: RLS (0002/0007) ya limita el delete a
+  // usuario_id = auth.uid(), pero se repite la condición aquí explícitamente
+  // para que el propio código no dependa solo de la policy.
+  await supabase
+    .from('push_suscripciones')
+    .delete()
+    .eq('endpoint', endpoint)
+    .eq('usuario_id', usuario.user_id)
 
   return {}
 }
