@@ -372,3 +372,85 @@ describe('RLS Fase 1: aislamiento admin/asesor (Supabase real)', () => {
     expect(asesor1Claims.user_role).toBe('asesor');
   });
 });
+
+describe('push_suscripciones', () => {
+  // Migracion 0007 solo agrega la policy de UPDATE faltante; select/insert/
+  // delete-own ya viven desde 0002. Endpoints obviamente falsos (dominio
+  // example.com), marcados por corrida para no colisionar entre ejecuciones.
+  const PUSH_ENDPOINT_ASESOR1 = `https://example.com/push/test-${RUN}-asesor1`;
+  const PUSH_ENDPOINT_ASESOR2 = `https://example.com/push/test-${RUN}-asesor2`;
+  const PUSH_ENDPOINT_CROSS = `https://example.com/push/test-${RUN}-cross-insert-should-not-exist`;
+
+  afterAll(async () => {
+    if (svc) {
+      await svc.from('push_suscripciones').delete().in('endpoint', [
+        PUSH_ENDPOINT_ASESOR1,
+        PUSH_ENDPOINT_ASESOR2,
+        PUSH_ENDPOINT_CROSS,
+      ]);
+    }
+  }, 30_000);
+
+  it('asesor1 inserta su propia suscripcion y la lee de vuelta', async () => {
+    const { data: ins, error: insError } = await asesor1
+      .from('push_suscripciones')
+      .insert({
+        usuario_id: asesor1Id,
+        endpoint: PUSH_ENDPOINT_ASESOR1,
+        p256dh: 'p256dh-fake-asesor1',
+        auth: 'auth-fake-asesor1',
+      })
+      .select('id, usuario_id, endpoint')
+      .single();
+    expect(insError).toBeNull();
+    expect(ins!.usuario_id).toBe(asesor1Id);
+
+    const { data: leida, error: leidaError } = await asesor1
+      .from('push_suscripciones')
+      .select('id, endpoint')
+      .eq('id', ins!.id);
+    expect(leidaError).toBeNull();
+    expect(leida).toHaveLength(1);
+    expect(leida![0].endpoint).toBe(PUSH_ENDPOINT_ASESOR1);
+  });
+
+  it('asesor1 NO ve la suscripcion de asesor2', async () => {
+    const { data: subAsesor2, error: subError } = await svc
+      .from('push_suscripciones')
+      .insert({
+        usuario_id: asesor2Id,
+        endpoint: PUSH_ENDPOINT_ASESOR2,
+        p256dh: 'p256dh-fake-asesor2',
+        auth: 'auth-fake-asesor2',
+      })
+      .select('id')
+      .single();
+    expect(subError).toBeNull();
+    expect(subAsesor2!.id).toBeTruthy();
+
+    const { data, error } = await asesor1
+      .from('push_suscripciones')
+      .select('id')
+      .eq('endpoint', PUSH_ENDPOINT_ASESOR2);
+    expect(error).toBeNull();
+    expect(data).toEqual([]);
+  });
+
+  it('asesor1 NO puede insertar una suscripcion con usuario_id de asesor2 (with check)', async () => {
+    const { error } = await asesor1.from('push_suscripciones').insert({
+      usuario_id: asesor2Id,
+      endpoint: PUSH_ENDPOINT_CROSS,
+      p256dh: 'p256dh-fake-cross',
+      auth: 'auth-fake-cross',
+    });
+    expect(error).not.toBeNull();
+
+    // Verificacion (service-role): la suscripcion nunca se creo.
+    const { data: check, error: checkError } = await svc
+      .from('push_suscripciones')
+      .select('id')
+      .eq('endpoint', PUSH_ENDPOINT_CROSS);
+    expect(checkError).toBeNull();
+    expect(check).toEqual([]);
+  });
+});
