@@ -2,6 +2,7 @@ import { requireAdmin } from '@/lib/auth/usuario-actual'
 import { Wordmark } from '@/components/marca/wordmark'
 import { BarraMovilAdmin, NavAdmin, PieSesion } from '@/components/nav/nav-admin'
 import { Campana } from '@/components/notificaciones/campana'
+import RegistroPush from '@/components/push/registro-push'
 import { BotonSugerencia } from '@/components/sugerencias/boton-sugerencia'
 
 export default async function AdminLayout({
@@ -11,6 +12,7 @@ export default async function AdminLayout({
 
   return (
     <div className="flex min-h-dvh flex-1 flex-col bg-slate-50">
+      <RegistroPush />
       {/* Sidebar de escritorio */}
       <aside className="fixed inset-y-0 left-0 z-40 hidden w-60 flex-col bg-slate-950 text-slate-100 lg:flex">
         <div className="flex items-center justify-between gap-2 px-6 pt-6 pb-4">
