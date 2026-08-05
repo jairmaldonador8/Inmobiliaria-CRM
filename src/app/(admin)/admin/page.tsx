@@ -21,7 +21,13 @@ const MAX_SIN_ATENDER = 15
 /** Cap del móvil, más chico que el de escritorio: la pantalla es angosta. */
 const MAX_SIN_ATENDER_MOVIL = 5
 /** Colores del pipeline de cápsulas, en orden — cicla si hay más etapas activas que colores. */
-const COLORES_PIPELINE = ['bg-chart-1', 'bg-chart-2', 'bg-chart-3', 'bg-chart-4'] as const
+const COLORES_PIPELINE = [
+  'bg-chart-1',
+  'bg-chart-2',
+  'bg-chart-3',
+  'bg-chart-4',
+  'bg-chart-5',
+] as const
 
 type LeadSinAsesor = {
   id: string
@@ -179,6 +185,10 @@ export default async function PaginaDashboardAdmin() {
   const segmentosPipeline = agruparPorEtapa(leads)
   const sinAtenderMovil = sinAtenderTodos.slice(0, MAX_SIN_ATENDER_MOVIL)
   const hayMasMovil = sinAtenderTodos.length > MAX_SIN_ATENDER_MOVIL
+  // La cifra del héroe debe coincidir con lo que grafica GraficaLinea (los
+  // últimos 30 días) — `leadsDelMes` es mes calendario y se ve mal los
+  // primeros días del mes (cifra chica junto a una gráfica de 30 puntos).
+  const leadsUltimos30Dias = serieLeads.reduce((total, valor) => total + valor, 0)
 
   return (
     <>
@@ -197,14 +207,14 @@ export default async function PaginaDashboardAdmin() {
               <div className="text-[11px] uppercase tracking-wide text-[#8E7F68]">
                 Leads · 30 días
               </div>
-              <p className="text-3xl font-bold text-[#221B14]">{leadsDelMes ?? 0}</p>
+              <p className="text-3xl font-bold text-[#221B14]">{leadsUltimos30Dias}</p>
               <GraficaLinea datos={serieLeads} color="#C98A3B" className="mt-2" />
             </TarjetaGlass>
 
             {/* Fila de estadísticas */}
             <div className="grid grid-cols-3 gap-2">
               <TarjetaGlass>
-                <div className="text-[11px] uppercase tracking-wide text-slate-500">
+                <div className="text-[11px] uppercase tracking-wide text-[#8E7F68]">
                   Sin atender
                 </div>
                 <p
