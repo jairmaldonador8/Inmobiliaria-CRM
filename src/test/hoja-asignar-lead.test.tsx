@@ -90,4 +90,38 @@ describe('HojaAsignarLead', () => {
     })
     expect(screen.getByText('Bruno Ruiz')).toBeInTheDocument()
   })
+
+  it('mientras la asignación está en curso, deshabilita las filas y muestra «Asignando…»; al resolver, se reactivan', async () => {
+    // Se resuelve con error (en vez de éxito) a propósito: así la hoja NO
+    // se cierra al resolver y se puede verificar que las filas vuelven a
+    // estar habilitadas, en vez de que el caso quede oculto por el
+    // desmontaje que provoca el camino de éxito.
+    let resolverPromesa: (resultado: { error: string }) => void
+    const promesaPendiente = new Promise<{ error: string }>((resolve) => {
+      resolverPromesa = resolve
+    })
+    mockAsignarLead.mockReturnValue(promesaPendiente)
+
+    render(<HojaAsignarLead leadId="lead-1" leadNombre="Carla Gómez" asesores={ASESORES} />)
+
+    fireEvent.click(screen.getByRole('button', { name: /asignar carla gómez/i }))
+    fireEvent.click(await screen.findByText('Ana Pérez'))
+
+    // Mientras la promesa no resuelve: ambas filas deshabilitadas y la fila
+    // tocada muestra «Asignando…».
+    await vi.waitFor(() => {
+      expect(screen.getByText('Ana Pérez').closest('button')).toBeDisabled()
+    })
+    expect(screen.getByText('Bruno Ruiz').closest('button')).toBeDisabled()
+    expect(screen.getByText('Asignando…')).toBeInTheDocument()
+
+    resolverPromesa!({ error: 'Este lead ya fue asignado' })
+
+    // Al resolver, las filas se reactivan y el indicador desaparece.
+    await vi.waitFor(() => {
+      expect(screen.getByText('Ana Pérez').closest('button')).not.toBeDisabled()
+    })
+    expect(screen.getByText('Bruno Ruiz').closest('button')).not.toBeDisabled()
+    expect(screen.queryByText('Asignando…')).not.toBeInTheDocument()
+  })
 })

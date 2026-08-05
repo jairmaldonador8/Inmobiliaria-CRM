@@ -7,6 +7,7 @@ import { requireAdmin } from '@/lib/auth/usuario-actual'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { leadsBandeja } from '@/lib/leads/consultas'
 import { etiquetaFuenteConDetalle, formatearTelefono } from '@/lib/leads/formato'
+import { HORA_MS, esUrgente } from '@/lib/leads/urgencia'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { AsignarLead } from '@/components/leads/asignar-lead'
@@ -19,22 +20,19 @@ import TarjetaGlass from '@/components/fintech/tarjeta-glass'
 // nav-admin) queda diferido: requiere pasar el conteo desde el layout de
 // servidor al nav de cliente. Por ahora el conteo vive en este encabezado.
 
-const HORA_MS = 60 * 60 * 1000
-
 /**
  * Urgencia visual por tiempo de espera: verde < 1 h, ámbar 1–24 h,
  * rojo > 24 h (punto de color + texto «hace X»).
+ *
+ * `esUrgente` (móvil, ver src/lib/leads/urgencia.ts) comparte la misma
+ * frontera de 24h — inclusiva, igual que el `horas < 24` de aquí abajo cae
+ * a rojo en `horas === 24`.
  */
 function urgencia(creadoEn: string): { punto: string; texto: string } {
   const horas = (Date.now() - new Date(creadoEn).getTime()) / HORA_MS
   if (horas < 1) return { punto: 'bg-emerald-500', texto: 'text-emerald-600' }
   if (horas < 24) return { punto: 'bg-amber-500', texto: 'text-amber-600' }
   return { punto: 'bg-red-500', texto: 'text-red-600' }
-}
-
-/** Urgencia binaria del móvil: café-rojizo + negritas si lleva más de 24h esperando. */
-function esUrgente(creadoEn: string): boolean {
-  return Date.now() - new Date(creadoEn).getTime() > 24 * HORA_MS
 }
 
 export default async function PaginaBandeja() {
