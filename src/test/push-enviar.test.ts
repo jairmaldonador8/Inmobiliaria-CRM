@@ -18,16 +18,19 @@ vi.mock('@/lib/env', () => ({
   vapidPublicKey: () => 'public-key-test',
 }))
 
-vi.mock('@/lib/env-server', () => ({
-  vapidPrivateKey: () => 'private-key-test',
-  vapidSubject: () => 'mailto:test@klo-ser.test',
-}))
-
 // vi.mock se hoistea sobre los imports; las variables que usa la factory
-// deben venir de vi.hoisted() para no chocar con el TDZ.
-const { sendNotificationMock, setVapidDetailsMock } = vi.hoisted(() => ({
+// deben venir de vi.hoisted() para no chocar con el TDZ. vapidSubjectMock es
+// vi.fn() (no una arrow simple) para poder forzar un throw puntual en el
+// test del caso "falla el setup de VAPID" sin afectar al resto.
+const { sendNotificationMock, setVapidDetailsMock, vapidSubjectMock } = vi.hoisted(() => ({
   sendNotificationMock: vi.fn(),
   setVapidDetailsMock: vi.fn(),
+  vapidSubjectMock: vi.fn(() => 'mailto:test@klo-ser.test'),
+}))
+
+vi.mock('@/lib/env-server', () => ({
+  vapidPrivateKey: () => 'private-key-test',
+  vapidSubject: vapidSubjectMock,
 }))
 
 vi.mock('web-push', async (importOriginal) => {
@@ -169,5 +172,47 @@ describe('enviarPush', () => {
 
     const [, payloadJson] = sendNotificationMock.mock.calls[0]
     expect(JSON.parse(payloadJson as string).data).toEqual({ url: '/' })
+  })
+
+  it('si el setup de VAPID falla (accessor de env lanza), resuelve enviados:0 sin lanzar', async () => {
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    vapidSubjectMock.mockImplementationOnce(() => {
+      throw new Error('Falta la variable de entorno VAPID_SUBJECT')
+    })
+    const subs: FilaSuscripcion[] = [
+      { id: 's1', endpoint: 'https://push.example/1', p256dh: 'k1', auth: 'a1' },
+    ]
+    const { supabase, from } = crearSupabaseFake(subs)
+
+    const resultado = await enviarPush(supabase, 'user-1', DATOS)
+
+    expect(resultado).toEqual({ enviados: 0 })
+    expect(sendNotificationMock).not.toHaveBeenCalled()
+    // Ni siquiera llegó a consultar suscripciones: el setup de VAPID va primero.
+    expect(from).not.toHaveBeenCalled()
+    expect(consoleErrorSpy).toHaveBeenCalled()
+
+    consoleErrorSpy.mockRestore()
+  })
+
+  it('si la poda (delete) de una suscripción muerta falla, igual devuelve el conteo de enviados', async () => {
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    const subs: FilaSuscripcion[] = [
+      { id: 's1', endpoint: 'https://push.example/1', p256dh: 'k1', auth: 'a1' },
+      { id: 's2', endpoint: 'https://push.example/2', p256dh: 'k2', auth: 'a2' },
+    ]
+    const { supabase, inMock } = crearSupabaseFake(subs)
+    inMock.mockRejectedValueOnce(new Error('boom: delete falló'))
+
+    sendNotificationMock
+      .mockRejectedValueOnce(new WebPushError('gone', 410, {}, '', subs[0].endpoint))
+      .mockResolvedValueOnce(undefined)
+
+    const resultado = await enviarPush(supabase, 'user-1', DATOS)
+
+    expect(resultado).toEqual({ enviados: 1 })
+    expect(consoleErrorSpy).toHaveBeenCalled()
+
+    consoleErrorSpy.mockRestore()
   })
 })
