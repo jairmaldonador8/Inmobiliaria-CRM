@@ -381,6 +381,9 @@ describe('push_suscripciones', () => {
   const PUSH_ENDPOINT_ASESOR2 = `https://example.com/push/test-${RUN}-asesor2`;
   const PUSH_ENDPOINT_CROSS = `https://example.com/push/test-${RUN}-cross-insert-should-not-exist`;
 
+  let pushSub1Id: string; // fila de asesor1 (insertada en el primer test)
+  let pushSub2Id: string; // fila de asesor2 (insertada en el segundo test)
+
   afterAll(async () => {
     if (svc) {
       await svc.from('push_suscripciones').delete().in('endpoint', [
@@ -404,6 +407,7 @@ describe('push_suscripciones', () => {
       .single();
     expect(insError).toBeNull();
     expect(ins!.usuario_id).toBe(asesor1Id);
+    pushSub1Id = ins!.id;
 
     const { data: leida, error: leidaError } = await asesor1
       .from('push_suscripciones')
@@ -427,6 +431,7 @@ describe('push_suscripciones', () => {
       .single();
     expect(subError).toBeNull();
     expect(subAsesor2!.id).toBeTruthy();
+    pushSub2Id = subAsesor2!.id;
 
     const { data, error } = await asesor1
       .from('push_suscripciones')
@@ -452,5 +457,63 @@ describe('push_suscripciones', () => {
       .eq('endpoint', PUSH_ENDPOINT_CROSS);
     expect(checkError).toBeNull();
     expect(check).toEqual([]);
+  });
+
+  it('asesor1 SI puede actualizar su propia suscripcion (0007: policy de UPDATE)', async () => {
+    const { data: upd, error: updError } = await asesor1
+      .from('push_suscripciones')
+      .update({ user_agent: `TEST-RLS-${RUN}-user-agent-actualizado` })
+      .eq('id', pushSub1Id)
+      .select('id, user_agent');
+    expect(updError).toBeNull();
+    expect(upd).toHaveLength(1);
+    expect(upd![0].user_agent).toBe(`TEST-RLS-${RUN}-user-agent-actualizado`);
+
+    // Verificacion (service-role): el cambio persiste.
+    const { data: after, error: afterError } = await svc
+      .from('push_suscripciones')
+      .select('user_agent')
+      .eq('id', pushSub1Id)
+      .single();
+    expect(afterError).toBeNull();
+    expect(after!.user_agent).toBe(`TEST-RLS-${RUN}-user-agent-actualizado`);
+  });
+
+  it('asesor1 NO puede actualizar la suscripcion de asesor2 (0 filas sin error) ni reasignar la suya a asesor2 (with check)', async () => {
+    // Denegacion por policy USING: 0 filas afectadas, sin error (mismo patron
+    // que la denegacion de UPDATE sobre leads ajenos, ver arriba).
+    const { data: cross, error: crossError } = await asesor1
+      .from('push_suscripciones')
+      .update({ user_agent: 'HACKEADO' })
+      .eq('id', pushSub2Id)
+      .select('id');
+    expect(crossError).toBeNull();
+    expect(cross).toHaveLength(0);
+
+    // Verificacion (service-role): la suscripcion de asesor2 sigue intacta.
+    const { data: after, error: afterError } = await svc
+      .from('push_suscripciones')
+      .select('user_agent')
+      .eq('id', pushSub2Id)
+      .single();
+    expect(afterError).toBeNull();
+    expect(after!.user_agent).toBeNull();
+
+    // Denegacion por policy WITH CHECK: reasignar la propia fila a asesor2 SI
+    // regresa error (viola with check usuario_id = auth.uid() en el UPDATE).
+    const { error: reasignaError } = await asesor1
+      .from('push_suscripciones')
+      .update({ usuario_id: asesor2Id })
+      .eq('id', pushSub1Id);
+    expect(reasignaError).not.toBeNull();
+
+    // Verificacion (service-role): la fila de asesor1 sigue siendo suya.
+    const { data: sigue, error: sigueError } = await svc
+      .from('push_suscripciones')
+      .select('usuario_id')
+      .eq('id', pushSub1Id)
+      .single();
+    expect(sigueError).toBeNull();
+    expect(sigue!.usuario_id).toBe(asesor1Id);
   });
 });
