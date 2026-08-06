@@ -1,11 +1,23 @@
 import Link from 'next/link'
 import { format, formatDistanceToNow } from 'date-fns'
 import { es } from 'date-fns/locale'
-import { AlertTriangle, ChevronRight, Flame, TrendingUp } from 'lucide-react'
+import { AlertTriangle, CalendarDays, ChevronRight, Flame, TrendingUp } from 'lucide-react'
 
 import { requireAsesor } from '@/lib/auth/usuario-actual'
 import { createClient } from '@/lib/supabase/server'
+import { proximasVisitas } from '@/lib/dashboard/consultas'
 import { ETAPAS_CERRADAS, NOTA_CIERRE } from '@/lib/leads/formato'
+
+const ZONA_HORARIA = 'America/Monterrey'
+
+/** Fecha/hora legible en español, en la zona horaria del negocio (mismo formato que la confirmación de WhatsApp). */
+function formatearFechaVisita(fecha: string): string {
+  return new Intl.DateTimeFormat('es-MX', {
+    timeZone: ZONA_HORARIA,
+    dateStyle: 'long',
+    timeStyle: 'short',
+  }).format(new Date(fecha))
+}
 
 type LeadCola = {
   id: string
@@ -32,12 +44,21 @@ export default async function PaginaInicioAsesor() {
   const usuario = await requireAsesor()
   const supabase = await createClient()
 
+  // Instante "actual" calculado una sola vez (fuera de cualquier .filter/.map
+  // de render, ver AGENTS.md de la tarea): evita repetir `Date.now()` en el
+  // render, mismo espíritu que el `ahora` inyectable de consultas.ts.
+  const ahora = new Date()
+
   const inicioMes = new Date()
   inicioMes.setDate(1)
   inicioMes.setHours(0, 0, 0, 0)
 
-  const [{ data: leadsData, error: errorLeads }, { count: leadsNuevosMes }, { data: cierresMes }] =
-    await Promise.all([
+  const [
+    { data: leadsData, error: errorLeads },
+    { count: leadsNuevosMes },
+    { data: cierresMes },
+    visitasProximas,
+  ] = await Promise.all([
       // Leads activos (no cerrados, no archivados): base de ambas listas y
       // del chip «leads activos».
       supabase
@@ -61,6 +82,8 @@ export default async function PaginaInicioAsesor() {
         .eq('tipo', 'sistema')
         .eq('nota', NOTA_CIERRE.cerrado_ganado)
         .gte('creado_en', inicioMes.toISOString()),
+      // Próximas visitas agendadas (futuras), para la sección homónima.
+      proximasVisitas(supabase, 5, ahora),
     ])
 
   if (errorLeads) {
@@ -113,7 +136,7 @@ export default async function PaginaInicioAsesor() {
   const leadsActivos = leads.length
   const cerradosGanadosMes = new Set((cierresMes ?? []).map((c) => c.lead_id)).size
 
-  const fechaHoy = capitalizar(format(new Date(), "EEEE, d 'de' MMMM 'de' yyyy", { locale: es }))
+  const fechaHoy = capitalizar(format(ahora, "EEEE, d 'de' MMMM 'de' yyyy", { locale: es }))
 
   return (
     <section className="flex flex-col gap-6">
@@ -200,6 +223,47 @@ export default async function PaginaInicioAsesor() {
                         addSuffix: true,
                         locale: es,
                       })}
+                    </p>
+                  </div>
+                  <ChevronRight aria-hidden className="size-4 shrink-0 text-slate-400" />
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
+      {/* Próximas visitas */}
+      <div className="flex flex-col gap-3">
+        <div className="flex items-center gap-2">
+          <CalendarDays aria-hidden className="size-4 text-sky-500" />
+          <h2 className="text-sm font-semibold text-slate-900">Próximas visitas</h2>
+          {visitasProximas.length > 0 ? (
+            <span className="ml-auto rounded-full bg-sky-100 px-2 py-0.5 text-xs font-semibold text-sky-700">
+              {visitasProximas.length}
+            </span>
+          ) : null}
+        </div>
+
+        {visitasProximas.length === 0 ? (
+          <p className="rounded-xl border border-dashed border-slate-300 bg-white/60 px-4 py-6 text-center text-sm text-slate-500">
+            Sin visitas agendadas 📅
+          </p>
+        ) : (
+          <ul className="flex flex-col gap-2">
+            {visitasProximas.map((visita) => (
+              <li key={visita.id}>
+                <Link
+                  href={`/asesor/leads/${visita.leadId}`}
+                  className="flex items-center justify-between gap-2 rounded-xl bg-white p-3 shadow-xs ring-1 ring-sky-200 transition-colors active:bg-sky-50"
+                >
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium text-slate-900">
+                      {visita.leadNombre}
+                    </p>
+                    <p suppressHydrationWarning className="mt-0.5 text-xs text-slate-500">
+                      {formatearFechaVisita(visita.fecha)}
+                      {visita.propiedadTitulo ? ` · ${visita.propiedadTitulo}` : ''}
                     </p>
                   </div>
                   <ChevronRight aria-hidden className="size-4 shrink-0 text-slate-400" />

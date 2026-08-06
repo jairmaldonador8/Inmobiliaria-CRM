@@ -160,3 +160,60 @@ export async function citasHoy(supabase: SupabaseClient, ahora: Date = new Date(
 
   return count ?? 0
 }
+
+const LIMITE_PROXIMAS_VISITAS = 5
+
+/** Una visita agendada futura, ya lista para pintarse en la lista del dashboard. */
+export type ProximaVisita = {
+  id: string
+  /** Fecha/hora ISO 8601 con offset (UTC); formatear en America/Monterrey al mostrar. */
+  fecha: string
+  duracionMin: number
+  leadId: string
+  leadNombre: string
+  /** Título de la propiedad de interés; null si la visita no tiene propiedad vinculada. */
+  propiedadTitulo: string | null
+}
+
+type FilaProximaVisita = {
+  id: string
+  fecha: string
+  duracion_min: number
+  lead: { id: string; nombre: string } | null
+  propiedad: { titulo: string } | null
+}
+
+/**
+ * Próximas visitas agendadas (futuras, `estado = 'agendada'`), ordenadas por
+ * `fecha` ascendente (la más próxima primero) y limitadas a `limite` filas
+ * (por defecto 5). Sin filtro de `asesor_id`: se usa con el cliente de
+ * SESIÓN (mismo patrón que el resto de la cola del día en
+ * `src/app/(asesor)/asesor/page.tsx`), y RLS de `visitas` ya acota a las
+ * propias del asesor (o a todas si es admin) — igual que `citasHoy`.
+ */
+export async function proximasVisitas(
+  supabase: SupabaseClient,
+  limite: number = LIMITE_PROXIMAS_VISITAS,
+  ahora: Date = new Date()
+): Promise<ProximaVisita[]> {
+  const { data, error } = await supabase
+    .from('visitas')
+    .select('id, fecha, duracion_min, lead:leads(id, nombre), propiedad:propiedades(titulo)')
+    .eq('estado', 'agendada')
+    .gte('fecha', ahora.toISOString())
+    .order('fecha', { ascending: true })
+    .limit(limite)
+
+  if (error) {
+    throw new Error(`No se pudieron obtener las próximas visitas: ${error.message}`)
+  }
+
+  return ((data ?? []) as unknown as FilaProximaVisita[]).map((fila) => ({
+    id: fila.id,
+    fecha: fila.fecha,
+    duracionMin: fila.duracion_min,
+    leadId: fila.lead?.id ?? '',
+    leadNombre: fila.lead?.nombre ?? '',
+    propiedadTitulo: fila.propiedad?.titulo ?? null,
+  }))
+}
