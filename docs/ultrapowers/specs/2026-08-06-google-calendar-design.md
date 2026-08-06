@@ -28,9 +28,12 @@ su dashboard y que las citas del CRM se plasmen automáticamente en él,
    modos. Si Google no responde, la advertencia se omite y el agendado sigue
    (falla abierta; nunca bloquea el negocio).
 5. **Cuentas: Gmail personal.** La app OAuth necesitará verificación de Google
-   (trámite gratuito: política de privacidad, dominio verificado, justificar
-   scopes). Mientras tanto, modo testing con hasta 100 usuarios de prueba
-   cubre a la agencia.
+   (trámite gratuito: política de privacidad, dominio verificado, video demo,
+   justificar scopes; ~10 días). **Corrección post-research (2026-08-06):** el
+   modo Testing NO sirve de puente — sus refresh tokens expiran a los 7 días
+   con scopes de Calendar. Estrategia: publicar «In production» sin verificar
+   desde el día 1 (tokens duraderos; tope de por vida de 100 usuarios con la
+   pantalla «app no verificada») y tramitar la verificación en paralelo.
 6. **Costo: $0 extra.** API de Calendar gratuita (~1M llamadas/día de cuota);
    corre sobre el Supabase y Vercel actuales. Se descartó intermediario tipo
    Nylas (~$1.50–3 USD/asesor/mes).
@@ -105,8 +108,9 @@ main toma el número).
   cifra y guarda el refresh token, marca conexión `activa`, redirige al
   dashboard con confirmación.
 - Desconectar: revoca el token contra Google (`oauth2.revoke`) y borra la fila.
-- Scopes mínimos: `calendar.events` (crear/editar/borrar eventos) +
-  `calendar.freebusy` (leer disponibilidad). Nada más.
+- Scopes mínimos: `calendar.events.owned` (crear/editar/borrar eventos en
+  calendarios propios — más angosto que `calendar.events`, facilita la
+  verificación) + `calendar.freebusy` (leer disponibilidad). Nada más.
 
 ### 2. Card en dashboard del asesor
 
