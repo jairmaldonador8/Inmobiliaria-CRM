@@ -20,6 +20,23 @@ npm run test:rls   # tests de integración RLS (contra la DB en la nube)
 
 Variables en `.env.local` (no se commitea): ver `.env.example` para la lista completa.
 
+### ⚠️ Entornos: nunca desarrolles contra producción
+
+Hay **dos** proyectos Supabase. `.env.local` apunta al de **desarrollo**, y ahí deben quedarse `npm run dev`, `npm test` y `npm run test:rls` — esas suites crean y borran filas de verdad en la base a la que apunten.
+
+| | Supabase | EasyBroker | Dónde viven las variables |
+|---|---|---|---|
+| **Desarrollo** | `CRM Inmobiliario DEV` (`fewbcrcacqrwxrxpwnxv`) | sandbox `api.stagingeb.com` (llave pública, datos ficticios) | `.env.local` |
+| **Producción** | `CRM Inmobiliario` (`sdyyczntaydzodyjtpgc`) | `api.easybroker.com` (llave real de Montana) | solo en Vercel |
+
+No copies los valores de producción a `.env.local`. En agosto de 2026, tenerlos ahí provocó que una demo local creara una cita real sobre una prospecto real.
+
+Para apuntar un comando puntual a un proyecto concreto:
+
+```bash
+SUPABASE_PROJECT_REF=<ref> node scripts/aplicar-migracion.mjs --sql "select ..."
+```
+
 Para aplicar una migración al proyecto Supabase (mismo flujo con el que se aplicó la 0007):
 
 ```bash
