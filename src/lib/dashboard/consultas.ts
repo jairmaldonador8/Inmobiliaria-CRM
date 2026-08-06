@@ -9,62 +9,18 @@
  * Todas aceptan un `ahora` opcional (por defecto `new Date()`) para que los
  * tests puedan fijar el instante "actual" sin depender del reloj real.
  *
- * Zona horaria: America/Monterrey. El repo NO tiene `@date-fns/tz` instalado
- * (ver package.json) — los días calendario se derivan con
- * `Intl.DateTimeFormat('en-CA', { timeZone: 'America/Monterrey' })`, que
- * entrega claves `YYYY-MM-DD` listas para agrupar u ordenar como texto.
+ * Zona horaria: America/Monterrey — las funciones genéricas de fecha
+ * (`diaMonterrey`, `inicioDeHoyMonterrey`, `inicioDeMesMonterrey`) viven en
+ * `src/lib/fechas/monterrey.ts`, fuente única de verdad compartida con el
+ * resto de la app.
  */
 import type { SupabaseClient } from '@supabase/supabase-js'
 
 import { NOTA_CIERRE } from '@/lib/leads/formato'
+import { diaMonterrey, inicioDeHoyMonterrey, inicioDeMesMonterrey } from '@/lib/fechas/monterrey'
 
-const ZONA_HORARIA = 'America/Monterrey'
 const UN_DIA_MS = 24 * 60 * 60 * 1000
 const DIAS_SERIE = 30
-
-/** Clave de día calendario (`YYYY-MM-DD`) de `fecha` en America/Monterrey. */
-export function diaMonterrey(fecha: Date): string {
-  return new Intl.DateTimeFormat('en-CA', { timeZone: ZONA_HORARIA }).format(fecha)
-}
-
-/**
- * Offset UTC (en minutos, p. ej. -360 para UTC-6) vigente en
- * America/Monterrey en el instante `fecha`. Se calcula en vivo con Intl en
- * vez de asumir un valor fijo: México eliminó el horario de verano en la
- * mayor parte del país en 2022, pero calcularlo evita depender de esa regla.
- */
-function offsetMinutosMonterrey(fecha: Date): number {
-  const partes = new Intl.DateTimeFormat('en-US', {
-    timeZone: ZONA_HORARIA,
-    timeZoneName: 'longOffset',
-  }).formatToParts(fecha)
-  const texto = partes.find((p) => p.type === 'timeZoneName')?.value ?? 'GMT-06:00'
-  const coincidencia = texto.match(/GMT([+-])(\d{2}):(\d{2})/)
-  if (!coincidencia) return -360
-  const signo = coincidencia[1] === '-' ? -1 : 1
-  return signo * (Number(coincidencia[2]) * 60 + Number(coincidencia[3]))
-}
-
-/** Instante UTC de las 00:00:00 del día calendario `claveDia` (`YYYY-MM-DD`) en America/Monterrey. */
-function inicioDeDiaMonterrey(claveDia: string): Date {
-  // `claveDia` interpretada como UTC es solo un candidato: se ajusta con el
-  // offset real vigente ese día para llegar al instante UTC correcto.
-  const candidato = new Date(`${claveDia}T00:00:00Z`)
-  const offset = offsetMinutosMonterrey(candidato)
-  return new Date(candidato.getTime() - offset * 60_000)
-}
-
-/** Instante UTC del inicio del día de hoy (según `ahora`) en America/Monterrey. */
-export function inicioDeHoyMonterrey(ahora: Date): Date {
-  return inicioDeDiaMonterrey(diaMonterrey(ahora))
-}
-
-/** Instante UTC del inicio del mes actual (según `ahora`) en America/Monterrey. */
-export function inicioDeMesMonterrey(ahora: Date): Date {
-  const claveDia = diaMonterrey(ahora)
-  const primerDiaDelMes = `${claveDia.slice(0, 7)}-01`
-  return inicioDeDiaMonterrey(primerDiaDelMes)
-}
 
 /**
  * Serie de leads creados por día calendario en America/Monterrey, para los

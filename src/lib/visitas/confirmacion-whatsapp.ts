@@ -11,15 +11,16 @@
  * agendar una visita sin tener una propiedad de interés vinculada, y el
  * mensaje debe leerse bien en ambos casos.
  *
- * Fecha/hora en es-MX, zona America/Monterrey — mismo patrón que
- * `formatearFechaVisita` en `src/lib/visitas/acciones.ts` y que
- * `src/lib/dashboard/consultas.ts`. IMPORTANTE: `datos.fecha` debe llegar
- * como ISO 8601 CON offset (UTC) — quien arma `DatosConfirmacionVisita` es
- * responsable de esa conversión (ver `hoja-agendar-visita.tsx`), aquí solo
- * se formatea para mostrar.
+ * Vive en `src/lib/visitas/` (no en `src/components/visitas/`, donde vivía
+ * antes): es lógica pura sin JSX, igual que `acciones.ts`/`validacion.ts`.
+ * Fecha/hora en es-MX, zona America/Monterrey — vía
+ * `formatearFechaHoraMonterrey` (fuente única en `src/lib/fechas/monterrey.ts`).
+ * IMPORTANTE: `datos.fecha` debe llegar como ISO 8601 CON offset (UTC) —
+ * quien arma `DatosConfirmacionVisita` es responsable de esa conversión (ver
+ * `hoja-agendar-visita.tsx`), aquí solo se formatea para mostrar.
  */
 
-const ZONA_HORARIA = 'America/Monterrey'
+import { formatearFechaHoraMonterrey } from '@/lib/fechas/monterrey'
 
 export type DatosConfirmacionVisita = {
   leadNombre: string
@@ -29,15 +30,6 @@ export type DatosConfirmacionVisita = {
   /** Título de la propiedad de interés; null/undefined si no aplica. */
   propiedadTitulo?: string | null
   asesorNombre: string
-}
-
-/** Fecha/hora legible en español, en la zona horaria del negocio. */
-function formatearFechaVisita(fecha: string): string {
-  return new Intl.DateTimeFormat('es-MX', {
-    timeZone: ZONA_HORARIA,
-    dateStyle: 'long',
-    timeStyle: 'short',
-  }).format(new Date(fecha))
 }
 
 /** Duración legible: minutos si es menor a una hora, si no horas (+ minutos si sobran). */
@@ -55,7 +47,7 @@ function formatearDuracionVisita(duracionMin: number): string {
  * cláusula de la oración por completo (sin conectores ni espacios colgando).
  */
 export function armarMensajeConfirmacionVisita(datos: DatosConfirmacionVisita): string {
-  const fechaTexto = formatearFechaVisita(datos.fecha)
+  const fechaTexto = formatearFechaHoraMonterrey(datos.fecha)
   const duracionTexto = formatearDuracionVisita(datos.duracionMin)
   const clausulaPropiedad = datos.propiedadTitulo ? ` para ${datos.propiedadTitulo}` : ''
 

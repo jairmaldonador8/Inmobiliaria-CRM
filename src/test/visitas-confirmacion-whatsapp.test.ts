@@ -3,11 +3,7 @@ import { describe, expect, it } from 'vitest'
 import {
   armarMensajeConfirmacionVisita,
   armarUrlConfirmacionVisita,
-} from '@/components/visitas/confirmacion-whatsapp'
-import {
-  convertirFechaHoraMonterreyAIso,
-  fechaHoyMonterrey,
-} from '@/components/visitas/zona-horaria-monterrey'
+} from '@/lib/visitas/confirmacion-whatsapp'
 
 // 18:30 UTC es 12:30 en America/Monterrey (UTC-6, sin horario de verano
 // desde 2022) — fija el instante para no depender del reloj real.
@@ -94,41 +90,6 @@ describe('armarUrlConfirmacionVisita', () => {
   })
 })
 
-describe('convertirFechaHoraMonterreyAIso', () => {
-  it('interpreta la fecha/hora tecleada como America/Monterrey (UTC-6), no la zona del dispositivo', () => {
-    // 15 de septiembre de 2026, 14:30 EN MONTERREY → 20:30 UTC (UTC-6, sin
-    // horario de verano desde 2022). Literal fijo — NO recalculado con la
-    // misma fórmula de la implementación — para que un regreso a "hora
-    // local del dispositivo" sí reviente este test.
-    expect(convertirFechaHoraMonterreyAIso('2026-09-15', '14:30')).toBe('2026-09-15T20:30:00.000Z')
-  })
-
-  it('mismo offset en otra fecha del año (México no observa horario de verano desde 2022)', () => {
-    expect(convertirFechaHoraMonterreyAIso('2026-01-01', '08:00')).toBe('2026-01-01T14:00:00.000Z')
-  })
-
-  it('el resultado NO depende de la zona horaria del proceso que ejecuta el código', () => {
-    // Si el helper leyera (aunque fuera indirectamente) la zona del
-    // dispositivo/proceso en vez de fijar 'America/Monterrey' en el
-    // Intl.DateTimeFormat, este resultado cambiaría al cambiar TZ.
-    const zonaOriginal = process.env.TZ
-    try {
-      process.env.TZ = 'Pacific/Auckland'
-      expect(convertirFechaHoraMonterreyAIso('2026-09-15', '14:30')).toBe(
-        '2026-09-15T20:30:00.000Z'
-      )
-    } finally {
-      process.env.TZ = zonaOriginal
-    }
-  })
-
-  it('devuelve null si la fecha/hora no forma un instante válido', () => {
-    expect(convertirFechaHoraMonterreyAIso('no-es-fecha', '14:30')).toBeNull()
-  })
-})
-
-describe('fechaHoyMonterrey', () => {
-  it('devuelve una fecha en formato YYYY-MM-DD', () => {
-    expect(fechaHoyMonterrey()).toMatch(/^\d{4}-\d{2}-\d{2}$/)
-  })
-})
+// Los tests de `convertirFechaHoraMonterreyAIso` y `fechaHoyMonterrey` viven
+// en `src/test/fechas-monterrey.test.ts` junto con el resto de las
+// funciones puras de `src/lib/fechas/monterrey.ts` (fuente única de verdad).

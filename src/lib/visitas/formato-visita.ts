@@ -3,22 +3,18 @@
  * (`ListaVisitasLead`): fecha/hora legible, duración legible y etiqueta +
  * clase de color del estado. Funciones PURAS, sin 'use client'.
  *
- * Mismo criterio de fecha/hora que `formatearFechaVisita` en
- * `src/lib/visitas/acciones.ts` y `src/components/visitas/confirmacion-whatsapp.ts`
- * — America/Monterrey, es-MX — pero vive aparte porque ninguno de esos dos
- * módulos se puede tocar en esta corrección.
+ * Vive en `src/lib/visitas/` (no en `src/components/visitas/`, donde vivía
+ * antes): es lógica pura sin JSX, igual que `acciones.ts`/`validacion.ts`.
+ *
+ * La fecha/hora reutiliza `formatearFechaHoraMonterrey` (fuente única en
+ * `src/lib/fechas/monterrey.ts`) — antes de este módulo, este archivo tenía
+ * su propia copia byte a byte de la misma función.
  */
 
-const ZONA_HORARIA = 'America/Monterrey'
+import { formatearFechaHoraMonterrey } from '@/lib/fechas/monterrey'
 
 /** Fecha/hora legible en español, en la zona horaria del negocio. */
-export function formatearFechaVisita(fecha: string): string {
-  return new Intl.DateTimeFormat('es-MX', {
-    timeZone: ZONA_HORARIA,
-    dateStyle: 'long',
-    timeStyle: 'short',
-  }).format(new Date(fecha))
-}
+export const formatearFechaVisita = formatearFechaHoraMonterrey
 
 /** Duración legible: minutos si es menor a una hora, si no horas (+ minutos si sobran). */
 export function formatearDuracionVisita(duracionMin: number): string {

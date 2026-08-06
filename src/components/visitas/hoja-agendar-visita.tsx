@@ -10,11 +10,8 @@ import { DURACION_MIN_DEFAULT, validarDatosVisita } from '@/lib/visitas/validaci
 import {
   armarMensajeConfirmacionVisita,
   armarUrlConfirmacionVisita,
-} from '@/components/visitas/confirmacion-whatsapp'
-import {
-  convertirFechaHoraMonterreyAIso,
-  fechaHoyMonterrey,
-} from '@/components/visitas/zona-horaria-monterrey'
+} from '@/lib/visitas/confirmacion-whatsapp'
+import { convertirFechaHoraMonterreyAIso, fechaHoyMonterrey } from '@/lib/fechas/monterrey'
 import { CamposFechaHoraVisita } from '@/components/visitas/campos-fecha-hora-visita'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -135,7 +132,7 @@ export function HojaAgendarVisita({
     // horario de verano de EE. UU., o con el equipo mal configurado
     // agendaría a la hora equivocada) — toda la app muestra horas en
     // America/Monterrey, así que lo tecleado también significa esa zona.
-    // Ver `zona-horaria-monterrey.ts` para el cálculo del offset real.
+    // Ver `src/lib/fechas/monterrey.ts` para el cálculo del offset real.
     const fechaISO = convertirFechaHoraMonterreyAIso(fecha, hora)
     if (!fechaISO) {
       setError('La fecha no es válida')

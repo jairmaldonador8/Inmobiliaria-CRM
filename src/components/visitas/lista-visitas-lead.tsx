@@ -12,7 +12,7 @@ import {
   etiquetaEstadoVisita,
   formatearDuracionVisita,
   formatearFechaVisita,
-} from '@/components/visitas/formato-visita'
+} from '@/lib/visitas/formato-visita'
 import { HojaReagendarVisita } from '@/components/visitas/hoja-reagendar-visita'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'

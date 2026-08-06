@@ -28,6 +28,7 @@ import { revalidatePath } from 'next/cache'
 import { usuarioActual } from '@/lib/auth/usuario-actual'
 import { createClient } from '@/lib/supabase/server'
 import { validarDatosVisita } from '@/lib/visitas/validacion'
+import { formatearFechaHoraMonterrey } from '@/lib/fechas/monterrey'
 
 export type ResultadoVisita = { ok: true } | { error: string }
 export type ResultadoAgendarVisita = { ok: true; visitaId: string } | { error: string }
@@ -42,17 +43,6 @@ export type DatosAgendarVisita = {
 export type DatosReagendarVisita = {
   fecha: string
   duracionMin: number
-}
-
-const ZONA_HORARIA = 'America/Monterrey'
-
-/** Fecha/hora legible en español, en la zona horaria del negocio. */
-function formatearFechaVisita(fecha: string): string {
-  return new Intl.DateTimeFormat('es-MX', {
-    timeZone: ZONA_HORARIA,
-    dateStyle: 'long',
-    timeStyle: 'short',
-  }).format(new Date(fecha))
 }
 
 /** Revalida las rutas donde una visita puede mostrarse (ambos roles). */
@@ -118,7 +108,7 @@ export async function agendarVisita(
     lead_id: lead.id,
     autor_id: usuario.user_id,
     tipo: 'sistema',
-    nota: `Visita agendada para ${formatearFechaVisita(datos.fecha)}`,
+    nota: `Visita agendada para ${formatearFechaHoraMonterrey(datos.fecha)}`,
   })
   if (errorSeguimiento) {
     console.error('No se pudo registrar el seguimiento de la visita:', errorSeguimiento.message)

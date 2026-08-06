@@ -19,9 +19,6 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import {
   cierresGanadosMes,
   citasHoy,
-  diaMonterrey,
-  inicioDeHoyMonterrey,
-  inicioDeMesMonterrey,
   proximasVisitas,
   serieLeads30Dias,
 } from '@/lib/dashboard/consultas'
@@ -83,24 +80,6 @@ function crearSupabaseProximasVisitasFake(
   const from = vi.fn(() => ({ select }))
   return { supabase: { from } as unknown as SupabaseClient, from, select, eq, gte, order, limit }
 }
-
-describe('diaMonterrey / inicioDeHoyMonterrey / inicioDeMesMonterrey', () => {
-  it('un instante a medianoche UTC cae en el día calendario ANTERIOR en Monterrey', () => {
-    expect(diaMonterrey(new Date('2026-03-15T00:00:00.000Z'))).toBe('2026-03-14')
-  })
-
-  it('un instante a las 06:00 UTC ya cae en el día calendario correspondiente en Monterrey', () => {
-    expect(diaMonterrey(new Date('2026-03-15T06:00:00.000Z'))).toBe('2026-03-15')
-  })
-
-  it('inicioDeHoyMonterrey devuelve las 06:00 UTC (00:00 Monterrey) del día de `ahora`', () => {
-    expect(inicioDeHoyMonterrey(AHORA).toISOString()).toBe('2026-03-15T06:00:00.000Z')
-  })
-
-  it('inicioDeMesMonterrey devuelve las 06:00 UTC del día 1 del mes de `ahora`', () => {
-    expect(inicioDeMesMonterrey(AHORA).toISOString()).toBe('2026-03-01T06:00:00.000Z')
-  })
-})
 
 describe('serieLeads30Dias', () => {
   it('devuelve exactamente 30 posiciones', async () => {

@@ -9,12 +9,12 @@ import { DURACION_MIN_DEFAULT, validarDatosVisita } from '@/lib/visitas/validaci
 import {
   armarMensajeConfirmacionVisita,
   armarUrlConfirmacionVisita,
-} from '@/components/visitas/confirmacion-whatsapp'
+} from '@/lib/visitas/confirmacion-whatsapp'
 import {
   convertirFechaHoraMonterreyAIso,
   descomponerFechaIsoMonterrey,
   fechaHoyMonterrey,
-} from '@/components/visitas/zona-horaria-monterrey'
+} from '@/lib/fechas/monterrey'
 import { CamposFechaHoraVisita } from '@/components/visitas/campos-fecha-hora-visita'
 import { Button } from '@/components/ui/button'
 import {

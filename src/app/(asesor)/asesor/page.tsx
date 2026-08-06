@@ -7,17 +7,7 @@ import { requireAsesor } from '@/lib/auth/usuario-actual'
 import { createClient } from '@/lib/supabase/server'
 import { proximasVisitas } from '@/lib/dashboard/consultas'
 import { ETAPAS_CERRADAS, NOTA_CIERRE } from '@/lib/leads/formato'
-
-const ZONA_HORARIA = 'America/Monterrey'
-
-/** Fecha/hora legible en español, en la zona horaria del negocio (mismo formato que la confirmación de WhatsApp). */
-function formatearFechaVisita(fecha: string): string {
-  return new Intl.DateTimeFormat('es-MX', {
-    timeZone: ZONA_HORARIA,
-    dateStyle: 'long',
-    timeStyle: 'short',
-  }).format(new Date(fecha))
-}
+import { formatearFechaHoraMonterrey } from '@/lib/fechas/monterrey'
 
 type LeadCola = {
   id: string
@@ -262,7 +252,7 @@ export default async function PaginaInicioAsesor() {
                       {visita.leadNombre}
                     </p>
                     <p suppressHydrationWarning className="mt-0.5 text-xs text-slate-500">
-                      {formatearFechaVisita(visita.fecha)}
+                      {formatearFechaHoraMonterrey(visita.fecha)}
                       {visita.propiedadTitulo ? ` · ${visita.propiedadTitulo}` : ''}
                     </p>
                   </div>
