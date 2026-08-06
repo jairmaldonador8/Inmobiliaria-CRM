@@ -19,6 +19,18 @@
  *      * leads: happened_after. El API no garantiza orden, asi que el cursor
  *        avanza SOLO al final de una corrida completamente exitosa (avanzarlo
  *        a la mitad podria saltarse contact requests de paginas no procesadas).
+ *  - Tercera fase, 'estatus' (recurso propio en sync_estado, SIN cursor): el
+ *    listado de propiedades no trae `status` y EasyBroker no manda eventos de
+ *    borrado, asi que la unica forma confiable de saber si una propiedad
+ *    sigue publicada -o si desaparecio del catalogo alla- es una pasada
+ *    COMPLETA de /v1/listing_statuses (paginado, limit 100) cruzada contra
+ *    `propiedades`. Cadencia: CADA corrida del sync (no una cadencia
+ *    separada) porque es barata -para el catalogo real (~177 propiedades) son
+ *    ~2 paginas, y hasta para el catalogo de staging (~1,474) son ~15- muy
+ *    por debajo del rate limit (20 req/s) y del maxDuration=300s del cron. Si
+ *    el catalogo creciera al punto de que esto pesara, desacoplar la cadencia
+ *    (ultimo_ok de 'estatus' con antiguedad minima) seria el siguiente paso;
+ *    hoy no se justifica la complejidad extra. Ver reconciliarEstatusPropiedades.
  *  - Idempotencia: upsert por easybroker_id en propiedades. En leads, dedup
  *    por easybroker_id tanto en `leads` como en `seguimientos` (un reingreso
  *    ya registrado no se repite), y por telefono/email (consulta repetida ->
@@ -36,10 +48,12 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 
 import { ebFetch, pausa, PAUSA_ENTRE_PAGINAS_MS, type PaginaEB, type ParamsEB } from '@/lib/easybroker/cliente'
 import {
+  estatusEsActivo,
   mapearContactRequest,
   mapearPropiedadDetalle,
   mapearPropiedadLista,
   type ContactRequestEB,
+  type ListingStatusEB,
   type PropiedadDetalleEB,
   type PropiedadListaEB,
 } from '@/lib/easybroker/mapeo'
@@ -52,6 +66,15 @@ import { crearNotificacion, notificarAdmins } from '@/lib/notificaciones/crear'
 export interface ResultadoSync {
   propiedades: { procesadas: number; nuevas: number; actualizadas: number }
   leads: { procesados: number; nuevos: number; duplicados: number }
+  estatus: {
+    procesadas: number
+    cambiosEstatus: number
+    desactivadas: number
+    reactivadas: number
+    ausentes: number
+    /** false si la pasada de listing_statuses se corto (maxPaginas/error): no se evaluaron bajas. */
+    catalogoCompleto: boolean
+  }
   errores: string[]
   /** true si la corrida no se ejecuto (otra invocacion tiene el lease). */
   omitido: boolean
@@ -272,6 +295,129 @@ export async function procesarPaginaPropiedades(
     }
   }
   return resultado
+}
+
+// ---------------------------------------------------------------------------
+// Estatus (reconciliacion completa contra /v1/listing_statuses)
+// ---------------------------------------------------------------------------
+
+export interface PropiedadEstatusActual {
+  id: string
+  easybroker_id: string
+  estatus: string
+  activa: boolean
+}
+
+export interface ResultadoReconciliacionEstatus {
+  procesadas: number
+  cambiosEstatus: number
+  desactivadas: number
+  reactivadas: number
+  ausentes: number
+  errores: string[]
+}
+
+/**
+ * Reconcilia estatus/activa de un lote de propiedades YA cargado contra el
+ * mapa easybroker_id -> status de /v1/listing_statuses.
+ *
+ * `catalogoCompleto` indica si `estatusPorId` viene de una pasada COMPLETA
+ * (sin cortes por maxPaginas ni errores). Si es false, las propiedades NO
+ * encontradas en el mapa se dejan intactas a proposito: con una pasada
+ * parcial no hay forma de distinguir "todavia no llegamos a su pagina" de
+ * "ya no existe en EB", y desactivar por error seria peor que el bug
+ * original. Las SI encontradas en el mapa se actualizan siempre — su estatus
+ * es cierto sin importar cuantas paginas mas falten.
+ *
+ * Nunca borra filas: una propiedad ausente del catalogo de EB puede seguir
+ * referenciada por leads y por seguimientos (append-only), asi que solo se
+ * le apaga `activa`.
+ */
+export async function reconciliarEstatusPropiedades(
+  supabase: SupabaseClient,
+  propiedades: PropiedadEstatusActual[],
+  estatusPorId: Map<string, string>,
+  catalogoCompleto: boolean
+): Promise<ResultadoReconciliacionEstatus> {
+  const resultado: ResultadoReconciliacionEstatus = {
+    procesadas: 0,
+    cambiosEstatus: 0,
+    desactivadas: 0,
+    reactivadas: 0,
+    ausentes: 0,
+    errores: [],
+  }
+
+  for (const fila of propiedades) {
+    try {
+      const statusEb = estatusPorId.get(fila.easybroker_id)
+
+      if (statusEb === undefined) {
+        if (catalogoCompleto) {
+          resultado.ausentes += 1
+          if (fila.activa) {
+            const { error } = await supabase
+              .from('propiedades')
+              .update({ activa: false })
+              .eq('id', fila.id)
+            if (error) throw new Error(error.message)
+            resultado.desactivadas += 1
+          }
+          resultado.procesadas += 1
+        }
+        // catalogo incompleto: no se toca esta propiedad en esta corrida.
+        continue
+      }
+
+      const nuevaActiva = estatusEsActivo(statusEb)
+      if (statusEb !== fila.estatus || nuevaActiva !== fila.activa) {
+        const { error } = await supabase
+          .from('propiedades')
+          .update({ estatus: statusEb, activa: nuevaActiva })
+          .eq('id', fila.id)
+        if (error) throw new Error(error.message)
+        if (statusEb !== fila.estatus) resultado.cambiosEstatus += 1
+        if (fila.activa && !nuevaActiva) resultado.desactivadas += 1
+        if (!fila.activa && nuevaActiva) resultado.reactivadas += 1
+      }
+      resultado.procesadas += 1
+    } catch (error) {
+      resultado.errores.push(`propiedad ${fila.easybroker_id}: ${mensajeDe(error)}`)
+    }
+  }
+
+  return resultado
+}
+
+/**
+ * Trae TODO /v1/listing_statuses paginado (limit 100). `completo` exige DOS
+ * cosas: (a) se llego a next_page=null de forma natural (no por agotar
+ * maxPaginas ni por un error), y (b) el mapa no quedo vacio. (b) es una
+ * salvaguarda a proposito: una respuesta vacia con next_page=null (API rota,
+ * catalogo real vacio, o un fetcher de test que no conoce este endpoint) NO
+ * debe interpretarse como "EasyBroker ya no tiene ninguna propiedad" —
+ * desactivar TODO el catalogo por una respuesta asi seria mucho peor que el
+ * bug que esto corrige. Solo con `completo=true` reconciliarEstatusPropiedades
+ * marca bajas (`activa=false` por ausencia).
+ */
+async function obtenerMapaEstatusEB(
+  obtenerPagina: (path: string, params?: ParamsEB) => Promise<PaginaEB<unknown>>,
+  maxPaginas: number
+): Promise<{ estatusPorId: Map<string, string>; completo: boolean }> {
+  const estatusPorId = new Map<string, string>()
+
+  let pagina = (await obtenerPagina('/v1/listing_statuses', { limit: 100 })) as PaginaEB<ListingStatusEB>
+  let paginasLeidas = 1
+  for (const item of pagina.content) estatusPorId.set(item.public_id, item.status)
+
+  while (pagina.pagination.next_page && paginasLeidas < maxPaginas) {
+    await pausa(PAUSA_ENTRE_PAGINAS_MS)
+    pagina = (await obtenerPagina(pagina.pagination.next_page)) as PaginaEB<ListingStatusEB>
+    paginasLeidas += 1
+    for (const item of pagina.content) estatusPorId.set(item.public_id, item.status)
+  }
+
+  return { estatusPorId, completo: !pagina.pagination.next_page && estatusPorId.size > 0 }
 }
 
 // ---------------------------------------------------------------------------
@@ -523,6 +669,14 @@ export async function sincronizarEasyBroker(
   const resultado: ResultadoSync = {
     propiedades: { procesadas: 0, nuevas: 0, actualizadas: 0 },
     leads: { procesados: 0, nuevos: 0, duplicados: 0 },
+    estatus: {
+      procesadas: 0,
+      cambiosEstatus: 0,
+      desactivadas: 0,
+      reactivadas: 0,
+      ausentes: 0,
+      catalogoCompleto: false,
+    },
     errores: [],
     omitido: false,
   }
@@ -635,6 +789,43 @@ export async function sincronizarEasyBroker(
       const mensaje = `sync leads: ${mensajeDe(error)}`
       resultado.errores.push(mensaje)
       await marcarError(supabase, 'leads', mensaje).catch(() => {})
+    }
+
+    // --- Estatus: pasada completa de listing_statuses, SIN cursor (ver jsdoc arriba) ---
+    try {
+      const { estatusPorId, completo } = await obtenerMapaEstatusEB(obtenerPagina, maxPaginas)
+
+      const propiedadesAgencia: PropiedadEstatusActual[] = []
+      const TAM_PAGINA_PROPIEDADES = 1000
+      for (let desde = 0; ; desde += TAM_PAGINA_PROPIEDADES) {
+        const { data, error } = await supabase
+          .from('propiedades')
+          .select('id, easybroker_id, estatus, activa')
+          .eq('agencia_id', agenciaId)
+          .range(desde, desde + TAM_PAGINA_PROPIEDADES - 1)
+        if (error) throw new Error(`consulta de propiedades para reconciliar estatus: ${error.message}`)
+        propiedadesAgencia.push(...((data ?? []) as PropiedadEstatusActual[]))
+        if (!data || data.length < TAM_PAGINA_PROPIEDADES) break
+      }
+
+      const r = await reconciliarEstatusPropiedades(supabase, propiedadesAgencia, estatusPorId, completo)
+      resultado.estatus.procesadas += r.procesadas
+      resultado.estatus.cambiosEstatus += r.cambiosEstatus
+      resultado.estatus.desactivadas += r.desactivadas
+      resultado.estatus.reactivadas += r.reactivadas
+      resultado.estatus.ausentes += r.ausentes
+      resultado.estatus.catalogoCompleto = completo
+
+      if (r.errores.length > 0) {
+        resultado.errores.push(...r.errores)
+        await marcarError(supabase, 'estatus', r.errores.join('; '))
+      } else {
+        await marcarOk(supabase, 'estatus')
+      }
+    } catch (error) {
+      const mensaje = `sync estatus: ${mensajeDe(error)}`
+      resultado.errores.push(mensaje)
+      await marcarError(supabase, 'estatus', mensaje).catch(() => {})
     }
 
     return resultado

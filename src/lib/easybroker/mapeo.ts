@@ -62,6 +62,18 @@ export interface ContactRequestEB {
   happened_at: string
 }
 
+/**
+ * Item de GET /v1/listing_statuses. GET /v1/properties NO trae `status`; esta
+ * es la unica fuente confiable del estatus real (ver skill easybroker-api).
+ * Estatus posibles: published | not_published | reserved | sold | rented |
+ * suspended.
+ */
+export interface ListingStatusEB {
+  public_id: string
+  status: string
+  updated_at: string
+}
+
 // ---------------------------------------------------------------------------
 // Filas resultantes (subconjuntos de las tablas propiedades / leads)
 // ---------------------------------------------------------------------------
@@ -183,6 +195,24 @@ export function mapearPropiedadDetalle(detalle: PropiedadDetalleEB): FilaPropied
     url_publica: detalle.public_url ?? null,
     fotos: (detalle.images ?? []).map((img) => img.url),
   }
+}
+
+/**
+ * Estatus de EasyBroker que consideramos "disponible" (`activa=true`) en
+ * nuestro catalogo.
+ *
+ * Decision de producto: SOLO 'published'. Se evaluo incluir 'reserved' (hay
+ * apartado, pero la operacion no se ha cerrado), pero se descarto: reserved
+ * significa que ya hay un cliente en proceso de cerrar esa propiedad, y
+ * mostrarsela como disponible a OTRO asesor reproduce el mismo bug que se
+ * esta corrigiendo (ofrecerle a un cliente algo que ya no esta realmente
+ * disponible). 'not_published' | 'sold' | 'rented' | 'suspended' -> false.
+ */
+const ESTATUS_DISPONIBLES: ReadonlySet<string> = new Set(['published'])
+
+/** ¿Este estatus de EasyBroker implica `propiedades.activa = true`? */
+export function estatusEsActivo(estatus: string): boolean {
+  return ESTATUS_DISPONIBLES.has(estatus)
 }
 
 /** Mapea un contact request de EasyBroker a la fila base de `leads`. */

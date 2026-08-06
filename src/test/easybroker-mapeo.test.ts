@@ -15,6 +15,7 @@ import {
   mapearPropiedadLista,
   mapearPropiedadDetalle,
   mapearContactRequest,
+  estatusEsActivo,
   type PropiedadListaEB,
   type PropiedadDetalleEB,
   type ContactRequestEB,
@@ -167,6 +168,18 @@ describe('mapearContactRequest', () => {
   it('devuelve null si el teléfono no tiene dígitos', () => {
     const cr: ContactRequestEB = { ...crContent[0], phone: 'sin numero' }
     expect(mapearContactRequest(cr).telefono).toBeNull()
+  })
+})
+
+describe('estatusEsActivo', () => {
+  it('solo published cuenta como activa', () => {
+    expect(estatusEsActivo('published')).toBe(true)
+  })
+
+  it('reserved, sold, rented, suspended y not_published NO cuentan como activa', () => {
+    for (const estatus of ['reserved', 'sold', 'rented', 'suspended', 'not_published']) {
+      expect(estatusEsActivo(estatus)).toBe(false)
+    }
   })
 })
 

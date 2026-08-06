@@ -33,6 +33,7 @@ import {
   avanzarCursor,
   procesarContactRequests,
   procesarPaginaPropiedades,
+  reconciliarEstatusPropiedades,
   sincronizarEasyBroker,
 } from '@/lib/easybroker/sync';
 import type { PaginaEB } from '@/lib/easybroker/cliente';
@@ -192,7 +193,7 @@ beforeAll(async () => {
   const { data: estado, error: estadoError } = await svc
     .from('sync_estado')
     .select('recurso, sync_cursor, ultimo_ok, ultimo_error, lock_until')
-    .in('recurso', ['propiedades', 'leads', 'lock']);
+    .in('recurso', ['propiedades', 'leads', 'estatus', 'lock']);
   if (estadoError) throw new Error(`No se pudo leer sync_estado: ${estadoError.message}`);
   syncEstadoSnapshot = estado ?? [];
 }, 30_000);
@@ -219,7 +220,7 @@ afterAll(async () => {
   }
 
   // Restaurar sync_estado.
-  await svc.from('sync_estado').delete().in('recurso', ['propiedades', 'leads', 'lock']);
+  await svc.from('sync_estado').delete().in('recurso', ['propiedades', 'leads', 'estatus', 'lock']);
   if (syncEstadoSnapshot.length > 0) {
     await svc.from('sync_estado').upsert(syncEstadoSnapshot, { onConflict: 'recurso' });
   }
@@ -504,6 +505,21 @@ describe('Sync EasyBroker Fase 1: idempotencia + dedup (Supabase real)', () => {
       .single();
     expect(estadoLeads!.ultimo_ok).not.toBeNull();
     expect(estadoLeads!.ultimo_error).toBeNull();
+
+    // La fase de estatus tambien corre en cada invocacion: el stub de este
+    // test no conoce /v1/listing_statuses (regresa la pagina vacia generica),
+    // asi que el mapa queda vacio -> catalogoCompleto=false a proposito (ver
+    // obtenerMapaEstatusEB) y NO desactiva nada por ausencia.
+    expect(resultado.estatus.catalogoCompleto).toBe(false);
+    expect(resultado.estatus.ausentes).toBe(0);
+    expect(resultado.estatus.desactivadas).toBe(0);
+    const { data: estadoEstatus } = await svc
+      .from('sync_estado')
+      .select('ultimo_ok, ultimo_error')
+      .eq('recurso', 'estatus')
+      .single();
+    expect(estadoEstatus!.ultimo_ok).not.toBeNull();
+    expect(estadoEstatus!.ultimo_error).toBeNull();
   });
 
   it('6b. lease: una segunda corrida concurrente se omite con "sync ya en curso"', async () => {
@@ -664,16 +680,122 @@ describe('Sync EasyBroker Fase 1: idempotencia + dedup (Supabase real)', () => {
       resultado.propiedades.nuevas + resultado.propiedades.actualizadas
     );
     expect(resultado.leads.procesados).toBe(resultado.leads.nuevos + resultado.leads.duplicados);
+    // maxPaginas:1 solo trae ~100 de ~1,474 listing_statuses reales: la pasada
+    // es incompleta A PROPOSITO (asi se prueba sin traer todo staging), asi
+    // que no debe evaluar bajas por ausencia (ver obtenerMapaEstatusEB).
+    expect(resultado.estatus.catalogoCompleto).toBe(false);
+    expect(resultado.estatus.ausentes).toBe(0);
 
     const { data: estados, error } = await svc
       .from('sync_estado')
       .select('recurso, ultimo_ok, ultimo_error')
-      .in('recurso', ['propiedades', 'leads']);
+      .in('recurso', ['propiedades', 'leads', 'estatus']);
     expect(error).toBeNull();
-    expect(estados).toHaveLength(2);
+    expect(estados).toHaveLength(3);
     for (const estado of estados!) {
       expect(estado.ultimo_ok).not.toBeNull();
       expect(estado.ultimo_error).toBeNull();
     }
+  });
+});
+
+describe('reconciliarEstatusPropiedades: activa deriva del estatus real (Supabase real)', () => {
+  let p5Id: string;
+  let p6Id: string;
+
+  beforeAll(async () => {
+    const { data, error } = await svc
+      .from('propiedades')
+      .insert([
+        { agencia_id: agenciaId, easybroker_id: `${MARK}-P5`, titulo: `${MARK} propiedad P5` },
+        { agencia_id: agenciaId, easybroker_id: `${MARK}-P6`, titulo: `${MARK} propiedad P6` },
+      ])
+      .select('id, easybroker_id');
+    expect(error).toBeNull();
+    // Recien insertadas: quedan en el default del esquema (estatus='published', activa=true).
+    p5Id = data!.find((p) => p.easybroker_id === `${MARK}-P5`)!.id;
+    p6Id = data!.find((p) => p.easybroker_id === `${MARK}-P6`)!.id;
+  });
+
+  it('published -> rented desactiva; propiedad ausente del catalogo tambien desactiva sin borrarla', async () => {
+    const propiedades = [
+      { id: p5Id, easybroker_id: `${MARK}-P5`, estatus: 'published', activa: true },
+      { id: p6Id, easybroker_id: `${MARK}-P6`, estatus: 'published', activa: true },
+    ];
+    // P5 paso a 'rented' en EB; P6 ya no aparece en listing_statuses (se borro alla).
+    const estatusPorId = new Map([[`${MARK}-P5`, 'rented']]);
+
+    const r = await reconciliarEstatusPropiedades(svc, propiedades, estatusPorId, true);
+    expect(r.errores).toEqual([]);
+    expect(r.procesadas).toBe(2);
+    expect(r.cambiosEstatus).toBe(1);
+    expect(r.desactivadas).toBe(2);
+    expect(r.ausentes).toBe(1);
+    expect(r.reactivadas).toBe(0);
+
+    const { data: filas } = await svc
+      .from('propiedades')
+      .select('easybroker_id, estatus, activa')
+      .in('easybroker_id', [`${MARK}-P5`, `${MARK}-P6`]);
+    const p5 = filas!.find((f) => f.easybroker_id === `${MARK}-P5`)!;
+    const p6 = filas!.find((f) => f.easybroker_id === `${MARK}-P6`)!;
+    expect(p5.estatus).toBe('rented');
+    expect(p5.activa).toBe(false);
+    // Ausente: NO se borra (puede estar referenciada por leads/seguimientos) y
+    // NO se inventa un estatus nuevo -- solo se apaga `activa`.
+    expect(p6.estatus).toBe('published');
+    expect(p6.activa).toBe(false);
+  });
+
+  it('vuelve a published -> reactiva; la que sigue ausente permanece desactivada sin escrituras de mas', async () => {
+    const propiedades = [
+      { id: p5Id, easybroker_id: `${MARK}-P5`, estatus: 'rented', activa: false }, // estado tras el test anterior
+      { id: p6Id, easybroker_id: `${MARK}-P6`, estatus: 'published', activa: false },
+    ];
+    const estatusPorId = new Map([[`${MARK}-P5`, 'published']]); // P6 sigue ausente
+
+    const r = await reconciliarEstatusPropiedades(svc, propiedades, estatusPorId, true);
+    expect(r.errores).toEqual([]);
+    expect(r.cambiosEstatus).toBe(1);
+    expect(r.reactivadas).toBe(1);
+    expect(r.desactivadas).toBe(0); // P6 ya estaba inactiva: no hay escritura extra
+    expect(r.ausentes).toBe(1);
+
+    const { data: p5 } = await svc
+      .from('propiedades')
+      .select('estatus, activa')
+      .eq('easybroker_id', `${MARK}-P5`)
+      .single();
+    expect(p5!.estatus).toBe('published');
+    expect(p5!.activa).toBe(true);
+  });
+
+  it('catalogo incompleto (maxPaginas agotado o error a mitad de la paginacion): NO desactiva por ausencia', async () => {
+    // Estado real tras el test anterior: P5 published/activa=true; P6 quedo
+    // published/activa=false (nunca aparecio en un mapa, y en el test previo
+    // ya estaba inactiva, asi que no hubo escritura).
+    const propiedades = [
+      { id: p5Id, easybroker_id: `${MARK}-P5`, estatus: 'published', activa: true },
+      { id: p6Id, easybroker_id: `${MARK}-P6`, estatus: 'published', activa: false },
+    ];
+    // Solo P5 vino en esta pagina parcial de listing_statuses; P6 no aparecio,
+    // pero con catalogoCompleto=false no hay forma de distinguir "no llegamos
+    // a su pagina" de "ya no existe en EB" -> no se toca.
+    const estatusPorId = new Map([[`${MARK}-P5`, 'suspended']]);
+
+    const r = await reconciliarEstatusPropiedades(svc, propiedades, estatusPorId, false);
+    expect(r.errores).toEqual([]);
+    expect(r.cambiosEstatus).toBe(1); // P5 SI se actualiza: su estatus es cierto sin importar la paginacion
+    expect(r.desactivadas).toBe(1); // solo P5 (suspended)
+    expect(r.ausentes).toBe(0); // no se evalua ausencia con catalogo incompleto
+
+    const { data: p6 } = await svc
+      .from('propiedades')
+      .select('estatus, activa')
+      .eq('easybroker_id', `${MARK}-P6`)
+      .single();
+    // P6 no se toco en absoluto: conserva exactamente su estado de entrada.
+    expect(p6!.estatus).toBe('published');
+    expect(p6!.activa).toBe(false);
   });
 });
