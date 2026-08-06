@@ -517,3 +517,119 @@ describe('push_suscripciones', () => {
     expect(sigue!.usuario_id).toBe(asesor1Id);
   });
 });
+
+describe('google_conexiones (migracion 0008)', () => {
+  // user_id es PK (referencia usuarios.user_id): a diferencia de los demas
+  // fixtures de este archivo, NO se usa un valor random marcado por RUN para
+  // el identificador — se limpia por user_id antes y despues para poder
+  // re-correr la suite sin chocar con la PK.
+  const GOOGLE_EMAIL_ASESOR1 = `asesor1-test-${RUN}@example.com`;
+  const GOOGLE_EMAIL_ASESOR2 = `asesor2-test-${RUN}@example.com`;
+  const TOKEN_FAKE_ASESOR1 = 'v1.fake-cifrado-asesor1-no-es-un-token-real';
+  const TOKEN_FAKE_ASESOR2 = 'v1.fake-cifrado-asesor2-no-es-un-token-real';
+
+  beforeAll(async () => {
+    // Defensivo: si una corrida anterior crasheo antes del afterAll, limpia
+    // antes de insertar (user_id es PK, no tolera duplicados).
+    await svc.from('google_conexiones').delete().in('user_id', [asesor1Id, asesor2Id]);
+
+    const { error: insError } = await svc.from('google_conexiones').insert([
+      { user_id: asesor1Id, google_email: GOOGLE_EMAIL_ASESOR1, refresh_token_cifrado: TOKEN_FAKE_ASESOR1 },
+      { user_id: asesor2Id, google_email: GOOGLE_EMAIL_ASESOR2, refresh_token_cifrado: TOKEN_FAKE_ASESOR2 },
+    ]);
+    if (insError) throw new Error(`No se pudo crear el fixture de google_conexiones: ${insError.message}`);
+  }, 30_000);
+
+  afterAll(async () => {
+    if (svc) {
+      await svc.from('google_conexiones').delete().in('user_id', [asesor1Id, asesor2Id]);
+    }
+  }, 30_000);
+
+  it('asesor1 ve su propia conexion y NO ve la de asesor2 (policy de ownership)', async () => {
+    const { data, error } = await asesor1
+      .from('google_conexiones')
+      .select('user_id, google_email, estado')
+      .in('user_id', [asesor1Id, asesor2Id]);
+    expect(error).toBeNull();
+    expect(data!.map((r) => r.user_id)).toEqual([asesor1Id]);
+    expect(data![0].google_email).toBe(GOOGLE_EMAIL_ASESOR1);
+  });
+
+  it('asesor1 NO puede leer refresh_token_cifrado (columna revocada), aunque sea su propia fila', async () => {
+    // A diferencia de la denegacion por policy USING (0 filas sin error), la
+    // ausencia de grant de columna SI regresa error — mismo patron que
+    // easybroker_id en seguimientos (migracion 0006).
+    const { data, error } = await asesor1
+      .from('google_conexiones')
+      .select('refresh_token_cifrado')
+      .eq('user_id', asesor1Id);
+    expect(error).not.toBeNull();
+    expect(data).toBeNull();
+
+    // Verificacion (service-role): el token sigue intacto en la BD.
+    const { data: after, error: afterError } = await svc
+      .from('google_conexiones')
+      .select('refresh_token_cifrado')
+      .eq('user_id', asesor1Id)
+      .single();
+    expect(afterError).toBeNull();
+    expect(after!.refresh_token_cifrado).toBe(TOKEN_FAKE_ASESOR1);
+  });
+
+  it('asesor1 NO puede insertar ni actualizar google_conexiones (sin policy de escritura para authenticated)', async () => {
+    const { error: insError } = await asesor1.from('google_conexiones').insert({
+      user_id: asesor1Id,
+      google_email: 'no-deberia-poder@example.com',
+      refresh_token_cifrado: 'v1.no-deberia-poder',
+    });
+    expect(insError).not.toBeNull();
+
+    // Sin policy de update para `authenticated`, RLS deniega por default:
+    // 0 filas afectadas, sin error (igual que las denegaciones por USING en
+    // leads/push_suscripciones de arriba).
+    const { data: upd, error: updError } = await asesor1
+      .from('google_conexiones')
+      .update({ estado: 'revocada' })
+      .eq('user_id', asesor1Id)
+      .select('user_id');
+    expect(updError).toBeNull();
+    expect(upd).toHaveLength(0);
+
+    // Verificacion (service-role): el estado sigue 'activa'.
+    const { data: after, error: afterError } = await svc
+      .from('google_conexiones')
+      .select('estado')
+      .eq('user_id', asesor1Id)
+      .single();
+    expect(afterError).toBeNull();
+    expect(after!.estado).toBe('activa');
+  });
+
+  it('asesor1 SI puede borrar su propia conexion (policy de delete)', async () => {
+    const { error, data } = await asesor1
+      .from('google_conexiones')
+      .delete()
+      .eq('user_id', asesor1Id)
+      .select('user_id');
+    expect(error).toBeNull();
+    expect(data).toHaveLength(1);
+
+    // Verificacion (service-role): la fila ya no existe.
+    const { data: after, error: afterError } = await svc
+      .from('google_conexiones')
+      .select('user_id')
+      .eq('user_id', asesor1Id);
+    expect(afterError).toBeNull();
+    expect(after).toEqual([]);
+
+    // Se reinserta para que el afterAll de este describe (delete por
+    // user_id) siga siendo un no-op idempotente.
+    const { error: reinsertError } = await svc.from('google_conexiones').insert({
+      user_id: asesor1Id,
+      google_email: GOOGLE_EMAIL_ASESOR1,
+      refresh_token_cifrado: TOKEN_FAKE_ASESOR1,
+    });
+    if (reinsertError) throw new Error(`No se pudo reinsertar el fixture: ${reinsertError.message}`);
+  });
+});
