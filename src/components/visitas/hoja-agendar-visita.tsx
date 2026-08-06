@@ -37,6 +37,13 @@ type Props = {
   telefono: string | null
   asesorNombre: string
   /**
+   * user_id del asesor dueño del lead — habilita la advertencia de
+   * conflicto de agenda (Task 9) en `CamposFechaHoraVisita`. Opcional: sin
+   * él, simplemente no se consulta disponibilidad (mismo comportamiento que
+   * antes de la Task 9).
+   */
+  asesorId?: string
+  /**
    * propiedad_id del lead: si existe, la visita la referencia por default
    * (sin combobox) — mismo patrón condicional que `SheetSeguimiento`.
    */
@@ -75,6 +82,7 @@ export function HojaAgendarVisita({
   leadNombre,
   telefono,
   asesorNombre,
+  asesorId,
   propiedadLeadId,
   propiedadLeadTitulo,
   propiedades,
@@ -245,6 +253,8 @@ export function HojaAgendarVisita({
             onDuracionChange={setDuracionMin}
             minFecha={minFecha}
             disabled={pendiente}
+            asesorId={asesorId}
+            asesorNombre={asesorNombre}
           />
 
           {/* Con propiedad de interés ya definida en el lead, la visita la

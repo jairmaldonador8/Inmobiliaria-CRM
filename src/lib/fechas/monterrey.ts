@@ -127,3 +127,26 @@ export function formatearFechaHoraMonterrey(fecha: string): string {
     timeStyle: 'short',
   }).format(new Date(fecha))
 }
+
+/**
+ * Solo la hora, formato corto de 12 horas (p. ej. "4:00 pm"), en la zona
+ * horaria del negocio — para la advertencia de conflicto de agenda (Task 9:
+ * «{Asesor} ya tiene un compromiso de 4:00 a 5:00 pm»). Se arma a mano con
+ * `formatToParts` en vez de `Intl.DateTimeFormat('es-MX', {timeStyle:
+ * 'short'})` porque ese locale intercala espacios/puntos ("4:00 p. m.") que
+ * no calzan con el texto exacto del spec.
+ */
+export function formatearHoraMonterrey(fecha: string): string {
+  const partes = new Intl.DateTimeFormat('en-US', {
+    timeZone: ZONA_HORARIA,
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+  }).formatToParts(new Date(fecha))
+
+  const hora = partes.find((p) => p.type === 'hour')?.value ?? ''
+  const minuto = partes.find((p) => p.type === 'minute')?.value ?? ''
+  const periodo = partes.find((p) => p.type === 'dayPeriod')?.value.toLowerCase() ?? ''
+
+  return `${hora}:${minuto} ${periodo}`
+}

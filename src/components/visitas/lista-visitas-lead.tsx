@@ -30,6 +30,8 @@ type Props = {
   leadNombre: string
   telefono: string | null
   asesorNombre: string
+  /** user_id del asesor dueño del lead — habilita la advertencia de conflicto de agenda (Task 9) en `HojaReagendarVisita`; opcional. */
+  asesorId?: string
   visitas: VisitaLead[]
 }
 
@@ -45,7 +47,7 @@ type Props = {
  * `MenuAccionesPlantilla`/`MenuAccionesAsesor`): es destructivo desde el
  * punto de vista del lead, la cita desaparece de la lista.
  */
-export function ListaVisitasLead({ leadNombre, telefono, asesorNombre, visitas }: Props) {
+export function ListaVisitasLead({ leadNombre, telefono, asesorNombre, asesorId, visitas }: Props) {
   const router = useRouter()
   const [pendiente, iniciarTransicion] = useTransition()
 
@@ -150,6 +152,7 @@ export function ListaVisitasLead({ leadNombre, telefono, asesorNombre, visitas }
           leadNombre={leadNombre}
           telefono={telefono}
           asesorNombre={asesorNombre}
+          asesorId={asesorId}
           propiedadTitulo={visitaEnReagenda.propiedadTitulo}
           fechaActualIso={visitaEnReagenda.fecha}
           duracionActualMin={visitaEnReagenda.duracionMin}

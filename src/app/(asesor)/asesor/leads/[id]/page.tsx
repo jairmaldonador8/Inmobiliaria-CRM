@@ -166,6 +166,7 @@ export default async function PaginaDetalleLeadAsesor({
           leadNombre={leadDetalle.nombre}
           telefono={leadDetalle.telefono}
           asesorNombre={usuario.nombre}
+          asesorId={usuario.user_id}
           propiedadLeadId={leadDetalle.propiedad_id}
           propiedadLeadTitulo={leadDetalle.propiedad?.titulo ?? null}
           propiedades={opcionesPropiedad as OpcionPropiedadVisita[]}
@@ -187,6 +188,7 @@ export default async function PaginaDetalleLeadAsesor({
           leadNombre={leadDetalle.nombre}
           telefono={leadDetalle.telefono}
           asesorNombre={usuario.nombre}
+          asesorId={usuario.user_id}
           visitas={visitas}
         />
       </div>

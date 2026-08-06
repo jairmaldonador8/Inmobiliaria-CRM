@@ -31,6 +31,8 @@ type Props = {
   leadNombre: string
   telefono: string | null
   asesorNombre: string
+  /** user_id del asesor dueño de la visita — habilita la advertencia de conflicto de agenda (Task 9); opcional, ver `HojaAgendarVisita`. */
+  asesorId?: string
   propiedadTitulo: string | null
   /** Fecha/hora ISO 8601 (UTC) actual de la visita — precarga los campos. */
   fechaActualIso: string
@@ -61,6 +63,7 @@ export function HojaReagendarVisita({
   leadNombre,
   telefono,
   asesorNombre,
+  asesorId,
   propiedadTitulo,
   fechaActualIso,
   duracionActualMin,
@@ -173,6 +176,9 @@ export function HojaReagendarVisita({
             onDuracionChange={setDuracionMin}
             minFecha={minFecha}
             disabled={pendiente}
+            asesorId={asesorId}
+            asesorNombre={asesorNombre}
+            excluirVisitaId={visitaId}
           />
 
           {error ? (

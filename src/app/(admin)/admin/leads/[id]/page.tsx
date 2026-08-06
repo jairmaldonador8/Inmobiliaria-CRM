@@ -208,6 +208,7 @@ export default async function PaginaDetalleLeadAdmin({
           leadNombre={leadDetalle.nombre}
           telefono={leadDetalle.telefono}
           asesorNombre={asesorNombre}
+          asesorId={leadDetalle.asesor_id ?? undefined}
           propiedadLeadId={leadDetalle.propiedad_id}
           propiedadLeadTitulo={leadDetalle.propiedad?.titulo ?? null}
           propiedades={opcionesPropiedad as OpcionPropiedadVisita[]}
@@ -240,6 +241,7 @@ export default async function PaginaDetalleLeadAdmin({
           leadNombre={leadDetalle.nombre}
           telefono={leadDetalle.telefono}
           asesorNombre={asesorNombre}
+          asesorId={leadDetalle.asesor_id ?? undefined}
           visitas={visitas}
         />
       </div>
