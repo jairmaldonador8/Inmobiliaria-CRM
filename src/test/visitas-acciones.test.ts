@@ -43,6 +43,18 @@ vi.mock('next/cache', () => ({
   revalidatePath: revalidatePathMock,
 }))
 
+// El hook de espejo de Google Calendar (Task 8) se mockea por completo: estos
+// tests cubren la lógica de negocio de las 3 actions, no la sincronización
+// con Google (ver src/test/google-espejo.test.ts para eso). Se deja resuelto
+// en éxito por defecto para no afectar los asserts existentes.
+const { sincronizarVisitaMock } = vi.hoisted(() => ({
+  sincronizarVisitaMock: vi.fn(),
+}))
+
+vi.mock('@/lib/google/espejo', () => ({
+  sincronizarVisita: sincronizarVisitaMock,
+}))
+
 import { agendarVisita, cancelarVisita, reagendarVisita } from '@/lib/visitas/acciones'
 
 interface ErrorFake {
@@ -148,6 +160,8 @@ beforeEach(() => {
   usuarioActualMock.mockReset()
   createClientMock.mockReset()
   revalidatePathMock.mockReset()
+  sincronizarVisitaMock.mockReset()
+  sincronizarVisitaMock.mockResolvedValue(undefined)
   usuarioActualMock.mockResolvedValue(USUARIO_ADMIN)
 })
 
@@ -200,6 +214,21 @@ describe('agendarVisita', () => {
     // El insert NO debe llevar el user_id de quien agenda como asesor_id.
     const argumentoInsert = fake.insertVisita.mock.calls[0][0]
     expect(argumentoInsert.asesor_id).not.toBe(USUARIO_ADMIN.user_id)
+    // Hook de espejo de Google Calendar (Task 8): se dispara con el id de la visita recién creada.
+    expect(sincronizarVisitaMock).toHaveBeenCalledWith('visita-1')
+  })
+
+  it('si sincronizarVisita (Google Calendar) falla, la visita ya agendada igual se reporta ok (best-effort)', async () => {
+    const fake = crearSupabaseAgendarFake({
+      lead: { id: 'lead-1', asesor_id: 'asesor-dueño', nombre: 'Ana', telefono: '5599000001' },
+      visita: { id: 'visita-1' },
+    })
+    createClientMock.mockResolvedValue(fake.supabase)
+    sincronizarVisitaMock.mockRejectedValue(new Error('Google no respondió'))
+
+    const resultado = await agendarVisita(DATOS_AGENDAR)
+
+    expect(resultado).toEqual({ ok: true, visitaId: 'visita-1' })
   })
 
   it('si falla el seguimiento de sistema (best-effort), la visita ya agendada NO se revierte', async () => {
@@ -254,6 +283,7 @@ describe('reagendarVisita', () => {
       fecha: DATOS_REAGENDAR.fecha,
       duracion_min: DATOS_REAGENDAR.duracionMin,
     })
+    expect(sincronizarVisitaMock).toHaveBeenCalledWith('visita-1')
   })
 })
 
@@ -276,5 +306,6 @@ describe('cancelarVisita', () => {
 
     expect(resultado).toEqual({ ok: true })
     expect(fake.update).toHaveBeenCalledWith({ estado: 'cancelada' })
+    expect(sincronizarVisitaMock).toHaveBeenCalledWith('visita-1')
   })
 })

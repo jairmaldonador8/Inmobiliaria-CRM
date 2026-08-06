@@ -29,6 +29,21 @@ import { usuarioActual } from '@/lib/auth/usuario-actual'
 import { createClient } from '@/lib/supabase/server'
 import { validarDatosVisita } from '@/lib/visitas/validacion'
 import { formatearFechaHoraMonterrey } from '@/lib/fechas/monterrey'
+import { sincronizarVisita } from '@/lib/google/espejo'
+
+/**
+ * Refleja la visita en el Google Calendar del asesor, best-effort: si Google
+ * falla, `sincronizarVisita` ya deja la visita en `gcal_sync_estado =
+ * 'pendiente'` (el cron `gcal-retry` reintenta) — esta action NUNCA debe
+ * fallar por culpa de Google.
+ */
+async function sincronizarConGoogleCalendar(visitaId: string): Promise<void> {
+  try {
+    await sincronizarVisita(visitaId)
+  } catch (error) {
+    console.error('No se pudo sincronizar la visita con Google Calendar:', error)
+  }
+}
 
 export type ResultadoVisita = { ok: true } | { error: string }
 export type ResultadoAgendarVisita = { ok: true; visitaId: string } | { error: string }
@@ -114,6 +129,8 @@ export async function agendarVisita(
     console.error('No se pudo registrar el seguimiento de la visita:', errorSeguimiento.message)
   }
 
+  await sincronizarConGoogleCalendar(visita.id)
+
   revalidarRutasVisita(lead.id)
   return { ok: true, visitaId: visita.id }
 }
@@ -147,6 +164,8 @@ export async function reagendarVisita(
     return { error: 'No se pudo reagendar la visita' }
   }
 
+  await sincronizarConGoogleCalendar(visitaId)
+
   revalidarRutasVisita(data[0].lead_id)
   return { ok: true }
 }
@@ -172,6 +191,8 @@ export async function cancelarVisita(visitaId: string): Promise<ResultadoVisita>
   if (error || !data || data.length === 0) {
     return { error: 'No se pudo cancelar la visita' }
   }
+
+  await sincronizarConGoogleCalendar(visitaId)
 
   revalidarRutasVisita(data[0].lead_id)
   return { ok: true }
