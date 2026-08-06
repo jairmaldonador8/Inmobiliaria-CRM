@@ -43,6 +43,22 @@ await supabase.from('propiedades').upsert(mapped, { onConflict: 'easybroker_id' 
 - Salvaguarda obligatoria en esa reconciliación: solo marcar «ausente → inactiva» si la paginación de `listing_statuses` se completó y el mapa no vino vacío. Una respuesta parcial desactivaría el catálogo entero.
 - Dedup leads by phone/email before insert; a repeat inquiry becomes a seguimiento with `propiedad_id` on the existing lead.
 
+## Tipos de contact request (medido sobre 150 reales, 2026-08-06)
+
+**No existe campo de «atendido».** No hay endpoints de notas, actividades, tareas ni etapas (verificado contra la API y el índice de docs). `contact_requests` solo trae `id, name, phone, email, contact_id, property_id, message, source, happened_at`, y no hay `GET /v1/contact_requests/{id}`.
+
+**`contacts.agent` NO indica atención** — es asignación automática por origen: 100 % de los leads de portal lo traen (Proppit 42/42, Pincali 12/12, Inmuebles24 8/8) contra 34/87 de MLS. Un lead recién caído de Pincali ya viene «con agente» sin que nadie lo haya tocado.
+
+Los tres tipos SÍ se pueden distinguir, y esto es lo útil:
+
+| Tipo | Cómo detectarlo | Qué es |
+|---|---|---|
+| **Saliente** | `property_id` NO está en `GET /v1/properties` (catálogo propio) | Un asesor de Montana preguntó por una propiedad ajena del MLS. **No es un lead.** 36/150 = 24 % |
+| **Co-broke** | propiedad propia + contacto con `tags` incluyendo `"agente"` | Corredor externo con un cliente interesado. `source = MLS` → **87/87 son corredores** |
+| **Cliente final** | propiedad propia + sin tag `"agente"` | El lead de verdad. Viene de Pincali / Proppit / Inmuebles24 / sitio web |
+
+`GET /v1/contacts/{id}` trae `tags`, `probability`, `private_description`, `agent`. Existe `PATCH /v1/contacts/{id}` (permite escribir tags) — pero la integración es de solo lectura por decisión de diseño.
+
 ## Common mistakes
 
 - Assuming `location` is an object in the list endpoint (it's a string there; object only in detail).
