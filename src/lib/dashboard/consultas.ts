@@ -9,62 +9,18 @@
  * Todas aceptan un `ahora` opcional (por defecto `new Date()`) para que los
  * tests puedan fijar el instante "actual" sin depender del reloj real.
  *
- * Zona horaria: America/Monterrey. El repo NO tiene `@date-fns/tz` instalado
- * (ver package.json) — los días calendario se derivan con
- * `Intl.DateTimeFormat('en-CA', { timeZone: 'America/Monterrey' })`, que
- * entrega claves `YYYY-MM-DD` listas para agrupar u ordenar como texto.
+ * Zona horaria: America/Monterrey — las funciones genéricas de fecha
+ * (`diaMonterrey`, `inicioDeHoyMonterrey`, `inicioDeMesMonterrey`) viven en
+ * `src/lib/fechas/monterrey.ts`, fuente única de verdad compartida con el
+ * resto de la app.
  */
 import type { SupabaseClient } from '@supabase/supabase-js'
 
 import { NOTA_CIERRE } from '@/lib/leads/formato'
+import { diaMonterrey, inicioDeHoyMonterrey, inicioDeMesMonterrey } from '@/lib/fechas/monterrey'
 
-const ZONA_HORARIA = 'America/Monterrey'
 const UN_DIA_MS = 24 * 60 * 60 * 1000
 const DIAS_SERIE = 30
-
-/** Clave de día calendario (`YYYY-MM-DD`) de `fecha` en America/Monterrey. */
-export function diaMonterrey(fecha: Date): string {
-  return new Intl.DateTimeFormat('en-CA', { timeZone: ZONA_HORARIA }).format(fecha)
-}
-
-/**
- * Offset UTC (en minutos, p. ej. -360 para UTC-6) vigente en
- * America/Monterrey en el instante `fecha`. Se calcula en vivo con Intl en
- * vez de asumir un valor fijo: México eliminó el horario de verano en la
- * mayor parte del país en 2022, pero calcularlo evita depender de esa regla.
- */
-function offsetMinutosMonterrey(fecha: Date): number {
-  const partes = new Intl.DateTimeFormat('en-US', {
-    timeZone: ZONA_HORARIA,
-    timeZoneName: 'longOffset',
-  }).formatToParts(fecha)
-  const texto = partes.find((p) => p.type === 'timeZoneName')?.value ?? 'GMT-06:00'
-  const coincidencia = texto.match(/GMT([+-])(\d{2}):(\d{2})/)
-  if (!coincidencia) return -360
-  const signo = coincidencia[1] === '-' ? -1 : 1
-  return signo * (Number(coincidencia[2]) * 60 + Number(coincidencia[3]))
-}
-
-/** Instante UTC de las 00:00:00 del día calendario `claveDia` (`YYYY-MM-DD`) en America/Monterrey. */
-function inicioDeDiaMonterrey(claveDia: string): Date {
-  // `claveDia` interpretada como UTC es solo un candidato: se ajusta con el
-  // offset real vigente ese día para llegar al instante UTC correcto.
-  const candidato = new Date(`${claveDia}T00:00:00Z`)
-  const offset = offsetMinutosMonterrey(candidato)
-  return new Date(candidato.getTime() - offset * 60_000)
-}
-
-/** Instante UTC del inicio del día de hoy (según `ahora`) en America/Monterrey. */
-export function inicioDeHoyMonterrey(ahora: Date): Date {
-  return inicioDeDiaMonterrey(diaMonterrey(ahora))
-}
-
-/** Instante UTC del inicio del mes actual (según `ahora`) en America/Monterrey. */
-export function inicioDeMesMonterrey(ahora: Date): Date {
-  const claveDia = diaMonterrey(ahora)
-  const primerDiaDelMes = `${claveDia.slice(0, 7)}-01`
-  return inicioDeDiaMonterrey(primerDiaDelMes)
-}
 
 /**
  * Serie de leads creados por día calendario en America/Monterrey, para los
@@ -159,4 +115,69 @@ export async function citasHoy(supabase: SupabaseClient, ahora: Date = new Date(
   }
 
   return count ?? 0
+}
+
+const LIMITE_PROXIMAS_VISITAS = 5
+
+/** Una visita agendada futura, ya lista para pintarse en la lista del dashboard. */
+export type ProximaVisita = {
+  id: string
+  /** Fecha/hora ISO 8601 con offset (UTC); formatear en America/Monterrey al mostrar. */
+  fecha: string
+  duracionMin: number
+  leadId: string
+  leadNombre: string
+  /** Título de la propiedad de interés; null si la visita no tiene propiedad vinculada. */
+  propiedadTitulo: string | null
+}
+
+type FilaProximaVisita = {
+  id: string
+  fecha: string
+  duracion_min: number
+  lead: { id: string; nombre: string } | null
+  propiedad: { titulo: string } | null
+}
+
+/**
+ * Próximas visitas agendadas (futuras, `estado = 'agendada'`), ordenadas por
+ * `fecha` ascendente (la más próxima primero) y limitadas a `limite` filas
+ * (por defecto 5). Sin filtro de `asesor_id`: se usa con el cliente de
+ * SESIÓN (mismo patrón que el resto de la cola del día en
+ * `src/app/(asesor)/asesor/page.tsx`), y RLS de `visitas` ya acota a las
+ * propias del asesor (o a todas si es admin) — igual que `citasHoy`.
+ *
+ * `lead:leads!inner(...)` (en vez del embed normal) para que una visita
+ * cuyo lead ya no sea legible por RLS (p. ej. quedó huérfana de un cambio de
+ * asesor que no movió también la visita) simplemente NO aparezca en vez de
+ * pintarse con `lead: null` y un link roto. Defensa en profundidad: el
+ * arreglo real vive en `reasignarLead` (src/lib/leads/acciones.ts), esto es
+ * el respaldo para cualquier otra vía en la que la fila de `visitas` quede
+ * desincronizada de su lead.
+ */
+export async function proximasVisitas(
+  supabase: SupabaseClient,
+  limite: number = LIMITE_PROXIMAS_VISITAS,
+  ahora: Date = new Date()
+): Promise<ProximaVisita[]> {
+  const { data, error } = await supabase
+    .from('visitas')
+    .select('id, fecha, duracion_min, lead:leads!inner(id, nombre), propiedad:propiedades(titulo)')
+    .eq('estado', 'agendada')
+    .gte('fecha', ahora.toISOString())
+    .order('fecha', { ascending: true })
+    .limit(limite)
+
+  if (error) {
+    throw new Error(`No se pudieron obtener las próximas visitas: ${error.message}`)
+  }
+
+  return ((data ?? []) as unknown as FilaProximaVisita[]).map((fila) => ({
+    id: fila.id,
+    fecha: fila.fecha,
+    duracionMin: fila.duracion_min,
+    leadId: fila.lead?.id ?? '',
+    leadNombre: fila.lead?.nombre ?? '',
+    propiedadTitulo: fila.propiedad?.titulo ?? null,
+  }))
 }

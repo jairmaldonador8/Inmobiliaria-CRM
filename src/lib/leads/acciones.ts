@@ -123,6 +123,23 @@ export async function asignarLead(leadId: string, asesorId: string): Promise<Res
 
 /**
  * Reasigna un lead a otro asesor (aplica tenga o no asesor actual).
+ *
+ * Mueve también las visitas FUTURAS y aún `agendada` del lead al nuevo
+ * asesor. Sin esto, `visitas.asesor_id` se queda apuntando al asesor
+ * anterior: la policy de `visitas` (owner-or-admin, migración 0002) sigue
+ * dejando pasar la fila al asesor viejo, pero el embed `lead:leads(...)`
+ * que arma el dashboard sí lo bloquea la RLS de `leads` (ya no es su lead)
+ * → llega `lead: null` y se pinta una fila en blanco con link roto a
+ * `/asesor/leads/` (sin id). El asesor nuevo, mientras tanto, no ve la
+ * visita en absoluto. Y no hay forma de corregirlo desde la app: el grant
+ * de columna de UPDATE de `authenticated` sobre `visitas` (migración 0009)
+ * no incluye `asesor_id` a propósito — por eso este arreglo vive aquí, con
+ * `createAdminClient()` (service-role), igual que el resto de la función.
+ *
+ * Las visitas PASADAS o ya `realizada`/`cancelada` NO se tocan: quedan como
+ * registro histórico de quién realmente atendió/canceló esa visita en su
+ * momento, que es información real y no debe reescribirse solo porque el
+ * lead cambió de dueño hoy.
  */
 export async function reasignarLead(
   leadId: string,
@@ -143,6 +160,20 @@ export async function reasignarLead(
   if (error) return { error: `No se pudo reasignar el lead: ${error.message}` }
   const lead = actualizados?.[0]
   if (!lead) return { error: 'No se encontró el lead' }
+
+  const { error: errorVisitas } = await supabase
+    .from('visitas')
+    .update({ asesor_id: nuevoAsesorId })
+    .eq('lead_id', leadId)
+    .eq('estado', 'agendada')
+    .gt('fecha', new Date().toISOString())
+
+  if (errorVisitas) {
+    revalidarRutasLeads()
+    return {
+      error: `El lead se reasignó, pero no se pudieron mover sus visitas agendadas: ${errorVisitas.message}`,
+    }
+  }
 
   try {
     await registrarAsignacion(supabase, {

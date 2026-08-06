@@ -19,9 +19,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import {
   cierresGanadosMes,
   citasHoy,
-  diaMonterrey,
-  inicioDeHoyMonterrey,
-  inicioDeMesMonterrey,
+  proximasVisitas,
   serieLeads30Dias,
 } from '@/lib/dashboard/consultas'
 
@@ -60,23 +58,28 @@ function crearSupabaseVisitasFake(count: number | null, error: ErrorFake | null 
   return { supabase: { from } as unknown as SupabaseClient, from, select, eq, gte, lt }
 }
 
-describe('diaMonterrey / inicioDeHoyMonterrey / inicioDeMesMonterrey', () => {
-  it('un instante a medianoche UTC cae en el día calendario ANTERIOR en Monterrey', () => {
-    expect(diaMonterrey(new Date('2026-03-15T00:00:00.000Z'))).toBe('2026-03-14')
-  })
+/** Fila cruda tal como la devolvería Supabase para el join de `proximasVisitas`. */
+type FilaProximaVisitaFake = {
+  id: string
+  fecha: string
+  duracion_min: number
+  lead: { id: string; nombre: string } | null
+  propiedad: { titulo: string } | null
+}
 
-  it('un instante a las 06:00 UTC ya cae en el día calendario correspondiente en Monterrey', () => {
-    expect(diaMonterrey(new Date('2026-03-15T06:00:00.000Z'))).toBe('2026-03-15')
-  })
-
-  it('inicioDeHoyMonterrey devuelve las 06:00 UTC (00:00 Monterrey) del día de `ahora`', () => {
-    expect(inicioDeHoyMonterrey(AHORA).toISOString()).toBe('2026-03-15T06:00:00.000Z')
-  })
-
-  it('inicioDeMesMonterrey devuelve las 06:00 UTC del día 1 del mes de `ahora`', () => {
-    expect(inicioDeMesMonterrey(AHORA).toISOString()).toBe('2026-03-01T06:00:00.000Z')
-  })
-})
+/** Stub chainable para proximasVisitas: select().eq().gte().order().limit() resuelve al final. */
+function crearSupabaseProximasVisitasFake(
+  filas: FilaProximaVisitaFake[],
+  error: ErrorFake | null = null
+) {
+  const limit = vi.fn().mockResolvedValue({ data: filas, error })
+  const order = vi.fn(() => ({ limit }))
+  const gte = vi.fn(() => ({ order }))
+  const eq = vi.fn(() => ({ gte }))
+  const select = vi.fn(() => ({ eq }))
+  const from = vi.fn(() => ({ select }))
+  return { supabase: { from } as unknown as SupabaseClient, from, select, eq, gte, order, limit }
+}
 
 describe('serieLeads30Dias', () => {
   it('devuelve exactamente 30 posiciones', async () => {
@@ -219,5 +222,90 @@ describe('citasHoy', () => {
     const { supabase } = crearSupabaseVisitasFake(0, { message: 'boom' })
 
     await expect(citasHoy(supabase, AHORA)).rejects.toThrow('boom')
+  })
+})
+
+describe('proximasVisitas', () => {
+  const filaBase: FilaProximaVisitaFake = {
+    id: 'v1',
+    fecha: '2026-03-16T18:00:00.000Z',
+    duracion_min: 45,
+    lead: { id: 'l1', nombre: 'Ana Pérez' },
+    propiedad: { titulo: 'Casa en Contry' },
+  }
+
+  it('devuelve el nombre del lead, el título de la propiedad y la duración', async () => {
+    const { supabase } = crearSupabaseProximasVisitasFake([filaBase])
+
+    const resultado = await proximasVisitas(supabase, 5, AHORA)
+
+    expect(resultado).toEqual([
+      {
+        id: 'v1',
+        fecha: '2026-03-16T18:00:00.000Z',
+        duracionMin: 45,
+        leadId: 'l1',
+        leadNombre: 'Ana Pérez',
+        propiedadTitulo: 'Casa en Contry',
+      },
+    ])
+  })
+
+  it('cuando la visita no tiene propiedad vinculada, propiedadTitulo es null', async () => {
+    const { supabase } = crearSupabaseProximasVisitasFake([{ ...filaBase, propiedad: null }])
+
+    const resultado = await proximasVisitas(supabase, 5, AHORA)
+
+    expect(resultado[0].propiedadTitulo).toBeNull()
+  })
+
+  it('usa lead:leads!inner (defensa en profundidad) para que una visita sin lead legible no se pinte con link roto', async () => {
+    // Con el inner join real, PostgREST jamás devolvería esta fila (la
+    // excluiría del resultado); este caso solo documenta que, si por
+    // cualquier razón llegara una fila con lead: null, el mapeo no truena y
+    // cae a valores vacíos en vez de reventar la UI.
+    const { supabase } = crearSupabaseProximasVisitasFake([{ ...filaBase, lead: null }])
+
+    const resultado = await proximasVisitas(supabase, 5, AHORA)
+
+    expect(resultado[0].leadId).toBe('')
+    expect(resultado[0].leadNombre).toBe('')
+  })
+
+  it('consulta visitas estado=agendada, futuras (gte fecha=ahora), orden ascendente por fecha, con el límite pedido', async () => {
+    const { supabase, from, select, eq, gte, order, limit } = crearSupabaseProximasVisitasFake([])
+
+    await proximasVisitas(supabase, 5, AHORA)
+
+    expect(from).toHaveBeenCalledWith('visitas')
+    expect(select).toHaveBeenCalledWith(
+      'id, fecha, duracion_min, lead:leads!inner(id, nombre), propiedad:propiedades(titulo)'
+    )
+    expect(eq).toHaveBeenCalledWith('estado', 'agendada')
+    expect(gte).toHaveBeenCalledWith('fecha', AHORA.toISOString())
+    expect(order).toHaveBeenCalledWith('fecha', { ascending: true })
+    expect(limit).toHaveBeenCalledWith(5)
+  })
+
+  it('usa 5 como límite por defecto cuando no se especifica', async () => {
+    const { supabase, limit } = crearSupabaseProximasVisitasFake([])
+
+    await proximasVisitas(supabase, undefined, AHORA)
+
+    expect(limit).toHaveBeenCalledWith(5)
+  })
+
+  it('respeta un límite explícito distinto al default', async () => {
+    const { supabase, limit } = crearSupabaseProximasVisitasFake([])
+
+    await proximasVisitas(supabase, 3, AHORA)
+
+    expect(limit).toHaveBeenCalledWith(3)
+  })
+
+  it('si la consulta falla, lanza', async () => {
+    const { supabase } = crearSupabaseProximasVisitasFake([], { message: 'boom' })
+
+    await expect(proximasVisitas(supabase, 5, AHORA)).rejects.toThrow('boom')
   })
 })

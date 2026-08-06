@@ -7,6 +7,7 @@ import { ArrowLeft, Phone } from 'lucide-react'
 import { requireAsesor } from '@/lib/auth/usuario-actual'
 import { createClient } from '@/lib/supabase/server'
 import { etiquetaFuenteConDetalle } from '@/lib/leads/formato'
+import { visitasDelLead } from '@/lib/visitas/consultas'
 import { Badge } from '@/components/ui/badge'
 import { SelectorEtapa } from '@/components/leads/selector-etapa'
 import { BotonWhatsApp, type PlantillaWhatsApp } from '@/components/leads/boton-whatsapp'
@@ -20,6 +21,11 @@ import {
   SheetSeguimiento,
   type OpcionPropiedadSeguimiento,
 } from '@/components/seguimientos/sheet-seguimiento'
+import {
+  HojaAgendarVisita,
+  type OpcionPropiedadVisita,
+} from '@/components/visitas/hoja-agendar-visita'
+import { ListaVisitasLead } from '@/components/visitas/lista-visitas-lead'
 import {
   TimelineSeguimientos,
   type SeguimientoTimeline,
@@ -59,7 +65,7 @@ export default async function PaginaDetalleLeadAsesor({
 
   const leadDetalle = lead as unknown as LeadDetalle
 
-  const [{ data: seguimientos }, { data: plantillas }, { data: propiedades }] =
+  const [{ data: seguimientos }, { data: plantillas }, { data: propiedades }, visitas] =
     await Promise.all([
       supabase
         .from('seguimientos')
@@ -79,6 +85,7 @@ export default async function PaginaDetalleLeadAsesor({
             .select('id, titulo')
             .eq('activa', true)
             .order('titulo', { ascending: true }),
+      visitasDelLead(supabase, id),
     ])
 
   // El asesor solo puede leer SU fila de usuarios (RLS): un autor ajeno
@@ -127,8 +134,8 @@ export default async function PaginaDetalleLeadAsesor({
         </div>
       </header>
 
-      {/* Barra de acciones: objetivos táctiles grandes, móvil primero. */}
-      <div className="grid grid-cols-3 gap-2">
+      {/* Barra de acciones: 2×2 para objetivos táctiles grandes en móvil. */}
+      <div className="grid grid-cols-2 gap-2">
         {leadDetalle.telefono ? (
           <a
             href={`tel:+${leadDetalle.telefono}`}
@@ -154,6 +161,16 @@ export default async function PaginaDetalleLeadAsesor({
           propiedadLeadId={leadDetalle.propiedad_id}
           propiedades={opcionesPropiedad}
         />
+        <HojaAgendarVisita
+          leadId={leadDetalle.id}
+          leadNombre={leadDetalle.nombre}
+          telefono={leadDetalle.telefono}
+          asesorNombre={usuario.nombre}
+          asesorId={usuario.user_id}
+          propiedadLeadId={leadDetalle.propiedad_id}
+          propiedadLeadTitulo={leadDetalle.propiedad?.titulo ?? null}
+          propiedades={opcionesPropiedad as OpcionPropiedadVisita[]}
+        />
       </div>
 
       {leadDetalle.propiedad ? (
@@ -164,6 +181,17 @@ export default async function PaginaDetalleLeadAsesor({
       ) : null}
 
       <DatosLead lead={leadDetalle} />
+
+      <div className="flex flex-col gap-3">
+        <h2 className="text-sm font-semibold text-slate-900">Visitas</h2>
+        <ListaVisitasLead
+          leadNombre={leadDetalle.nombre}
+          telefono={leadDetalle.telefono}
+          asesorNombre={usuario.nombre}
+          asesorId={usuario.user_id}
+          visitas={visitas}
+        />
+      </div>
 
       <div className="flex flex-col gap-3">
         <h2 className="text-sm font-semibold text-slate-900">Seguimientos</h2>

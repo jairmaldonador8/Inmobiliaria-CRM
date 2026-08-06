@@ -517,3 +517,277 @@ describe('push_suscripciones', () => {
     expect(sigue!.usuario_id).toBe(asesor1Id);
   });
 });
+
+describe('google_conexiones (migracion 0008)', () => {
+  // user_id es PK (referencia usuarios.user_id): a diferencia de los demas
+  // fixtures de este archivo, NO se usa un valor random marcado por RUN para
+  // el identificador — se limpia por user_id antes y despues para poder
+  // re-correr la suite sin chocar con la PK.
+  const GOOGLE_EMAIL_ASESOR1 = `asesor1-test-${RUN}@example.com`;
+  const GOOGLE_EMAIL_ASESOR2 = `asesor2-test-${RUN}@example.com`;
+  const TOKEN_FAKE_ASESOR1 = 'v1.fake-cifrado-asesor1-no-es-un-token-real';
+  const TOKEN_FAKE_ASESOR2 = 'v1.fake-cifrado-asesor2-no-es-un-token-real';
+
+  beforeAll(async () => {
+    // Defensivo: si una corrida anterior crasheo antes del afterAll, limpia
+    // antes de insertar (user_id es PK, no tolera duplicados).
+    await svc.from('google_conexiones').delete().in('user_id', [asesor1Id, asesor2Id, adminId]);
+
+    const { error: insError } = await svc.from('google_conexiones').insert([
+      { user_id: asesor1Id, google_email: GOOGLE_EMAIL_ASESOR1, refresh_token_cifrado: TOKEN_FAKE_ASESOR1 },
+      { user_id: asesor2Id, google_email: GOOGLE_EMAIL_ASESOR2, refresh_token_cifrado: TOKEN_FAKE_ASESOR2 },
+    ]);
+    if (insError) throw new Error(`No se pudo crear el fixture de google_conexiones: ${insError.message}`);
+  }, 30_000);
+
+  afterAll(async () => {
+    if (svc) {
+      await svc.from('google_conexiones').delete().in('user_id', [asesor1Id, asesor2Id, adminId]);
+    }
+  }, 30_000);
+
+  it('asesor1 ve su propia conexion y NO ve la de asesor2 (policy de ownership)', async () => {
+    const { data, error } = await asesor1
+      .from('google_conexiones')
+      .select('user_id, google_email, estado')
+      .in('user_id', [asesor1Id, asesor2Id]);
+    expect(error).toBeNull();
+    expect(data!.map((r) => r.user_id)).toEqual([asesor1Id]);
+    expect(data![0].google_email).toBe(GOOGLE_EMAIL_ASESOR1);
+  });
+
+  it('asesor1 NO puede leer refresh_token_cifrado (columna revocada), aunque sea su propia fila', async () => {
+    // A diferencia de la denegacion por policy USING (0 filas sin error), la
+    // ausencia de grant de columna SI regresa error — mismo patron que
+    // easybroker_id en seguimientos (migracion 0006).
+    const { data, error } = await asesor1
+      .from('google_conexiones')
+      .select('refresh_token_cifrado')
+      .eq('user_id', asesor1Id);
+    expect(error).not.toBeNull();
+    expect(data).toBeNull();
+
+    // Verificacion (service-role): el token sigue intacto en la BD.
+    const { data: after, error: afterError } = await svc
+      .from('google_conexiones')
+      .select('refresh_token_cifrado')
+      .eq('user_id', asesor1Id)
+      .single();
+    expect(afterError).toBeNull();
+    expect(after!.refresh_token_cifrado).toBe(TOKEN_FAKE_ASESOR1);
+  });
+
+  it('asesor1 NO puede insertar ni actualizar google_conexiones (sin policy de escritura para authenticated)', async () => {
+    // user_id = adminId (no asesor1Id): adminId es un usuario valido (pasa la
+    // FK) pero NO tiene fixture en google_conexiones, asi que el insert no
+    // puede fallar por PK duplicada. Ademas se afirma el codigo 42501
+    // (insufficient_privilege / violacion de RLS) explicitamente: sin este
+    // chequeo, si algun dia se agregara una policy de insert, esta misma
+    // llamada seguiria fallando -pero por 23505 (duplicate key si se usara
+    // asesor1Id, o por with_check si el user_id no coincide con auth.uid())-
+    // y el test seguiria en verde sin proteger nada.
+    const { error: insError } = await asesor1.from('google_conexiones').insert({
+      user_id: adminId,
+      google_email: 'no-deberia-poder@example.com',
+      refresh_token_cifrado: 'v1.no-deberia-poder',
+    });
+    expect(insError).not.toBeNull();
+    expect(insError!.code).toBe('42501');
+
+    // Verificacion (service-role): la fila nunca se creo.
+    const { data: checkIns, error: checkInsError } = await svc
+      .from('google_conexiones')
+      .select('user_id')
+      .eq('user_id', adminId);
+    expect(checkInsError).toBeNull();
+    expect(checkIns).toEqual([]);
+
+    // Desde la migracion 0010 la denegacion del update tiene DOS capas: ya no
+    // depende solo de que falte la policy (que filtraria en silencio: 0 filas
+    // sin error, como las denegaciones por USING de leads/push_suscripciones
+    // de arriba), sino que el grant de tabla de UPDATE esta revocado para
+    // `authenticated`, asi que Postgres corta antes de evaluar RLS. Se afirma
+    // el 42501 explicitamente: si alguien devolviera ese grant, este test se
+    // pone rojo aunque RLS siguiera filtrando por su cuenta.
+    const { error: updError } = await asesor1
+      .from('google_conexiones')
+      .update({ estado: 'revocada' })
+      .eq('user_id', asesor1Id)
+      .select('user_id');
+    expect(updError).not.toBeNull();
+    expect(updError!.code).toBe('42501');
+
+    // Verificacion (service-role): el estado sigue 'activa'.
+    const { data: after, error: afterError } = await svc
+      .from('google_conexiones')
+      .select('estado')
+      .eq('user_id', asesor1Id)
+      .single();
+    expect(afterError).toBeNull();
+    expect(after!.estado).toBe('activa');
+  });
+
+  it('asesor1 SI puede borrar su propia conexion (policy de delete)', async () => {
+    const { error, data } = await asesor1
+      .from('google_conexiones')
+      .delete()
+      .eq('user_id', asesor1Id)
+      .select('user_id');
+    expect(error).toBeNull();
+    expect(data).toHaveLength(1);
+
+    // Verificacion (service-role): la fila ya no existe.
+    const { data: after, error: afterError } = await svc
+      .from('google_conexiones')
+      .select('user_id')
+      .eq('user_id', asesor1Id);
+    expect(afterError).toBeNull();
+    expect(after).toEqual([]);
+
+    // Se reinserta para que el afterAll de este describe (delete por
+    // user_id) siga siendo un no-op idempotente.
+    const { error: reinsertError } = await svc.from('google_conexiones').insert({
+      user_id: asesor1Id,
+      google_email: GOOGLE_EMAIL_ASESOR1,
+      refresh_token_cifrado: TOKEN_FAKE_ASESOR1,
+    });
+    if (reinsertError) throw new Error(`No se pudo reinsertar el fixture: ${reinsertError.message}`);
+  });
+});
+
+describe('visitas (migraciones 0008/0009)', () => {
+  // Reutiliza lead1Id (de asesor1) y lead2Id (de asesor2) del fixture
+  // principal de este archivo. A diferencia de `leads`/`seguimientos`,
+  // `visitas` NO tiene trigger de inmutabilidad (ver migracion 0002 seccion
+  // 5, que solo cubre `seguimientos`), asi que las filas de fixture SI se
+  // pueden borrar con service-role en el afterAll sin dejar basura.
+  let visitaAsesor1Id: string;
+  let visitaAsesor2Id: string;
+  const FECHA_FUTURA = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+  const FECHA_REAGENDADA = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString();
+
+  beforeAll(async () => {
+    const { data: v1, error: v1Error } = await svc
+      .from('visitas')
+      .insert({ lead_id: lead1Id, asesor_id: asesor1Id, fecha: FECHA_FUTURA, estado: 'agendada' })
+      .select('id')
+      .single();
+    if (v1Error || !v1) throw new Error(`No se pudo crear la visita fixture de asesor1: ${v1Error?.message}`);
+    visitaAsesor1Id = v1.id;
+
+    const { data: v2, error: v2Error } = await svc
+      .from('visitas')
+      .insert({ lead_id: lead2Id, asesor_id: asesor2Id, fecha: FECHA_FUTURA, estado: 'agendada' })
+      .select('id')
+      .single();
+    if (v2Error || !v2) throw new Error(`No se pudo crear la visita fixture de asesor2: ${v2Error?.message}`);
+    visitaAsesor2Id = v2.id;
+  }, 30_000);
+
+  afterAll(async () => {
+    if (svc) {
+      await svc.from('visitas').delete().in('id', [visitaAsesor1Id, visitaAsesor2Id].filter(Boolean));
+    }
+  }, 30_000);
+
+  it('asesor1 NO puede leer la visita de asesor2 (policy de ownership, 0 filas sin error)', async () => {
+    const { data, error } = await asesor1.from('visitas').select('id').eq('id', visitaAsesor2Id);
+    expect(error).toBeNull();
+    expect(data).toEqual([]);
+  });
+
+  it('asesor1 SI puede leer su propia visita', async () => {
+    const { data, error } = await asesor1.from('visitas').select('id, asesor_id').eq('id', visitaAsesor1Id);
+    expect(error).toBeNull();
+    expect(data).toHaveLength(1);
+    expect(data![0].asesor_id).toBe(asesor1Id);
+  });
+
+  it('asesor1 NO puede reagendar (update de fecha) la visita de asesor2 (0 filas afectadas, sin error)', async () => {
+    const { data, error } = await asesor1
+      .from('visitas')
+      .update({ fecha: FECHA_REAGENDADA })
+      .eq('id', visitaAsesor2Id)
+      .eq('estado', 'agendada')
+      .select('id');
+    expect(error).toBeNull();
+    expect(data).toHaveLength(0);
+
+    // Verificacion (service-role): la fecha de la visita de asesor2 no cambio.
+    const { data: after, error: afterError } = await svc
+      .from('visitas')
+      .select('fecha')
+      .eq('id', visitaAsesor2Id)
+      .single();
+    expect(afterError).toBeNull();
+    expect(new Date(after!.fecha).toISOString()).toBe(FECHA_FUTURA);
+  });
+
+  it('asesor1 NO puede cancelar la visita de asesor2 (0 filas afectadas, sin error)', async () => {
+    const { data, error } = await asesor1
+      .from('visitas')
+      .update({ estado: 'cancelada' })
+      .eq('id', visitaAsesor2Id)
+      .eq('estado', 'agendada')
+      .select('id');
+    expect(error).toBeNull();
+    expect(data).toHaveLength(0);
+
+    // Verificacion (service-role): el estado de la visita de asesor2 sigue 'agendada'.
+    const { data: after, error: afterError } = await svc
+      .from('visitas')
+      .select('estado')
+      .eq('id', visitaAsesor2Id)
+      .single();
+    expect(afterError).toBeNull();
+    expect(after!.estado).toBe('agendada');
+  });
+
+  it('authenticated NO puede escribir gcal_sync_estado ni gcal_event_id, ni siquiera sobre su propia visita (columnas fuera del grant de UPDATE, 0009)', async () => {
+    // A diferencia de la denegacion por policy USING (0 filas sin error), la
+    // ausencia de grant de columna SI regresa error con codigo de permiso
+    // denegado explicito — mismo patron que refresh_token_cifrado en
+    // google_conexiones y easybroker_id en seguimientos.
+    const { error: errorSyncEstado } = await asesor1
+      .from('visitas')
+      .update({ gcal_sync_estado: 'error' })
+      .eq('id', visitaAsesor1Id);
+    expect(errorSyncEstado).not.toBeNull();
+    expect(errorSyncEstado!.code).toBe('42501');
+
+    const { error: errorEventId } = await asesor1
+      .from('visitas')
+      .update({ gcal_event_id: 'evt-no-deberia-poder' })
+      .eq('id', visitaAsesor1Id);
+    expect(errorEventId).not.toBeNull();
+    expect(errorEventId!.code).toBe('42501');
+
+    // Verificacion (service-role): ninguna de las dos columnas cambio.
+    const { data: after, error: afterError } = await svc
+      .from('visitas')
+      .select('gcal_sync_estado, gcal_event_id')
+      .eq('id', visitaAsesor1Id)
+      .single();
+    expect(afterError).toBeNull();
+    expect(after!.gcal_sync_estado).toBe('sin_conexion');
+    expect(after!.gcal_event_id).toBeNull();
+  });
+
+  it('authenticated NO puede repuntar visitas.asesor_id a otro asesor, ni siquiera sobre su propia visita (columna fuera del grant de UPDATE, 0009)', async () => {
+    const { error } = await asesor1
+      .from('visitas')
+      .update({ asesor_id: asesor2Id })
+      .eq('id', visitaAsesor1Id);
+    expect(error).not.toBeNull();
+    expect(error!.code).toBe('42501');
+
+    // Verificacion (service-role): la visita sigue siendo de asesor1.
+    const { data: after, error: afterError } = await svc
+      .from('visitas')
+      .select('asesor_id')
+      .eq('id', visitaAsesor1Id)
+      .single();
+    expect(afterError).toBeNull();
+    expect(after!.asesor_id).toBe(asesor1Id);
+  });
+});
