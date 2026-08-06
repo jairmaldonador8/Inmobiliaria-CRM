@@ -50,20 +50,20 @@ export const usuarioActual = cache(async (): Promise<UsuarioActual | null> => {
   return usuario as UsuarioActual
 })
 
-/** Exige sesión de admin; si no, redirige a la landing. */
+/** Exige sesión de admin; si no, redirige al login. */
 export async function requireAdmin(): Promise<UsuarioActual> {
   const usuario = await usuarioActual()
   if (!usuario || usuario.rol !== 'admin') {
-    redirect('/')
+    redirect('/login')
   }
   return usuario
 }
 
-/** Exige sesión de asesor; si no, redirige a la landing. */
+/** Exige sesión de asesor; si no, redirige al login. */
 export async function requireAsesor(): Promise<UsuarioActual> {
   const usuario = await usuarioActual()
   if (!usuario || usuario.rol !== 'asesor') {
-    redirect('/')
+    redirect('/login')
   }
   return usuario
 }

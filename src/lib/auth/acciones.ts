@@ -42,9 +42,9 @@ export async function iniciarSesion(
   return { error: 'Tu cuenta no tiene acceso. Contacta al administrador.' }
 }
 
-/** Cierra la sesión del navegador actual y regresa a la landing. */
+/** Cierra la sesión del navegador actual y regresa al login. */
 export async function cerrarSesion(): Promise<void> {
   const supabase = await createClient()
   await supabase.auth.signOut({ scope: 'local' })
-  redirect('/')
+  redirect('/login')
 }

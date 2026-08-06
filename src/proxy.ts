@@ -79,19 +79,21 @@ export async function proxy(request: NextRequest) {
     return response
   }
 
-  // Sin sesión: las áreas protegidas redirigen a la landing (login en /).
+  // Sin sesión: las áreas protegidas redirigen al login (la landing
+  // pública vive en /).
   if (!claims && esProtegida(path)) {
-    return redirigir('/')
+    return redirigir('/login')
   }
 
   // Sesión autenticada sin rol válido: sesión inválida. Cerrarla y
-  // enviar a / (evita el ping-pong /admin ↔ /asesor y el bucle
-  // autenticado-sin-rol en /).
+  // enviar a /login (evita el ping-pong /admin ↔ /asesor y el bucle
+  // autenticado-sin-rol).
   if (claims && !rol) {
     // scope 'local': invalida solo la sesión de este navegador; no
     // cierra las sesiones del usuario en otros dispositivos.
     const { error: signOutError } = await supabase.auth.signOut({ scope: 'local' })
-    const response = path === '/' ? supabaseResponse : redirigir('/')
+    const response =
+      path === '/' || path === '/login' ? supabaseResponse : redirigir('/login')
 
     if (signOutError) {
       console.error('[proxy] signOut falló:', signOutError.message)
@@ -109,8 +111,8 @@ export async function proxy(request: NextRequest) {
   }
 
   if (rol) {
-    // Con sesión válida en la landing: enviar a su área.
-    if (path === '/') {
+    // Con sesión válida en la landing o el login: enviar a su área.
+    if (path === '/' || path === '/login') {
       return redirigir(AREA_POR_ROL[rol])
     }
 
