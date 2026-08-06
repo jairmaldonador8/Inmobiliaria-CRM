@@ -115,6 +115,11 @@ export default async function PaginaInicioAsesor({
     ? (conexionGoogle.estado as EstadoConexionGoogleUI)
     : 'sin_conectar'
 
+  // La integración solo se ofrece cuando la app OAuth ya existe en Google
+  // Cloud. Mientras falte la credencial, la card se oculta en vez de mostrar
+  // un botón que lleva a un error de Google.
+  const googleConfigurado = Boolean(process.env.GOOGLE_CLIENT_ID)
+
   // Último seguimiento por lead: mismo patrón que el kanban (src/app/(asesor)/asesor/leads/page.tsx)
   // — segunda consulta ordenada desc; el primer registro visto por lead es el más reciente.
   const ultimoSeguimiento = new Map<string, string>()
@@ -297,12 +302,17 @@ export default async function PaginaInicioAsesor({
         )}
       </div>
 
-      {/* Google Calendar (Task 7) */}
-      <CardConexionGoogle
-        estado={estadoGoogle}
-        googleEmail={conexionGoogle?.google_email ?? null}
-        aviso={avisoGoogle}
-      />
+      {/* Google Calendar (Task 7). La card solo se muestra si la app OAuth ya
+          está configurada: sin GOOGLE_CLIENT_ID el botón «Conectar» llevaría a
+          una pantalla de error de Google. Así el resto del dashboard puede
+          desplegarse antes de terminar el alta en Google Cloud. */}
+      {googleConfigurado ? (
+        <CardConexionGoogle
+          estado={estadoGoogle}
+          googleEmail={conexionGoogle?.google_email ?? null}
+          aviso={avisoGoogle}
+        />
+      ) : null}
 
       {/* Mis números del mes */}
       <div className="flex flex-col gap-3">
