@@ -190,6 +190,14 @@ type FilaProximaVisita = {
  * SESIÓN (mismo patrón que el resto de la cola del día en
  * `src/app/(asesor)/asesor/page.tsx`), y RLS de `visitas` ya acota a las
  * propias del asesor (o a todas si es admin) — igual que `citasHoy`.
+ *
+ * `lead:leads!inner(...)` (en vez del embed normal) para que una visita
+ * cuyo lead ya no sea legible por RLS (p. ej. quedó huérfana de un cambio de
+ * asesor que no movió también la visita) simplemente NO aparezca en vez de
+ * pintarse con `lead: null` y un link roto. Defensa en profundidad: el
+ * arreglo real vive en `reasignarLead` (src/lib/leads/acciones.ts), esto es
+ * el respaldo para cualquier otra vía en la que la fila de `visitas` quede
+ * desincronizada de su lead.
  */
 export async function proximasVisitas(
   supabase: SupabaseClient,
@@ -198,7 +206,7 @@ export async function proximasVisitas(
 ): Promise<ProximaVisita[]> {
   const { data, error } = await supabase
     .from('visitas')
-    .select('id, fecha, duracion_min, lead:leads(id, nombre), propiedad:propiedades(titulo)')
+    .select('id, fecha, duracion_min, lead:leads!inner(id, nombre), propiedad:propiedades(titulo)')
     .eq('estado', 'agendada')
     .gte('fecha', ahora.toISOString())
     .order('fecha', { ascending: true })

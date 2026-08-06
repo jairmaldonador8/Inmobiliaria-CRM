@@ -280,6 +280,19 @@ describe('proximasVisitas', () => {
     expect(resultado[0].propiedadTitulo).toBeNull()
   })
 
+  it('usa lead:leads!inner (defensa en profundidad) para que una visita sin lead legible no se pinte con link roto', async () => {
+    // Con el inner join real, PostgREST jamás devolvería esta fila (la
+    // excluiría del resultado); este caso solo documenta que, si por
+    // cualquier razón llegara una fila con lead: null, el mapeo no truena y
+    // cae a valores vacíos en vez de reventar la UI.
+    const { supabase } = crearSupabaseProximasVisitasFake([{ ...filaBase, lead: null }])
+
+    const resultado = await proximasVisitas(supabase, 5, AHORA)
+
+    expect(resultado[0].leadId).toBe('')
+    expect(resultado[0].leadNombre).toBe('')
+  })
+
   it('consulta visitas estado=agendada, futuras (gte fecha=ahora), orden ascendente por fecha, con el límite pedido', async () => {
     const { supabase, from, select, eq, gte, order, limit } = crearSupabaseProximasVisitasFake([])
 
@@ -287,7 +300,7 @@ describe('proximasVisitas', () => {
 
     expect(from).toHaveBeenCalledWith('visitas')
     expect(select).toHaveBeenCalledWith(
-      'id, fecha, duracion_min, lead:leads(id, nombre), propiedad:propiedades(titulo)'
+      'id, fecha, duracion_min, lead:leads!inner(id, nombre), propiedad:propiedades(titulo)'
     )
     expect(eq).toHaveBeenCalledWith('estado', 'agendada')
     expect(gte).toHaveBeenCalledWith('fecha', AHORA.toISOString())

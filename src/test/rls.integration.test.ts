@@ -650,3 +650,140 @@ describe('google_conexiones (migracion 0008)', () => {
     if (reinsertError) throw new Error(`No se pudo reinsertar el fixture: ${reinsertError.message}`);
   });
 });
+
+describe('visitas (migraciones 0008/0009)', () => {
+  // Reutiliza lead1Id (de asesor1) y lead2Id (de asesor2) del fixture
+  // principal de este archivo. A diferencia de `leads`/`seguimientos`,
+  // `visitas` NO tiene trigger de inmutabilidad (ver migracion 0002 seccion
+  // 5, que solo cubre `seguimientos`), asi que las filas de fixture SI se
+  // pueden borrar con service-role en el afterAll sin dejar basura.
+  let visitaAsesor1Id: string;
+  let visitaAsesor2Id: string;
+  const FECHA_FUTURA = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+  const FECHA_REAGENDADA = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString();
+
+  beforeAll(async () => {
+    const { data: v1, error: v1Error } = await svc
+      .from('visitas')
+      .insert({ lead_id: lead1Id, asesor_id: asesor1Id, fecha: FECHA_FUTURA, estado: 'agendada' })
+      .select('id')
+      .single();
+    if (v1Error || !v1) throw new Error(`No se pudo crear la visita fixture de asesor1: ${v1Error?.message}`);
+    visitaAsesor1Id = v1.id;
+
+    const { data: v2, error: v2Error } = await svc
+      .from('visitas')
+      .insert({ lead_id: lead2Id, asesor_id: asesor2Id, fecha: FECHA_FUTURA, estado: 'agendada' })
+      .select('id')
+      .single();
+    if (v2Error || !v2) throw new Error(`No se pudo crear la visita fixture de asesor2: ${v2Error?.message}`);
+    visitaAsesor2Id = v2.id;
+  }, 30_000);
+
+  afterAll(async () => {
+    if (svc) {
+      await svc.from('visitas').delete().in('id', [visitaAsesor1Id, visitaAsesor2Id].filter(Boolean));
+    }
+  }, 30_000);
+
+  it('asesor1 NO puede leer la visita de asesor2 (policy de ownership, 0 filas sin error)', async () => {
+    const { data, error } = await asesor1.from('visitas').select('id').eq('id', visitaAsesor2Id);
+    expect(error).toBeNull();
+    expect(data).toEqual([]);
+  });
+
+  it('asesor1 SI puede leer su propia visita', async () => {
+    const { data, error } = await asesor1.from('visitas').select('id, asesor_id').eq('id', visitaAsesor1Id);
+    expect(error).toBeNull();
+    expect(data).toHaveLength(1);
+    expect(data![0].asesor_id).toBe(asesor1Id);
+  });
+
+  it('asesor1 NO puede reagendar (update de fecha) la visita de asesor2 (0 filas afectadas, sin error)', async () => {
+    const { data, error } = await asesor1
+      .from('visitas')
+      .update({ fecha: FECHA_REAGENDADA })
+      .eq('id', visitaAsesor2Id)
+      .eq('estado', 'agendada')
+      .select('id');
+    expect(error).toBeNull();
+    expect(data).toHaveLength(0);
+
+    // Verificacion (service-role): la fecha de la visita de asesor2 no cambio.
+    const { data: after, error: afterError } = await svc
+      .from('visitas')
+      .select('fecha')
+      .eq('id', visitaAsesor2Id)
+      .single();
+    expect(afterError).toBeNull();
+    expect(new Date(after!.fecha).toISOString()).toBe(FECHA_FUTURA);
+  });
+
+  it('asesor1 NO puede cancelar la visita de asesor2 (0 filas afectadas, sin error)', async () => {
+    const { data, error } = await asesor1
+      .from('visitas')
+      .update({ estado: 'cancelada' })
+      .eq('id', visitaAsesor2Id)
+      .eq('estado', 'agendada')
+      .select('id');
+    expect(error).toBeNull();
+    expect(data).toHaveLength(0);
+
+    // Verificacion (service-role): el estado de la visita de asesor2 sigue 'agendada'.
+    const { data: after, error: afterError } = await svc
+      .from('visitas')
+      .select('estado')
+      .eq('id', visitaAsesor2Id)
+      .single();
+    expect(afterError).toBeNull();
+    expect(after!.estado).toBe('agendada');
+  });
+
+  it('authenticated NO puede escribir gcal_sync_estado ni gcal_event_id, ni siquiera sobre su propia visita (columnas fuera del grant de UPDATE, 0009)', async () => {
+    // A diferencia de la denegacion por policy USING (0 filas sin error), la
+    // ausencia de grant de columna SI regresa error con codigo de permiso
+    // denegado explicito — mismo patron que refresh_token_cifrado en
+    // google_conexiones y easybroker_id en seguimientos.
+    const { error: errorSyncEstado } = await asesor1
+      .from('visitas')
+      .update({ gcal_sync_estado: 'error' })
+      .eq('id', visitaAsesor1Id);
+    expect(errorSyncEstado).not.toBeNull();
+    expect(errorSyncEstado!.code).toBe('42501');
+
+    const { error: errorEventId } = await asesor1
+      .from('visitas')
+      .update({ gcal_event_id: 'evt-no-deberia-poder' })
+      .eq('id', visitaAsesor1Id);
+    expect(errorEventId).not.toBeNull();
+    expect(errorEventId!.code).toBe('42501');
+
+    // Verificacion (service-role): ninguna de las dos columnas cambio.
+    const { data: after, error: afterError } = await svc
+      .from('visitas')
+      .select('gcal_sync_estado, gcal_event_id')
+      .eq('id', visitaAsesor1Id)
+      .single();
+    expect(afterError).toBeNull();
+    expect(after!.gcal_sync_estado).toBe('sin_conexion');
+    expect(after!.gcal_event_id).toBeNull();
+  });
+
+  it('authenticated NO puede repuntar visitas.asesor_id a otro asesor, ni siquiera sobre su propia visita (columna fuera del grant de UPDATE, 0009)', async () => {
+    const { error } = await asesor1
+      .from('visitas')
+      .update({ asesor_id: asesor2Id })
+      .eq('id', visitaAsesor1Id);
+    expect(error).not.toBeNull();
+    expect(error!.code).toBe('42501');
+
+    // Verificacion (service-role): la visita sigue siendo de asesor1.
+    const { data: after, error: afterError } = await svc
+      .from('visitas')
+      .select('asesor_id')
+      .eq('id', visitaAsesor1Id)
+      .single();
+    expect(afterError).toBeNull();
+    expect(after!.asesor_id).toBe(asesor1Id);
+  });
+});
