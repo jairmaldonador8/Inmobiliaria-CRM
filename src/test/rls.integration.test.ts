@@ -531,7 +531,7 @@ describe('google_conexiones (migracion 0008)', () => {
   beforeAll(async () => {
     // Defensivo: si una corrida anterior crasheo antes del afterAll, limpia
     // antes de insertar (user_id es PK, no tolera duplicados).
-    await svc.from('google_conexiones').delete().in('user_id', [asesor1Id, asesor2Id]);
+    await svc.from('google_conexiones').delete().in('user_id', [asesor1Id, asesor2Id, adminId]);
 
     const { error: insError } = await svc.from('google_conexiones').insert([
       { user_id: asesor1Id, google_email: GOOGLE_EMAIL_ASESOR1, refresh_token_cifrado: TOKEN_FAKE_ASESOR1 },
@@ -542,7 +542,7 @@ describe('google_conexiones (migracion 0008)', () => {
 
   afterAll(async () => {
     if (svc) {
-      await svc.from('google_conexiones').delete().in('user_id', [asesor1Id, asesor2Id]);
+      await svc.from('google_conexiones').delete().in('user_id', [asesor1Id, asesor2Id, adminId]);
     }
   }, 30_000);
 
@@ -578,12 +578,29 @@ describe('google_conexiones (migracion 0008)', () => {
   });
 
   it('asesor1 NO puede insertar ni actualizar google_conexiones (sin policy de escritura para authenticated)', async () => {
+    // user_id = adminId (no asesor1Id): adminId es un usuario valido (pasa la
+    // FK) pero NO tiene fixture en google_conexiones, asi que el insert no
+    // puede fallar por PK duplicada. Ademas se afirma el codigo 42501
+    // (insufficient_privilege / violacion de RLS) explicitamente: sin este
+    // chequeo, si algun dia se agregara una policy de insert, esta misma
+    // llamada seguiria fallando -pero por 23505 (duplicate key si se usara
+    // asesor1Id, o por with_check si el user_id no coincide con auth.uid())-
+    // y el test seguiria en verde sin proteger nada.
     const { error: insError } = await asesor1.from('google_conexiones').insert({
-      user_id: asesor1Id,
+      user_id: adminId,
       google_email: 'no-deberia-poder@example.com',
       refresh_token_cifrado: 'v1.no-deberia-poder',
     });
     expect(insError).not.toBeNull();
+    expect(insError!.code).toBe('42501');
+
+    // Verificacion (service-role): la fila nunca se creo.
+    const { data: checkIns, error: checkInsError } = await svc
+      .from('google_conexiones')
+      .select('user_id')
+      .eq('user_id', adminId);
+    expect(checkInsError).toBeNull();
+    expect(checkIns).toEqual([]);
 
     // Sin policy de update para `authenticated`, RLS deniega por default:
     // 0 filas afectadas, sin error (igual que las denegaciones por USING en
