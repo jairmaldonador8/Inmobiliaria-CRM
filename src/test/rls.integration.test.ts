@@ -602,16 +602,20 @@ describe('google_conexiones (migracion 0008)', () => {
     expect(checkInsError).toBeNull();
     expect(checkIns).toEqual([]);
 
-    // Sin policy de update para `authenticated`, RLS deniega por default:
-    // 0 filas afectadas, sin error (igual que las denegaciones por USING en
-    // leads/push_suscripciones de arriba).
-    const { data: upd, error: updError } = await asesor1
+    // Desde la migracion 0010 la denegacion del update tiene DOS capas: ya no
+    // depende solo de que falte la policy (que filtraria en silencio: 0 filas
+    // sin error, como las denegaciones por USING de leads/push_suscripciones
+    // de arriba), sino que el grant de tabla de UPDATE esta revocado para
+    // `authenticated`, asi que Postgres corta antes de evaluar RLS. Se afirma
+    // el 42501 explicitamente: si alguien devolviera ese grant, este test se
+    // pone rojo aunque RLS siguiera filtrando por su cuenta.
+    const { error: updError } = await asesor1
       .from('google_conexiones')
       .update({ estado: 'revocada' })
       .eq('user_id', asesor1Id)
       .select('user_id');
-    expect(updError).toBeNull();
-    expect(upd).toHaveLength(0);
+    expect(updError).not.toBeNull();
+    expect(updError!.code).toBe('42501');
 
     // Verificacion (service-role): el estado sigue 'activa'.
     const { data: after, error: afterError } = await svc
