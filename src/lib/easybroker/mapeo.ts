@@ -74,6 +74,17 @@ export interface ListingStatusEB {
   updated_at: string
 }
 
+/**
+ * Item de GET /v1/contacts/{contact_id} (solo los campos que usamos). Trae
+ * ademas `probability`, `private_description`, `agent` — ninguno sirve para
+ * clasificar (ver skill easybroker-api: `agent` es asignacion automatica por
+ * origen, NO indica atencion ni corretaje).
+ */
+export interface ContactoEB {
+  id: number
+  tags?: string[] | null
+}
+
 // ---------------------------------------------------------------------------
 // Filas resultantes (subconjuntos de las tablas propiedades / leads)
 // ---------------------------------------------------------------------------
@@ -114,6 +125,8 @@ export interface FilaLead {
   fuente_detalle: string | null
   /** public_id de EasyBroker; el sync lo resuelve a propiedad_id (uuid). */
   propiedad_eb_id: string | null
+  /** contact_id de EasyBroker; el sync lo usa SOLO para clasificar (GET /v1/contacts/{id}), no se persiste. */
+  contacto_eb_id: number | null
   mensaje_original: string | null
   creado_en: string
 }
@@ -226,7 +239,39 @@ export function mapearContactRequest(cr: ContactRequestEB): FilaLead {
     fuente: 'portal',
     fuente_detalle: cr.source ?? null,
     propiedad_eb_id: cr.property_id ?? null,
+    contacto_eb_id: cr.contact_id ?? null,
     mensaje_original: cr.message ?? null,
     creado_en: aUtcIso(cr.happened_at),
   }
+}
+
+// ---------------------------------------------------------------------------
+// Clasificacion de contact requests (ver skill easybroker-api, "Tipos de
+// contact request" — medido sobre 150 solicitudes reales, 2026-08-06)
+// ---------------------------------------------------------------------------
+
+export type ClasificacionLeadEB = 'cliente_directo' | 'co_broke' | 'saliente'
+
+/**
+ * Clasifica un contact request en una de las 3 categorias verificadas:
+ *  - 'saliente': `property_id` NO esta en nuestro catalogo (`propiedades`) ->
+ *    un asesor de Montana pregunto por una propiedad AJENA. No es un lead.
+ *  - 'co_broke': la propiedad SI es nuestra y el contacto trae el tag
+ *    "agente" -> corredor externo con un cliente interesado.
+ *  - 'cliente_directo': la propiedad es nuestra y el contacto NO trae ese tag.
+ *
+ * Funcion pura: `propiedadEsNuestra` y `tagsContacto` ya los resuelve el sync
+ * (consulta local a `propiedades.easybroker_id` + GET /v1/contacts/{id}).
+ * `tagsContacto` es `null` cuando no se pudo determinar (la llamada al
+ * contacto fallo, o no habia contact_id) — en ese caso NO se adivina: se
+ * devuelve `null` (sin clasificar). No confundir con `[]` (contacto
+ * consultado con exito, simplemente sin tags).
+ */
+export function clasificarContactRequest(
+  propiedadEsNuestra: boolean,
+  tagsContacto: string[] | null
+): ClasificacionLeadEB | null {
+  if (!propiedadEsNuestra) return 'saliente'
+  if (tagsContacto === null) return null
+  return tagsContacto.includes('agente') ? 'co_broke' : 'cliente_directo'
 }

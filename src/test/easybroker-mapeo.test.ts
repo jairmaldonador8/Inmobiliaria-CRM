@@ -15,6 +15,7 @@ import {
   mapearPropiedadLista,
   mapearPropiedadDetalle,
   mapearContactRequest,
+  clasificarContactRequest,
   estatusEsActivo,
   type PropiedadListaEB,
   type PropiedadDetalleEB,
@@ -168,6 +169,28 @@ describe('mapearContactRequest', () => {
   it('devuelve null si el teléfono no tiene dígitos', () => {
     const cr: ContactRequestEB = { ...crContent[0], phone: 'sin numero' }
     expect(mapearContactRequest(cr).telefono).toBeNull()
+  })
+})
+
+describe('clasificarContactRequest', () => {
+  it('propiedad ajena (no en catalogo) -> "saliente", sin importar los tags', () => {
+    expect(clasificarContactRequest(false, null)).toBe('saliente')
+    expect(clasificarContactRequest(false, ['agente'])).toBe('saliente')
+    expect(clasificarContactRequest(false, [])).toBe('saliente')
+  })
+
+  it('propiedad nuestra + contacto con tag "agente" -> "co_broke"', () => {
+    expect(clasificarContactRequest(true, ['agente'])).toBe('co_broke')
+    expect(clasificarContactRequest(true, ['vip', 'agente'])).toBe('co_broke')
+  })
+
+  it('propiedad nuestra + contacto sin tag "agente" -> "cliente_directo"', () => {
+    expect(clasificarContactRequest(true, [])).toBe('cliente_directo')
+    expect(clasificarContactRequest(true, ['vip'])).toBe('cliente_directo')
+  })
+
+  it('propiedad nuestra + tags no determinados (llamada al contacto fallida) -> null (sin clasificar)', () => {
+    expect(clasificarContactRequest(true, null)).toBeNull()
   })
 })
 

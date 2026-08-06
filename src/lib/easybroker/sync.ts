@@ -48,10 +48,13 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 
 import { ebFetch, pausa, PAUSA_ENTRE_PAGINAS_MS, type PaginaEB, type ParamsEB } from '@/lib/easybroker/cliente'
 import {
+  clasificarContactRequest,
   estatusEsActivo,
   mapearContactRequest,
   mapearPropiedadDetalle,
   mapearPropiedadLista,
+  type ClasificacionLeadEB,
+  type ContactoEB,
   type ContactRequestEB,
   type ListingStatusEB,
   type PropiedadDetalleEB,
@@ -63,9 +66,27 @@ import { crearNotificacion, notificarAdmins } from '@/lib/notificaciones/crear'
 // Tipos publicos
 // ---------------------------------------------------------------------------
 
+/** Contadores de clasificacion de leads NUEVOS (ver mapeo.clasificarContactRequest). */
+export interface ContadoresClasificacionEB {
+  clienteDirecto: number
+  coBroke: number
+  saliente: number
+  /** No se pudo determinar: llamada a /v1/contacts fallo, o sin property_id/contact_id. */
+  sinClasificar: number
+}
+
+function contadoresClasificacionVacios(): ContadoresClasificacionEB {
+  return { clienteDirecto: 0, coBroke: 0, saliente: 0, sinClasificar: 0 }
+}
+
 export interface ResultadoSync {
   propiedades: { procesadas: number; nuevas: number; actualizadas: number }
-  leads: { procesados: number; nuevos: number; duplicados: number }
+  leads: {
+    procesados: number
+    nuevos: number
+    duplicados: number
+    porClasificacion: ContadoresClasificacionEB
+  }
   estatus: {
     procesadas: number
     cambiosEstatus: number
@@ -84,6 +105,8 @@ export interface ResultadoSync {
 export interface DepsSync {
   obtenerPagina?: (path: string, params?: ParamsEB) => Promise<PaginaEB<unknown>>
   obtenerDetalle?: (publicId: string) => Promise<PropiedadDetalleEB>
+  /** GET /v1/contacts/{contact_id} — usado solo para clasificar leads nuevos. */
+  obtenerContacto?: (contactId: number) => Promise<ContactoEB>
   maxPaginas?: number
 }
 
@@ -94,6 +117,7 @@ export interface CtxPropiedades {
 
 export interface CtxLeads {
   agenciaId: string
+  obtenerContacto: (contactId: number) => Promise<ContactoEB>
 }
 
 export interface ResultadoPaginaPropiedades {
@@ -109,6 +133,8 @@ export interface ResultadoContactRequests {
   procesados: number
   nuevos: number
   duplicados: number
+  /** Solo cuenta clasificacion de leads NUEVOS (duplicados/consultas repetidas no se re-clasifican). */
+  porClasificacion: ContadoresClasificacionEB
   /** Max happened_at (UTC ISO) de los items procesados con exito; null si ninguno. */
   maxHappenedAt: string | null
   errores: string[]
@@ -505,13 +531,52 @@ async function buscarLeadExistente(
 }
 
 /**
+ * Clasifica un lead NUEVO (ver mapeo.clasificarContactRequest):
+ *  - propiedad ajena (no encontrada en catalogo local) -> 'saliente', SIN
+ *    pedir el contacto (ya se sabe la respuesta, se ahorra un request).
+ *  - sin property_id en el contact request -> null (sin clasificar): no hay
+ *    suficiente informacion para aplicar ninguna de las 3 reglas.
+ *  - propiedad nuestra -> requiere el tag del contacto: GET /v1/contacts/{id}.
+ *    Sin contact_id, o si esa llamada falla, se deja sin clasificar (null) y
+ *    NO se propaga el error (no debe tumbar el sync ni la pagina completa).
+ */
+async function clasificarLeadNuevo(
+  ctx: CtxLeads,
+  fila: ReturnType<typeof mapearContactRequest>,
+  propiedad: PropiedadResuelta | null
+): Promise<ClasificacionLeadEB | null> {
+  if (!fila.propiedad_eb_id) return null
+  if (!propiedad) return clasificarContactRequest(false, null) // 'saliente'
+  if (!fila.contacto_eb_id) return null
+
+  await pausa(PAUSA_ENTRE_DETALLES_MS) // rate limit: 1 request extra por lead nuevo
+  try {
+    const contacto = await ctx.obtenerContacto(fila.contacto_eb_id)
+    return clasificarContactRequest(true, contacto.tags ?? [])
+  } catch {
+    return null // GET /v1/contacts fallo: el lead se guarda sin clasificar.
+  }
+}
+
+function acumularClasificacion(
+  contadores: ContadoresClasificacionEB,
+  clasificacion: ClasificacionLeadEB | null
+): void {
+  if (clasificacion === 'cliente_directo') contadores.clienteDirecto += 1
+  else if (clasificacion === 'co_broke') contadores.coBroke += 1
+  else if (clasificacion === 'saliente') contadores.saliente += 1
+  else contadores.sinClasificar += 1
+}
+
+/**
  * Procesa un lote de contact requests con dedup:
  *  1. easybroker_id ya visto (en leads O en seguimientos) -> skip (duplicado).
  *  2. mismo telefono o email en un lead NO archivado -> consulta repetida:
  *     seguimiento 'sistema' (marcado con el easybroker_id del contact request)
  *     + notificacion (asesor asignado, o admins si esta en bandeja); no se
- *     crea lead.
- *  3. si no -> lead nuevo en bandeja (asesor null) + notificacion a admins.
+ *     crea lead (y no se clasifica: la clasificacion es del lead nuevo).
+ *  3. si no -> se clasifica (clasificarLeadNuevo) y se crea lead nuevo en
+ *     bandeja (asesor null) + notificacion a admins.
  * En 2 y 3, una violacion de unicidad 23505 (carrera con una corrida
  * traslapada) cuenta como duplicado y NO notifica.
  */
@@ -524,6 +589,7 @@ export async function procesarContactRequests(
     procesados: 0,
     nuevos: 0,
     duplicados: 0,
+    porClasificacion: contadoresClasificacionVacios(),
     maxHappenedAt: null,
     errores: [],
   }
@@ -532,6 +598,7 @@ export async function procesarContactRequests(
     try {
       const fila = mapearContactRequest(cr)
       let esNuevo = false
+      let clasificacion: ClasificacionLeadEB | null = null
 
       if (!(await contactRequestYaVisto(supabase, fila.easybroker_id))) {
         // Resolver la propiedad referida (puede no existir en nuestro catalogo).
@@ -551,12 +618,17 @@ export async function procesarContactRequests(
           await registrarConsultaRepetida(supabase, existente, fila, propiedad)
           // esNuevo queda false: la consulta repetida cuenta como duplicado.
         } else {
-          esNuevo = await crearLeadEnBandeja(supabase, ctx.agenciaId, fila, propiedad)
+          clasificacion = await clasificarLeadNuevo(ctx, fila, propiedad)
+          esNuevo = await crearLeadEnBandeja(supabase, ctx.agenciaId, fila, propiedad, clasificacion)
         }
       }
 
-      if (esNuevo) resultado.nuevos += 1
-      else resultado.duplicados += 1
+      if (esNuevo) {
+        resultado.nuevos += 1
+        acumularClasificacion(resultado.porClasificacion, clasificacion)
+      } else {
+        resultado.duplicados += 1
+      }
       resultado.procesados += 1
       if (!resultado.maxHappenedAt || fila.creado_en > resultado.maxHappenedAt) {
         resultado.maxHappenedAt = fila.creado_en
@@ -616,7 +688,8 @@ async function crearLeadEnBandeja(
   supabase: SupabaseClient,
   agenciaId: string,
   fila: ReturnType<typeof mapearContactRequest>,
-  propiedad: PropiedadResuelta | null
+  propiedad: PropiedadResuelta | null,
+  clasificacionEb: ClasificacionLeadEB | null
 ): Promise<boolean> {
   const { error } = await supabase.from('leads').insert({
     agencia_id: agenciaId,
@@ -631,6 +704,7 @@ async function crearLeadEnBandeja(
     easybroker_id: fila.easybroker_id,
     mensaje_original: fila.mensaje_original,
     creado_en: fila.creado_en, // happened_at real del contact request (UTC)
+    clasificacion_eb: clasificacionEb,
   })
   if (error) {
     // Otra corrida traslapada ya creo este lead: duplicado, no notificar.
@@ -664,11 +738,13 @@ export async function sincronizarEasyBroker(
     deps.obtenerPagina ?? ((path: string, params?: ParamsEB) => ebFetch<PaginaEB<unknown>>(path, params))
   const obtenerDetalle =
     deps.obtenerDetalle ?? ((publicId: string) => ebFetch<PropiedadDetalleEB>(`/v1/properties/${publicId}`))
+  const obtenerContacto =
+    deps.obtenerContacto ?? ((contactId: number) => ebFetch<ContactoEB>(`/v1/contacts/${contactId}`))
   const maxPaginas = deps.maxPaginas ?? Infinity
 
   const resultado: ResultadoSync = {
     propiedades: { procesadas: 0, nuevas: 0, actualizadas: 0 },
-    leads: { procesados: 0, nuevos: 0, duplicados: 0 },
+    leads: { procesados: 0, nuevos: 0, duplicados: 0, porClasificacion: contadoresClasificacionVacios() },
     estatus: {
       procesadas: 0,
       cambiosEstatus: 0,
@@ -759,10 +835,14 @@ export async function sincronizarEasyBroker(
       let fallo = false
 
       for (;;) {
-        const r = await procesarContactRequests(supabase, pagina.content, { agenciaId })
+        const r = await procesarContactRequests(supabase, pagina.content, { agenciaId, obtenerContacto })
         resultado.leads.procesados += r.procesados
         resultado.leads.nuevos += r.nuevos
         resultado.leads.duplicados += r.duplicados
+        resultado.leads.porClasificacion.clienteDirecto += r.porClasificacion.clienteDirecto
+        resultado.leads.porClasificacion.coBroke += r.porClasificacion.coBroke
+        resultado.leads.porClasificacion.saliente += r.porClasificacion.saliente
+        resultado.leads.porClasificacion.sinClasificar += r.porClasificacion.sinClasificar
 
         if (r.errores.length > 0) {
           resultado.errores.push(...r.errores)

@@ -37,7 +37,7 @@ import {
   sincronizarEasyBroker,
 } from '@/lib/easybroker/sync';
 import type { PaginaEB } from '@/lib/easybroker/cliente';
-import type { ContactRequestEB, PropiedadDetalleEB, PropiedadListaEB } from '@/lib/easybroker/mapeo';
+import type { ContactoEB, ContactRequestEB, PropiedadDetalleEB, PropiedadListaEB } from '@/lib/easybroker/mapeo';
 
 loadEnv({ path: path.resolve(__dirname, '../../.env.local') });
 
@@ -146,6 +146,22 @@ function contactRequest(id: number, overrides: Partial<ContactRequestEB> = {}): 
     happened_at: '2026-08-02T09:30:00-06:00',
     ...overrides,
   };
+}
+
+// Fixture de GET /v1/contacts/{id} (clasificacion co-broke vs cliente directo).
+// Los contact_id NO listados aqui simulan una llamada que falla (404/500/etc).
+const CONTACTOS: Record<number, ContactoEB> = {
+  1001: { id: 1001, tags: ['agente'] }, // corredor externo -> co_broke
+  1002: { id: 1002, tags: [] }, // sin tag -> cliente_directo
+};
+
+const llamadasContacto: number[] = [];
+
+async function obtenerContactoFixture(contactId: number): Promise<ContactoEB> {
+  llamadasContacto.push(contactId);
+  const contacto = CONTACTOS[contactId];
+  if (!contacto) throw new Error(`GET /v1/contacts/${contactId} fallo (fixture no definido)`);
+  return contacto;
 }
 
 // ---------------------------------------------------------------------------
@@ -283,7 +299,7 @@ describe('Sync EasyBroker Fase 1: idempotencia + dedup (Supabase real)', () => {
   });
 
   it('2. contact request nuevo -> lead en bandeja (asesor null, zona_interes de la propiedad) + notificacion a admins', async () => {
-    const r = await procesarContactRequests(svc, [contactRequest(RUN)], { agenciaId });
+    const r = await procesarContactRequests(svc, [contactRequest(RUN)], { agenciaId, obtenerContacto: obtenerContactoFixture });
     expect(r.errores).toEqual([]);
     expect(r.procesados).toBe(1);
     expect(r.nuevos).toBe(1);
@@ -324,7 +340,7 @@ describe('Sync EasyBroker Fase 1: idempotencia + dedup (Supabase real)', () => {
   });
 
   it('3. mismo contact request otra vez (mismo easybroker_id) -> duplicado, sin lead ni notificacion nuevos', async () => {
-    const r = await procesarContactRequests(svc, [contactRequest(RUN)], { agenciaId });
+    const r = await procesarContactRequests(svc, [contactRequest(RUN)], { agenciaId, obtenerContacto: obtenerContactoFixture });
     expect(r.errores).toEqual([]);
     expect(r.procesados).toBe(1);
     expect(r.nuevos).toBe(0);
@@ -350,7 +366,7 @@ describe('Sync EasyBroker Fase 1: idempotencia + dedup (Supabase real)', () => {
       source: 'Pincali',
       happened_at: '2026-08-02T12:00:00-06:00',
     });
-    const r = await procesarContactRequests(svc, [cr], { agenciaId });
+    const r = await procesarContactRequests(svc, [cr], { agenciaId, obtenerContacto: obtenerContactoFixture });
     expect(r.errores).toEqual([]);
     expect(r.nuevos).toBe(0);
     expect(r.duplicados).toBe(1);
@@ -394,7 +410,7 @@ describe('Sync EasyBroker Fase 1: idempotencia + dedup (Supabase real)', () => {
     // Reintento del MISMO contact request (cron reintenta / invocacion doble):
     // el seguimiento ya registrado con ese easybroker_id lo hace duplicado —
     // ni seguimiento nuevo ni notificacion nueva.
-    const rRetry = await procesarContactRequests(svc, [cr], { agenciaId });
+    const rRetry = await procesarContactRequests(svc, [cr], { agenciaId, obtenerContacto: obtenerContactoFixture });
     expect(rRetry.errores).toEqual([]);
     expect(rRetry.nuevos).toBe(0);
     expect(rRetry.duplicados).toBe(1);
@@ -421,7 +437,7 @@ describe('Sync EasyBroker Fase 1: idempotencia + dedup (Supabase real)', () => {
       source: 'lamudi.com.mx',
       happened_at: '2026-08-02T15:00:00-06:00',
     });
-    const r = await procesarContactRequests(svc, [cr], { agenciaId });
+    const r = await procesarContactRequests(svc, [cr], { agenciaId, obtenerContacto: obtenerContactoFixture });
     expect(r.errores).toEqual([]);
     expect(r.nuevos).toBe(0);
     expect(r.duplicados).toBe(1);
@@ -587,7 +603,7 @@ describe('Sync EasyBroker Fase 1: idempotencia + dedup (Supabase real)', () => {
       source: 'sitio propio',
       happened_at: '2026-08-02T16:00:00-06:00',
     });
-    const r = await procesarContactRequests(svc, [cr], { agenciaId });
+    const r = await procesarContactRequests(svc, [cr], { agenciaId, obtenerContacto: obtenerContactoFixture });
     expect(r.errores).toEqual([]);
     expect(r.nuevos).toBe(1);
 
@@ -614,7 +630,7 @@ describe('Sync EasyBroker Fase 1: idempotencia + dedup (Supabase real)', () => {
       source: 'sitio propio',
       happened_at: '2026-08-02T17:00:00-06:00',
     });
-    const r1 = await procesarContactRequests(svc, [crNuevo], { agenciaId });
+    const r1 = await procesarContactRequests(svc, [crNuevo], { agenciaId, obtenerContacto: obtenerContactoFixture });
     expect(r1.errores).toEqual([]);
     expect(r1.nuevos).toBe(1);
 
@@ -638,7 +654,7 @@ describe('Sync EasyBroker Fase 1: idempotencia + dedup (Supabase real)', () => {
       source: 'sitio propio',
       happened_at: '2026-08-02T17:30:00-06:00',
     });
-    const r2 = await procesarContactRequests(svc, [crRepetido], { agenciaId });
+    const r2 = await procesarContactRequests(svc, [crRepetido], { agenciaId, obtenerContacto: obtenerContactoFixture });
     expect(r2.errores).toEqual([]);
     expect(r2.nuevos).toBe(0);
     expect(r2.duplicados).toBe(1);
@@ -658,6 +674,113 @@ describe('Sync EasyBroker Fase 1: idempotencia + dedup (Supabase real)', () => {
     expect(segs![0].easybroker_id).toBe(String(RUN + 5));
     expect(segs![0].propiedad_id).toBeNull(); // el CR no traia propiedad
     expect(segs![0].nota).toContain('volvió a preguntar');
+  });
+
+  it('7c. clasificacion "saliente": property_id ajeno (no en catalogo) -> lead sin propiedad, SIN llamar a /v1/contacts', async () => {
+    const llamadasAntes = llamadasContacto.length;
+    const cr = contactRequest(RUN + 6, {
+      name: `${MARK} Lead Saliente`,
+      phone: null,
+      email: `${RUN}-saliente@sync.test`,
+      property_id: `${MARK}-PROPIEDAD-AJENA-NO-EXISTE`,
+      contact_id: 1001, // si se llegara a consultar, traeria tag "agente"; NO debe consultarse
+      source: 'MLS',
+      happened_at: '2026-08-02T18:00:00-06:00',
+    });
+    const r = await procesarContactRequests(svc, [cr], { agenciaId, obtenerContacto: obtenerContactoFixture });
+    expect(r.errores).toEqual([]);
+    expect(r.nuevos).toBe(1);
+    expect(r.porClasificacion.saliente).toBe(1);
+    expect(r.porClasificacion.clienteDirecto).toBe(0);
+    expect(r.porClasificacion.coBroke).toBe(0);
+    expect(r.porClasificacion.sinClasificar).toBe(0);
+    // Propiedad ajena -> ya se sabe la respuesta sin consultar el contacto (ahorra el request).
+    expect(llamadasContacto.length).toBe(llamadasAntes);
+
+    const { data: lead, error } = await svc
+      .from('leads')
+      .select('clasificacion_eb, propiedad_id')
+      .eq('easybroker_id', String(RUN + 6))
+      .single();
+    expect(error).toBeNull();
+    expect(lead!.clasificacion_eb).toBe('saliente');
+    expect(lead!.propiedad_id).toBeNull();
+  });
+
+  it('7d. clasificacion "co_broke": propiedad nuestra + contacto con tag "agente"', async () => {
+    const cr = contactRequest(RUN + 7, {
+      name: `${MARK} Lead CoBroke`,
+      phone: null,
+      email: `${RUN}-cobroke@sync.test`,
+      property_id: `${MARK}-P1`,
+      contact_id: 1001, // CONTACTOS[1001].tags incluye "agente"
+      source: 'MLS',
+      happened_at: '2026-08-02T18:15:00-06:00',
+    });
+    const r = await procesarContactRequests(svc, [cr], { agenciaId, obtenerContacto: obtenerContactoFixture });
+    expect(r.errores).toEqual([]);
+    expect(r.nuevos).toBe(1);
+    expect(r.porClasificacion.coBroke).toBe(1);
+    expect(llamadasContacto).toContain(1001);
+
+    const { data: lead, error } = await svc
+      .from('leads')
+      .select('clasificacion_eb, propiedad_id')
+      .eq('easybroker_id', String(RUN + 7))
+      .single();
+    expect(error).toBeNull();
+    expect(lead!.clasificacion_eb).toBe('co_broke');
+    expect(lead!.propiedad_id).toBe(propiedad1Id);
+  });
+
+  it('7e. clasificacion "cliente_directo": propiedad nuestra + contacto SIN tag "agente"', async () => {
+    const cr = contactRequest(RUN + 8, {
+      name: `${MARK} Lead Directo`,
+      phone: null,
+      email: `${RUN}-directo@sync.test`,
+      property_id: `${MARK}-P1`,
+      contact_id: 1002, // CONTACTOS[1002].tags no incluye "agente"
+      source: 'Pincali',
+      happened_at: '2026-08-02T18:30:00-06:00',
+    });
+    const r = await procesarContactRequests(svc, [cr], { agenciaId, obtenerContacto: obtenerContactoFixture });
+    expect(r.errores).toEqual([]);
+    expect(r.nuevos).toBe(1);
+    expect(r.porClasificacion.clienteDirecto).toBe(1);
+
+    const { data: lead, error } = await svc
+      .from('leads')
+      .select('clasificacion_eb')
+      .eq('easybroker_id', String(RUN + 8))
+      .single();
+    expect(error).toBeNull();
+    expect(lead!.clasificacion_eb).toBe('cliente_directo');
+  });
+
+  it('7f. si GET /v1/contacts falla, el lead se guarda SIN clasificar y el sync no truena', async () => {
+    const cr = contactRequest(RUN + 9, {
+      name: `${MARK} Lead ContactoFalla`,
+      phone: null,
+      email: `${RUN}-contactofalla@sync.test`,
+      property_id: `${MARK}-P1`,
+      contact_id: 9999, // no esta en CONTACTOS -> obtenerContactoFixture lanza
+      source: 'Proppit by Lamudi',
+      happened_at: '2026-08-02T18:45:00-06:00',
+    });
+    const r = await procesarContactRequests(svc, [cr], { agenciaId, obtenerContacto: obtenerContactoFixture });
+    // La falla del contacto NO es un error del contact request: se sigue
+    // procesando y creando el lead, solo sin clasificar.
+    expect(r.errores).toEqual([]);
+    expect(r.nuevos).toBe(1);
+    expect(r.porClasificacion.sinClasificar).toBe(1);
+
+    const { data: lead, error } = await svc
+      .from('leads')
+      .select('clasificacion_eb')
+      .eq('easybroker_id', String(RUN + 9))
+      .single();
+    expect(error).toBeNull();
+    expect(lead!.clasificacion_eb).toBeNull();
   });
 
   it('8. smoke: sincronizarEasyBroker contra staging real (cursores en "ahora", maxPaginas 1)', async () => {
