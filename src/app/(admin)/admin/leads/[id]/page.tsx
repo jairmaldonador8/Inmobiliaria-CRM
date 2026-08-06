@@ -11,6 +11,7 @@ import {
   etiquetaEtapa,
   etiquetaFuenteConDetalle,
 } from '@/lib/leads/formato'
+import { visitasDelLead } from '@/lib/visitas/consultas'
 import { Badge } from '@/components/ui/badge'
 import { BotonWhatsApp, type PlantillaWhatsApp } from '@/components/leads/boton-whatsapp'
 import { ReasignarLead } from '@/components/leads/reasignar-lead'
@@ -28,6 +29,7 @@ import {
   HojaAgendarVisita,
   type OpcionPropiedadVisita,
 } from '@/components/visitas/hoja-agendar-visita'
+import { ListaVisitasLead } from '@/components/visitas/lista-visitas-lead'
 import {
   TimelineSeguimientos,
   type SeguimientoTimeline,
@@ -73,32 +75,38 @@ export default async function PaginaDetalleLeadAdmin({
     asesor: { user_id: string; nombre: string } | null
   }
 
-  const [{ data: seguimientos }, { data: plantillas }, { data: asesores }, { data: propiedades }] =
-    await Promise.all([
-      supabase
-        .from('seguimientos')
-        .select('id, tipo, nota, creado_en, autor:usuarios(nombre)')
-        .eq('lead_id', id)
-        .order('creado_en', { ascending: false }),
-      supabase
-        .from('plantillas_mensajes')
-        .select('id, nombre, texto')
-        .eq('activa', true)
-        .order('creada_en', { ascending: true }),
-      supabase
-        .from('usuarios')
-        .select('user_id, nombre')
-        .eq('rol', 'asesor')
-        .eq('activo', true)
-        .order('nombre', { ascending: true }),
-      leadDetalle.propiedad_id
-        ? Promise.resolve({ data: [] as { id: string; titulo: string }[] })
-        : supabase
-            .from('propiedades')
-            .select('id, titulo')
-            .eq('activa', true)
-            .order('titulo', { ascending: true }),
-    ])
+  const [
+    { data: seguimientos },
+    { data: plantillas },
+    { data: asesores },
+    { data: propiedades },
+    visitas,
+  ] = await Promise.all([
+    supabase
+      .from('seguimientos')
+      .select('id, tipo, nota, creado_en, autor:usuarios(nombre)')
+      .eq('lead_id', id)
+      .order('creado_en', { ascending: false }),
+    supabase
+      .from('plantillas_mensajes')
+      .select('id, nombre, texto')
+      .eq('activa', true)
+      .order('creada_en', { ascending: true }),
+    supabase
+      .from('usuarios')
+      .select('user_id, nombre')
+      .eq('rol', 'asesor')
+      .eq('activo', true)
+      .order('nombre', { ascending: true }),
+    leadDetalle.propiedad_id
+      ? Promise.resolve({ data: [] as { id: string; titulo: string }[] })
+      : supabase
+          .from('propiedades')
+          .select('id, titulo')
+          .eq('activa', true)
+          .order('titulo', { ascending: true }),
+    visitasDelLead(supabase, id),
+  ])
 
   const itemsTimeline: SeguimientoTimeline[] = (
     (seguimientos ?? []) as unknown as FilaSeguimiento[]
@@ -203,8 +211,19 @@ export default async function PaginaDetalleLeadAdmin({
           propiedadLeadId={leadDetalle.propiedad_id}
           propiedadLeadTitulo={leadDetalle.propiedad?.titulo ?? null}
           propiedades={opcionesPropiedad as OpcionPropiedadVisita[]}
+          deshabilitadoMotivo={
+            leadDetalle.asesor_id === null
+              ? 'Asigna el lead a un asesor antes de agendar una visita'
+              : null
+          }
         />
       </div>
+
+      {leadDetalle.asesor_id === null ? (
+        <p className="-mt-2 text-xs text-slate-500">
+          Asigna el lead a un asesor para poder agendar una visita.
+        </p>
+      ) : null}
 
       {leadDetalle.propiedad ? (
         <CardPropiedadInteres
@@ -214,6 +233,16 @@ export default async function PaginaDetalleLeadAdmin({
       ) : null}
 
       <DatosLead lead={leadDetalle} />
+
+      <div className="flex flex-col gap-3">
+        <h2 className="text-sm font-semibold text-slate-900">Visitas</h2>
+        <ListaVisitasLead
+          leadNombre={leadDetalle.nombre}
+          telefono={leadDetalle.telefono}
+          asesorNombre={asesorNombre}
+          visitas={visitas}
+        />
+      </div>
 
       <div className="flex flex-col gap-3">
         <h2 className="text-sm font-semibold text-slate-900">Seguimientos</h2>

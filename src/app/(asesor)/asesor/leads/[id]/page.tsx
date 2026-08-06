@@ -7,6 +7,7 @@ import { ArrowLeft, Phone } from 'lucide-react'
 import { requireAsesor } from '@/lib/auth/usuario-actual'
 import { createClient } from '@/lib/supabase/server'
 import { etiquetaFuenteConDetalle } from '@/lib/leads/formato'
+import { visitasDelLead } from '@/lib/visitas/consultas'
 import { Badge } from '@/components/ui/badge'
 import { SelectorEtapa } from '@/components/leads/selector-etapa'
 import { BotonWhatsApp, type PlantillaWhatsApp } from '@/components/leads/boton-whatsapp'
@@ -24,6 +25,7 @@ import {
   HojaAgendarVisita,
   type OpcionPropiedadVisita,
 } from '@/components/visitas/hoja-agendar-visita'
+import { ListaVisitasLead } from '@/components/visitas/lista-visitas-lead'
 import {
   TimelineSeguimientos,
   type SeguimientoTimeline,
@@ -63,7 +65,7 @@ export default async function PaginaDetalleLeadAsesor({
 
   const leadDetalle = lead as unknown as LeadDetalle
 
-  const [{ data: seguimientos }, { data: plantillas }, { data: propiedades }] =
+  const [{ data: seguimientos }, { data: plantillas }, { data: propiedades }, visitas] =
     await Promise.all([
       supabase
         .from('seguimientos')
@@ -83,6 +85,7 @@ export default async function PaginaDetalleLeadAsesor({
             .select('id, titulo')
             .eq('activa', true)
             .order('titulo', { ascending: true }),
+      visitasDelLead(supabase, id),
     ])
 
   // El asesor solo puede leer SU fila de usuarios (RLS): un autor ajeno
@@ -177,6 +180,16 @@ export default async function PaginaDetalleLeadAsesor({
       ) : null}
 
       <DatosLead lead={leadDetalle} />
+
+      <div className="flex flex-col gap-3">
+        <h2 className="text-sm font-semibold text-slate-900">Visitas</h2>
+        <ListaVisitasLead
+          leadNombre={leadDetalle.nombre}
+          telefono={leadDetalle.telefono}
+          asesorNombre={usuario.nombre}
+          visitas={visitas}
+        />
+      </div>
 
       <div className="flex flex-col gap-3">
         <h2 className="text-sm font-semibold text-slate-900">Seguimientos</h2>

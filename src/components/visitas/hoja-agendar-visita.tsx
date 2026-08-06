@@ -15,6 +15,7 @@ import {
   convertirFechaHoraMonterreyAIso,
   fechaHoyMonterrey,
 } from '@/components/visitas/zona-horaria-monterrey'
+import { CamposFechaHoraVisita } from '@/components/visitas/campos-fecha-hora-visita'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -27,28 +28,10 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 
 export type OpcionPropiedadVisita = { id: string; titulo: string }
 
 const MAX_RESULTADOS = 7
-
-/** Opciones de duración razonables para una visita, en minutos. */
-const OPCIONES_DURACION = [30, 45, 60, 90, 120] as const
-
-const ETIQUETA_DURACION: Record<number, string> = {
-  30: '30 min',
-  45: '45 min',
-  60: '1 hora',
-  90: '1 h 30 min',
-  120: '2 horas',
-}
 
 type Props = {
   leadId: string
@@ -63,6 +46,13 @@ type Props = {
   propiedadLeadId: string | null
   propiedadLeadTitulo: string | null
   propiedades: OpcionPropiedadVisita[]
+  /**
+   * Motivo por el que agendar está deshabilitado (p. ej. el lead sigue en
+   * la bandeja, sin asesor asignado); `null`/`undefined` = habilitado. Con
+   * motivo, el botón se ve deshabilitado y NUNCA monta la hoja — evita que
+   * el admin llene todo el formulario para enterarse hasta el submit.
+   */
+  deshabilitadoMotivo?: string | null
 }
 
 /**
@@ -74,6 +64,14 @@ type Props = {
  *
  * Al agendar con éxito, el toast ofrece (NUNCA automático) mandar la
  * confirmación por WhatsApp con el mensaje ya prellenado.
+ *
+ * Fecha y hora son estado controlado (no `defaultValue`): con
+ * `<form action={fn}>`, React 19 resetea los inputs no controlados en
+ * cuanto la función retorna, incluso si hubo error — antes, un error de
+ * validación («La fecha debe ser futura») dejaba Fecha y Hora en blanco y
+ * obligaba a teclear todo de nuevo. Los campos viven en
+ * `CamposFechaHoraVisita`, COMPARTIDO con `HojaReagendarVisita` para no
+ * duplicar la lógica de duración ni la conversión de zona horaria.
  */
 export function HojaAgendarVisita({
   leadId,
@@ -83,12 +81,15 @@ export function HojaAgendarVisita({
   propiedadLeadId,
   propiedadLeadTitulo,
   propiedades,
+  deshabilitadoMotivo,
 }: Props) {
   const router = useRouter()
   const [abierto, setAbierto] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [pendiente, iniciarTransicion] = useTransition()
 
+  const [fecha, setFecha] = useState('')
+  const [hora, setHora] = useState('')
   const [duracionMin, setDuracionMin] = useState<number>(DURACION_MIN_DEFAULT)
 
   // Combobox simple de propiedad (mismo patrón que SheetSeguimiento).
@@ -104,11 +105,6 @@ export function HojaAgendarVisita({
       .slice(0, MAX_RESULTADOS)
   }, [busquedaPropiedad, propiedades])
 
-  const itemsDuracion = OPCIONES_DURACION.map((min) => ({
-    value: String(min),
-    label: ETIQUETA_DURACION[min],
-  }))
-
   // `min` del input de fecha: hoy en America/Monterrey (no la del
   // dispositivo), calculado una sola vez por apertura de la hoja.
   const minFecha = useMemo(() => fechaHoyMonterrey(), [])
@@ -117,16 +113,16 @@ export function HojaAgendarVisita({
     setAbierto(abrir)
     if (!abrir) {
       setError(null)
+      setFecha('')
+      setHora('')
       setDuracionMin(DURACION_MIN_DEFAULT)
       setBusquedaPropiedad('')
       setPropiedadSeleccionada(null)
     }
   }
 
-  function alEnviar(formData: FormData) {
+  function alEnviar() {
     setError(null)
-    const fecha = String(formData.get('fecha') ?? '')
-    const hora = String(formData.get('hora') ?? '')
 
     if (!fecha || !hora) {
       setError('Elige fecha y hora')
@@ -200,6 +196,19 @@ export function HojaAgendarVisita({
     })
   }
 
+  if (deshabilitadoMotivo) {
+    return (
+      <span
+        title={deshabilitadoMotivo}
+        aria-label={`Agendar visita: ${deshabilitadoMotivo}`}
+        className="flex h-14 flex-col items-center justify-center gap-1 rounded-xl border border-input bg-slate-50 text-xs font-medium text-slate-400"
+      >
+        <CalendarClock aria-hidden className="size-5" />
+        Agendar visita
+      </span>
+    )
+  }
+
   return (
     <Sheet open={abierto} onOpenChange={alCambiarAbierto}>
       <SheetTrigger
@@ -225,45 +234,21 @@ export function HojaAgendarVisita({
           </SheetDescription>
         </SheetHeader>
 
-        <form action={alEnviar} className="grid gap-4 overflow-y-auto px-4 pb-4">
-          <div className="grid grid-cols-2 gap-3">
-            <div className="grid gap-2">
-              <Label htmlFor="visita-fecha">Fecha</Label>
-              <Input
-                id="visita-fecha"
-                name="fecha"
-                type="date"
-                required
-                min={minFecha}
-                disabled={pendiente}
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="visita-hora">Hora</Label>
-              <Input id="visita-hora" name="hora" type="time" required disabled={pendiente} />
-            </div>
-          </div>
-
-          <div className="grid gap-2">
-            <Label htmlFor="visita-duracion">Duración</Label>
-            <Select
-              items={itemsDuracion}
-              value={String(duracionMin)}
-              onValueChange={(v) => setDuracionMin(Number(v))}
-              disabled={pendiente}
-            >
-              <SelectTrigger id="visita-duracion" className="w-full">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {itemsDuracion.map((item) => (
-                  <SelectItem key={item.value} value={item.value}>
-                    {item.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+        <form
+          action={alEnviar}
+          className="grid gap-4 overflow-y-auto px-4 pb-4"
+        >
+          <CamposFechaHoraVisita
+            idPrefijo="visita"
+            fecha={fecha}
+            hora={hora}
+            duracionMin={duracionMin}
+            onFechaChange={setFecha}
+            onHoraChange={setHora}
+            onDuracionChange={setDuracionMin}
+            minFecha={minFecha}
+            disabled={pendiente}
+          />
 
           {/* Con propiedad de interés ya definida en el lead, la visita la
               referencia solo — sin pedir nada más. */}

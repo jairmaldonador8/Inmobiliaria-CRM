@@ -70,3 +70,22 @@ export function convertirFechaHoraMonterreyAIso(fecha: string, hora: string): st
 export function fechaHoyMonterrey(): string {
   return new Intl.DateTimeFormat('en-CA', { timeZone: ZONA_HORARIA }).format(new Date())
 }
+
+/**
+ * Inversa de `convertirFechaHoraMonterreyAIso`: descompone un instante ISO
+ * (con offset UTC) en la fecha (YYYY-MM-DD) y hora (HH:mm) "de pared" que
+ * un asesor en America/Monterrey leería en su reloj — para precargar los
+ * inputs `date`/`time` de la hoja de REAGENDAR con la fecha/hora actual de
+ * la visita (nunca la zona horaria del dispositivo que renderiza).
+ */
+export function descomponerFechaIsoMonterrey(fechaIso: string): { fecha: string; hora: string } {
+  const instante = new Date(fechaIso)
+  const fecha = new Intl.DateTimeFormat('en-CA', { timeZone: ZONA_HORARIA }).format(instante)
+  const hora = new Intl.DateTimeFormat('en-GB', {
+    timeZone: ZONA_HORARIA,
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23',
+  }).format(instante)
+  return { fecha, hora }
+}

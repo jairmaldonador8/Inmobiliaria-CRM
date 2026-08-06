@@ -219,4 +219,52 @@ describe('HojaAgendarVisita', () => {
     expect(screen.getByLabelText('Fecha')).toBeInTheDocument()
     expect(mockToastSuccess).not.toHaveBeenCalled()
   })
+
+  it('un error de servidor NO borra la fecha/hora tecleadas (bug de React 19 con inputs no controlados)', async () => {
+    mockAgendarVisita.mockResolvedValue({ error: 'La fecha debe ser futura' })
+
+    render(
+      <HojaAgendarVisita
+        leadId="lead-1"
+        leadNombre="Carla Gómez"
+        telefono="528100000000"
+        asesorNombre="Luis"
+        propiedadLeadId="prop-1"
+        propiedadLeadTitulo="Casa Bonita"
+        propiedades={[]}
+      />
+    )
+
+    abrirYLlenar()
+    fireEvent.click(screen.getByRole('button', { name: /confirmar visita/i }))
+
+    await screen.findByRole('alert')
+
+    // Con `<form action={fn}>`, React 19 resetea los inputs NO controlados
+    // en cuanto la función retorna, incluso si hubo error. Fecha y Hora
+    // ahora son estado controlado — deben sobrevivir al error.
+    expect(screen.getByLabelText('Fecha')).toHaveValue('2026-09-15')
+    expect(screen.getByLabelText('Hora')).toHaveValue('14:30')
+  })
+
+  it('con deshabilitadoMotivo, el botón se ve deshabilitado, explica el motivo y NO monta la hoja', () => {
+    render(
+      <HojaAgendarVisita
+        leadId="lead-1"
+        leadNombre="Carla Gómez"
+        telefono="528100000000"
+        asesorNombre="Luis"
+        propiedadLeadId={null}
+        propiedadLeadTitulo={null}
+        propiedades={[]}
+        deshabilitadoMotivo="Asigna el lead a un asesor antes de agendar una visita"
+      />
+    )
+
+    // No hay botón clicable: ni siquiera se monta el trigger del Sheet.
+    expect(screen.queryByRole('button', { name: /agendar visita/i })).not.toBeInTheDocument()
+    expect(
+      screen.getByTitle('Asigna el lead a un asesor antes de agendar una visita')
+    ).toBeInTheDocument()
+  })
 })
