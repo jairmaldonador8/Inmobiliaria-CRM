@@ -717,6 +717,14 @@ describe('reconciliarEstatusPropiedades: activa deriva del estatus real (Supabas
     p6Id = data!.find((p) => p.easybroker_id === `${MARK}-P6`)!.id;
   });
 
+  afterAll(async () => {
+    // Este describe es un suite HERMANO del de arriba: su afterAll (que borra
+    // TEST-SYNC-% de propiedades) ya corrio antes de que este siquiera
+    // empezara, asi que P5/P6 necesitan su propia limpieza aqui.
+    if (!svc) return;
+    await svc.from('propiedades').delete().in('easybroker_id', [`${MARK}-P5`, `${MARK}-P6`]);
+  });
+
   it('published -> rented desactiva; propiedad ausente del catalogo tambien desactiva sin borrarla', async () => {
     const propiedades = [
       { id: p5Id, easybroker_id: `${MARK}-P5`, estatus: 'published', activa: true },
