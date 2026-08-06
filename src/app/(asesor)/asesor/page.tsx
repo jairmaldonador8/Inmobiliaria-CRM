@@ -8,6 +8,11 @@ import { createClient } from '@/lib/supabase/server'
 import { proximasVisitas } from '@/lib/dashboard/consultas'
 import { ETAPAS_CERRADAS, NOTA_CIERRE } from '@/lib/leads/formato'
 import { formatearFechaHoraMonterrey } from '@/lib/fechas/monterrey'
+import {
+  CardConexionGoogle,
+  type AvisoConexionGoogle,
+  type EstadoConexionGoogleUI,
+} from '@/components/google/card-conexion'
 
 type LeadCola = {
   id: string
@@ -24,15 +29,28 @@ function capitalizar(texto: string): string {
   return texto.charAt(0).toUpperCase() + texto.slice(1)
 }
 
+type BusquedaPagina = { gcal?: string }
+
 /**
  * «Cola del día» del asesor (Task 17): NO es un dashboard, es una lista de
  * trabajo (patrón Smart List) — qué atender primero, no cuánto se ha
  * vendido. Todo con el cliente de SESIÓN: RLS limita automáticamente a los
  * leads y seguimientos propios.
+ *
+ * `searchParams` (Task 7): trae `?gcal=conectado|cancelado|error` cuando el
+ * asesor acaba de volver del callback OAuth de Google — se traduce a un
+ * toast único en `CardConexionGoogle`.
  */
-export default async function PaginaInicioAsesor() {
+export default async function PaginaInicioAsesor({
+  searchParams,
+}: {
+  searchParams: Promise<BusquedaPagina>
+}) {
   const usuario = await requireAsesor()
   const supabase = await createClient()
+  const { gcal } = await searchParams
+  const avisoGoogle: AvisoConexionGoogle | null =
+    gcal === 'conectado' || gcal === 'cancelado' || gcal === 'error' ? gcal : null
 
   // Instante "actual" calculado una sola vez (fuera de cualquier .filter/.map
   // de render, ver AGENTS.md de la tarea): evita repetir `Date.now()` en el
@@ -48,6 +66,7 @@ export default async function PaginaInicioAsesor() {
     { count: leadsNuevosMes },
     { data: cierresMes },
     visitasProximas,
+    { data: conexionGoogle },
   ] = await Promise.all([
       // Leads activos (no cerrados, no archivados): base de ambas listas y
       // del chip «leads activos».
@@ -74,6 +93,16 @@ export default async function PaginaInicioAsesor() {
         .gte('creado_en', inicioMes.toISOString()),
       // Próximas visitas agendadas (futuras), para la sección homónima.
       proximasVisitas(supabase, 5, ahora),
+      // Conexión de Google Calendar (Task 7): columnas explícitas, NUNCA
+      // select('*') — la 0008 revocó el SELECT de tabla completo de
+      // `authenticated` y solo regranteó estas columnas (refresh_token_cifrado
+      // queda fuera, ver migración 0008/0010). maybeSingle() porque puede no
+      // haber fila (asesor sin conectar todavía).
+      supabase
+        .from('google_conexiones')
+        .select('google_email, estado')
+        .eq('user_id', usuario.user_id)
+        .maybeSingle(),
     ])
 
   if (errorLeads) {
@@ -81,6 +110,10 @@ export default async function PaginaInicioAsesor() {
   }
 
   const leads = (leadsData ?? []) as LeadCola[]
+
+  const estadoGoogle: EstadoConexionGoogleUI = conexionGoogle
+    ? (conexionGoogle.estado as EstadoConexionGoogleUI)
+    : 'sin_conectar'
 
   // Último seguimiento por lead: mismo patrón que el kanban (src/app/(asesor)/asesor/leads/page.tsx)
   // — segunda consulta ordenada desc; el primer registro visto por lead es el más reciente.
@@ -263,6 +296,13 @@ export default async function PaginaInicioAsesor() {
           </ul>
         )}
       </div>
+
+      {/* Google Calendar (Task 7) */}
+      <CardConexionGoogle
+        estado={estadoGoogle}
+        googleEmail={conexionGoogle?.google_email ?? null}
+        aviso={avisoGoogle}
+      />
 
       {/* Mis números del mes */}
       <div className="flex flex-col gap-3">
