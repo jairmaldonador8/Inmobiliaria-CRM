@@ -259,6 +259,37 @@ async function marcarPendiente(
     .eq('id', visitaId)
 }
 
+/**
+ * El asesor borró el evento a mano en Google Calendar: el `patch` de un
+ * reagendado devuelve 404 porque el `eventId` ya no existe (a diferencia del
+ * `delete` de una cancelación, un 404 en `patch` NO es éxito — no hay nada
+ * que actualizar). Sin este manejo, `gcal_event_id` seguiría apuntando al
+ * evento fantasma y el cron reintentaría el mismo `patch` fallando con 404
+ * hasta agotar los intentos (Task 10), sin recuperarse nunca.
+ *
+ * Se limpia `gcal_event_id` (vuelve a `null`) para que el SIGUIENTE intento
+ * tome la rama de CREACIÓN (`!visita.gcal_event_id`) en vez de repetir el
+ * patch — el mismo `idEventoDeVisita` determinista hace que ese insert sea
+ * seguro de reintentar. El estado queda `pendiente` (no `error`): esto no es
+ * un fallo agotado, es una recuperación de un intento más con forma distinta.
+ */
+async function marcarEventoPerdido(
+  supabase: SupabaseClient,
+  visitaId: string,
+  mensajeError: string,
+  ahora: Date
+): Promise<void> {
+  await supabase
+    .from('visitas')
+    .update({
+      gcal_event_id: null,
+      gcal_sync_estado: 'pendiente',
+      gcal_proximo_intento: new Date(ahora.getTime() + 60_000).toISOString(),
+      gcal_ultimo_error: mensajeError,
+    })
+    .eq('id', visitaId)
+}
+
 /** Notifica al asesor que su conexión quedó revocada y necesita reconectar (best-effort: `enviarPush` nunca lanza). */
 async function notificarReconexion(supabase: SupabaseClient, asesorId: string): Promise<void> {
   await enviarPush(supabase, asesorId, {
@@ -380,12 +411,20 @@ export async function sincronizarVisita(
       visita.lead,
       visita.propiedad
     )
-    await cliente.events.patch({
-      calendarId: CALENDAR_ID,
-      eventId: visita.gcal_event_id,
-      requestBody: cuerpo,
-      sendUpdates: 'none',
-    })
+    try {
+      await cliente.events.patch({
+        calendarId: CALENDAR_ID,
+        eventId: visita.gcal_event_id,
+        requestBody: cuerpo,
+        sendUpdates: 'none',
+      })
+    } catch (err) {
+      if (statusDeError(err) === 404) {
+        await marcarEventoPerdido(supabase, visitaId, mensajeDeError(err), ahora)
+        return
+      }
+      throw err
+    }
     await marcarSincronizada(supabase, visitaId)
   } catch (err) {
     // Fallo de red / 5xx / 429 al hablar con la Calendar API: transitorio.

@@ -35,3 +35,27 @@ El plan **Hobby** de Vercel solo permite crons diarios, así que el sync de Easy
 - Si se migra a Vercel Pro: desprogramar el job (`select cron.unschedule('easybroker-sync-15min');`) y restaurar `vercel.json` con el cron `*/15 * * * *` a esa ruta.
 
 La ruta es fail-closed (401 sin el Bearer correcto) y el sync tiene lease de ejecución única de 5 min, cursores idempotentes y dedup de leads repetidos.
+
+### Cron de reintento del espejo a Google Calendar (`gcal-retry`)
+
+El espejo de visitas a Google Calendar (ver skill `google-calendar`) marca una visita `gcal_sync_estado = 'pendiente'` cuando Google falla de forma transitoria. El job `gcal-retry` es quien la reintenta con backoff exponencial, igual que `easybroker-sync-15min`, programado por **pg_cron dentro de Supabase**:
+
+**Crítico: este job se crea por SQL, NUNCA desde el UI de "Cron Jobs" de Supabase** — ese UI capa `timeout_milliseconds` a 5000, insuficiente para un lote que puede tardar más. Correrlo desde el SQL Editor:
+
+```sql
+select cron.schedule('gcal-retry-5min', '*/5 * * * *', $$
+  select net.http_get(
+    url := 'https://www.klo-ser.com/api/cron/gcal-retry',
+    headers := jsonb_build_object('Authorization', 'Bearer ' ||
+      (select decrypted_secret from vault.decrypted_secrets where name = 'cron_secret_easybroker')),
+    timeout_milliseconds := 30000
+  )
+$$);
+```
+
+(El SQL anterior **no se ha ejecutado todavía** — el job se programa cuando la rama `feat/google-calendar` llegue a producción, reutilizando el mismo secret de Vault que `easybroker-sync-15min`.)
+
+- La ruta (`src/app/api/cron/gcal-retry/route.ts`) es fail-closed (401 sin el Bearer correcto) y responde SIEMPRE 200, con los errores del lote en el body — para que pg_net no registre la corrida como fallida por fallos parciales.
+- Lote acotado a 20 visitas por corrida, ordenadas por `gcal_proximo_intento` (las más atrasadas primero). Claim atómico por fila (UPDATE condicional) antes de tocar cada una, así dos ticks traslapados nunca reintentan la misma visita dos veces.
+- Backoff exponencial: `1 min * 2^gcal_intentos` (1, 2, 4, 8, 16, 32 min). Tope de 6 intentos: al agotarlos, la visita queda `gcal_sync_estado = 'error'` con el motivo en `gcal_ultimo_error` (dead letter, requiere diagnóstico manual).
+- Ver estado y últimas corridas con las mismas consultas de `cron.job` / `cron.job_run_details` de arriba.

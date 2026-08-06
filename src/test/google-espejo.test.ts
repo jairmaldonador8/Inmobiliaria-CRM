@@ -380,6 +380,26 @@ describe('sincronizarVisita', () => {
     expect(cliente.events.delete).not.toHaveBeenCalled()
   })
 
+  it('reagendar con 404 en el patch (el asesor borró el evento a mano): limpia gcal_event_id y queda pendiente para recrear', async () => {
+    const fake = crearSupabaseFake(
+      visitaAgendarSinEvento({ gcal_event_id: 'visita-evento-fantasma', fecha: '2026-04-01T15:00:00.000Z' })
+    )
+    createAdminClientMock.mockReturnValue(fake.supabase)
+    const cliente = crearClienteFake()
+    ;(cliente.events.patch as ReturnType<typeof vi.fn>).mockRejectedValue(errorConStatus(404))
+
+    await sincronizarVisita('visita-1', { crearClienteCalendar: () => cliente, ahora: AHORA })
+
+    expect(fake.update).toHaveBeenCalledWith({
+      gcal_event_id: null,
+      gcal_sync_estado: 'pendiente',
+      gcal_proximo_intento: new Date(AHORA.getTime() + 60_000).toISOString(),
+      gcal_ultimo_error: expect.any(String),
+    })
+    // No es un fallo agotado (no confundir con dead letter del cron): sigue pendiente, no error.
+    expect(fake.updateCalls.some((c) => c.gcal_sync_estado === 'error')).toBe(false)
+  })
+
   it('fallo de red al refrescar el access token: marca pendiente con próximo intento ~1 min después', async () => {
     refrescarAccessTokenMock.mockRejectedValue(new Error('ECONNRESET'))
     const fake = crearSupabaseFake(visitaAgendarSinEvento())
