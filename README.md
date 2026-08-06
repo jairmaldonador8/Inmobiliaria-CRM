@@ -18,7 +18,16 @@ npm test           # tests unitarios
 npm run test:rls   # tests de integración RLS (contra la DB en la nube)
 ```
 
-Variables en `.env.local` (no se commitea): `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SECRET_KEY`, `EASYBROKER_API_KEY`, `EASYBROKER_BASE_URL`, `CRON_SECRET`.
+Variables en `.env.local` (no se commitea): ver `.env.example` para la lista completa.
+
+Para aplicar una migración al proyecto Supabase (mismo flujo con el que se aplicó la 0007):
+
+```bash
+node scripts/aplicar-migracion.mjs supabase/migrations/00XX_lo_que_sea.sql
+node scripts/aplicar-migracion.mjs --sql "select 1"   # consulta suelta
+```
+
+Requiere `SUPABASE_ACCESS_TOKEN` en `.env.local`. Ojo: el proyecto Supabase es dev **y** producción del piloto.
 
 ## Producción
 
@@ -59,3 +68,42 @@ $$);
 - Lote acotado a 20 visitas por corrida, ordenadas por `gcal_proximo_intento` (las más atrasadas primero). Claim atómico por fila (UPDATE condicional) antes de tocar cada una, así dos ticks traslapados nunca reintentan la misma visita dos veces.
 - Backoff exponencial: `1 min * 2^gcal_intentos` (1, 2, 4, 8, 16, 32 min). Tope de 6 intentos: al agotarlos, la visita queda `gcal_sync_estado = 'error'` con el motivo en `gcal_ultimo_error` (dead letter, requiere diagnóstico manual).
 - Ver estado y últimas corridas con las mismas consultas de `cron.job` / `cron.job_run_details` de arriba.
+
+## Integración con Google Calendar
+
+Cada asesor conecta su cuenta desde su dashboard; las visitas del CRM se espejan en su calendario principal. El CRM es la fuente de verdad: editar el evento en Google **no** modifica la visita en Klo-Ser. Detalles de implementación en el skill de proyecto `google-calendar`.
+
+### Puesta en marcha (pendiente al 2026-08-06)
+
+**1. Proyecto en Google Cloud Console.** Crear credenciales OAuth de tipo *Aplicación web* y anotar el client ID y el client secret. Redirect URIs autorizadas:
+
+- `https://www.klo-ser.com/api/google/oauth/callback` (producción — ojo: **con `www`**, el apex hace 308 a www)
+- `http://localhost:3000/api/google/oauth/callback` (desarrollo)
+
+Scopes solicitados (los mínimos que necesita la integración):
+
+- `https://www.googleapis.com/auth/calendar.events.owned` — crear/editar/borrar eventos en calendarios propios
+- `https://www.googleapis.com/auth/calendar.freebusy` — leer disponibilidad (sin ver títulos ni contenido)
+
+**2. ⚠️ Publicar la app «In production» ANTES de conectar al primer asesor real.** En modo *Testing*, Google **caduca los refresh tokens a los 7 días** cuando hay scopes de Calendar, así que los asesores tendrían que reconectar cada semana. Publicada sin verificar, los tokens dejan de caducar; el costo es la pantalla de «app no verificada» y un tope de por vida de 100 usuarios nuevos — holgado para la agencia.
+
+**3. Variables de entorno** (`.env.local` y Vercel): `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_TOKEN_SECRET` y `GOOGLE_REDIRECT_URI`. Generar el secret de cifrado con `openssl rand -base64 32`.
+
+> **Gotcha conocido:** cargar secretos a Vercel con un pipe de PowerShell mete un `\r` al final y el valor llega corrupto. Usar `printf '%s' "$VALOR" | vercel env add NOMBRE production` desde bash.
+
+**4. Verificación de la app (trámite gratuito, en paralelo — no bloquea).** Google la exige porque los scopes de Calendar son *sensibles* (no *restringidos*, así que **no** aplica la auditoría anual de seguridad CASA ni tiene costo). Timeline oficial: hasta 10 días. Requisitos:
+
+- Dominio `klo-ser.com` verificado en Google Search Console
+- Política de privacidad publicada **en ese mismo dominio**, explicando qué datos de Google se acceden, cómo se usan y cómo se almacenan
+- Video demo (YouTube, no listado) mostrando el flujo de consentimiento completo y el uso de cada scope
+- Justificación por escrito de por qué se necesita cada scope
+
+### Checklist de E2E manual (con una cuenta Gmail de prueba)
+
+- [ ] Conectar el calendario desde el dashboard del asesor
+- [ ] Agendar una visita → el evento aparece en Google Calendar, **sin mandar invitaciones**
+- [ ] Reagendar → el evento se mueve
+- [ ] Cancelar → el evento desaparece
+- [ ] Borrar el evento a mano en Google y reagendar → se vuelve a crear
+- [ ] Revocar el acceso en myaccount.google.com y agendar → llega el push de reconexión y la visita queda `sin_conexion`
+- [ ] Reconectar → vuelve a sincronizar
