@@ -25,6 +25,10 @@ import {
   type OpcionPropiedadSeguimiento,
 } from '@/components/seguimientos/sheet-seguimiento'
 import {
+  HojaAgendarVisita,
+  type OpcionPropiedadVisita,
+} from '@/components/visitas/hoja-agendar-visita'
+import {
   TimelineSeguimientos,
   type SeguimientoTimeline,
 } from '@/components/seguimientos/timeline-seguimientos'
@@ -107,10 +111,9 @@ export default async function PaginaDetalleLeadAdmin({
   }))
 
   // {asesor} en las plantillas = el asesor asignado; sin asesor, el admin.
-  const contexto = contextoPlantillasLead(
-    leadDetalle,
-    leadDetalle.asesor?.nombre ?? admin.nombre
-  )
+  // Mismo nombre para la confirmación de WhatsApp de la visita agendada.
+  const asesorNombre = leadDetalle.asesor?.nombre ?? admin.nombre
+  const contexto = contextoPlantillasLead(leadDetalle, asesorNombre)
   const opcionesAsesor = (asesores ?? []).map((a) => ({
     userId: a.user_id,
     nombre: a.nombre,
@@ -166,7 +169,7 @@ export default async function PaginaDetalleLeadAdmin({
         />
       </div>
 
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-2 gap-2">
         {leadDetalle.telefono ? (
           <a
             href={`tel:+${leadDetalle.telefono}`}
@@ -191,6 +194,15 @@ export default async function PaginaDetalleLeadAdmin({
           leadId={leadDetalle.id}
           propiedadLeadId={leadDetalle.propiedad_id}
           propiedades={opcionesPropiedad}
+        />
+        <HojaAgendarVisita
+          leadId={leadDetalle.id}
+          leadNombre={leadDetalle.nombre}
+          telefono={leadDetalle.telefono}
+          asesorNombre={asesorNombre}
+          propiedadLeadId={leadDetalle.propiedad_id}
+          propiedadLeadTitulo={leadDetalle.propiedad?.titulo ?? null}
+          propiedades={opcionesPropiedad as OpcionPropiedadVisita[]}
         />
       </div>
 

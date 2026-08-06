@@ -21,6 +21,10 @@ import {
   type OpcionPropiedadSeguimiento,
 } from '@/components/seguimientos/sheet-seguimiento'
 import {
+  HojaAgendarVisita,
+  type OpcionPropiedadVisita,
+} from '@/components/visitas/hoja-agendar-visita'
+import {
   TimelineSeguimientos,
   type SeguimientoTimeline,
 } from '@/components/seguimientos/timeline-seguimientos'
@@ -127,8 +131,8 @@ export default async function PaginaDetalleLeadAsesor({
         </div>
       </header>
 
-      {/* Barra de acciones: objetivos táctiles grandes, móvil primero. */}
-      <div className="grid grid-cols-3 gap-2">
+      {/* Barra de acciones: 2×2 para objetivos táctiles grandes en móvil. */}
+      <div className="grid grid-cols-2 gap-2">
         {leadDetalle.telefono ? (
           <a
             href={`tel:+${leadDetalle.telefono}`}
@@ -153,6 +157,15 @@ export default async function PaginaDetalleLeadAsesor({
           leadId={leadDetalle.id}
           propiedadLeadId={leadDetalle.propiedad_id}
           propiedades={opcionesPropiedad}
+        />
+        <HojaAgendarVisita
+          leadId={leadDetalle.id}
+          leadNombre={leadDetalle.nombre}
+          telefono={leadDetalle.telefono}
+          asesorNombre={usuario.nombre}
+          propiedadLeadId={leadDetalle.propiedad_id}
+          propiedadLeadTitulo={leadDetalle.propiedad?.titulo ?? null}
+          propiedades={opcionesPropiedad as OpcionPropiedadVisita[]}
         />
       </div>
 
