@@ -262,7 +262,7 @@ Run: `npm test -- google-cifrado`. Expected: FAIL.
 - [ ] **Step 1: Tests (fallan)**
   - `idEventoDeVisita(uuid)`: determinista, charset `[a-v0-9]`, 5–1024 chars (mapear hex del uuid: dígitos igual, `a-f` igual — hex ⊂ base32hex — quitar guiones, prefijo `visita`).
   - `construirEvento(visita, lead, propiedad?)`: summary `Visita — {lead}`, start/end con `dateTime` + `timeZone: 'America/Monterrey'`, end = fecha + duracion_min, `extendedProperties.private.visitaId`, sin `attendees`.
-  - `construirEvento` — description: incluye teléfono del lead, link a la visita en Klo-Ser (`https://<dominio>/asesor/leads/<leadId>`), y la propiedad cuando existe; caso sin propiedad también cubierto.
+  - `construirEvento` — description: incluye teléfono del lead, link a la visita en Klo-Ser (`https://www.klo-ser.com/asesor/leads/<leadId>`), y la propiedad cuando existe; caso sin propiedad también cubierto.
   - `sincronizarVisita(supabase, visita, calendarioMock)`: crear → insert con id propio y `sendUpdates: 'none'`; respuesta 409 → tratar como éxito y hacer update reponiendo `status: 'confirmed'`; reagendar → patch; cancelar → delete con 404/410 = éxito; visita cancelada sin `gcal_event_id` → marca `sincronizada` sin llamar; fallo de red → estado `pendiente` + `gcal_proximo_intento` now+1min; `invalid_grant` → conexión `revocada` + push al asesor (`enviarPush` mockeado) + visita `sin_conexion`.
 - [ ] **Step 2: Implementar → PASS.**
 - [ ] **Step 3: Hook en las 3 actions** — tras el éxito de BD, `try { await sincronizarVisita(...) } catch { /* ya quedó pendiente */ }`; la action nunca falla por Google (garantía del spec).
@@ -300,7 +300,7 @@ Run: `npm test -- google-cifrado`. Expected: FAIL.
 ```sql
 select cron.schedule('gcal-retry-5min', '*/5 * * * *', $$
   select net.http_get(
-    url := 'https://<dominio-prod>/api/cron/gcal-retry',
+    url := 'https://www.klo-ser.com/api/cron/gcal-retry',
     headers := jsonb_build_object('Authorization', 'Bearer ' ||
       (select decrypted_secret from vault.decrypted_secrets where name = 'cron_secret_easybroker')),
     timeout_milliseconds := 30000
