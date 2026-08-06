@@ -119,7 +119,7 @@ export function TabBarAdmin({ nombre }: { nombre: string }) {
             <Ellipsis className="size-5" aria-hidden strokeWidth={masActiva ? 2.25 : 2} />
             Más
           </SheetTrigger>
-          <SheetContent side="bottom" className="gap-0 p-0">
+          <SheetContent side="bottom" className="mx-auto max-w-md gap-0 rounded-t-2xl p-0">
             <SheetHeader className="px-6 pt-6 pb-2">
               <SheetTitle>Más opciones</SheetTitle>
             </SheetHeader>
@@ -147,7 +147,7 @@ export function TabBarAdmin({ nombre }: { nombre: string }) {
               text-slate-200) están pensadas para el sidebar oscuro y
               perderían contraste aquí.
             */}
-            <div className="border-t border-slate-200 px-3 pt-3 pb-6">
+            <div className="border-t border-slate-200 px-3 pt-3 pb-[max(env(safe-area-inset-bottom),1.5rem)]">
               <p className="truncate px-3 pb-1 text-xs font-medium text-slate-400" title={nombre}>
                 {nombre}
               </p>

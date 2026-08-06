@@ -16,8 +16,8 @@ export default function CargandoAdmin() {
   return (
     <>
       {/* Móvil — esqueleto Fintech Muro */}
-      <div className="lg:hidden">
-        <FondoFintech className="px-4 pt-6 pb-8">
+      <div className="-mx-4 -mt-6 -mb-28 lg:hidden">
+        <FondoFintech className="px-4 pt-6 pb-32">
           <div className="flex animate-pulse flex-col gap-4" aria-hidden>
             <div className="h-6 w-40 rounded-md bg-[#221B14]/10" />
 

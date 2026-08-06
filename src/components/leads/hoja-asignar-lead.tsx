@@ -67,14 +67,16 @@ export function HojaAsignarLead({ leadId, leadNombre, asesores }: Props) {
       >
         Asignar
       </SheetTrigger>
-      <SheetContent side="bottom" className="gap-0 p-0">
+      <SheetContent side="bottom" className="mx-auto max-w-md gap-0 rounded-t-2xl p-0">
         <SheetHeader className="px-6 pt-6 pb-2">
           <SheetTitle>Asignar a {leadNombre}</SheetTitle>
         </SheetHeader>
         {asesores.length === 0 ? (
-          <p className="px-6 pb-6 text-sm text-slate-500">No hay asesores activos disponibles</p>
+          <p className="px-6 pb-[max(env(safe-area-inset-bottom),1.5rem)] text-sm text-slate-500">
+            No hay asesores activos disponibles
+          </p>
         ) : (
-          <ul className="flex flex-col gap-1 px-3 pb-6">
+          <ul className="flex flex-col gap-1 px-3 pb-[max(env(safe-area-inset-bottom),1.5rem)]">
             {asesores.map((asesor) => (
               <li key={asesor.userId}>
                 <button

@@ -193,8 +193,8 @@ export default async function PaginaDashboardAdmin() {
   return (
     <>
       {/* Móvil — estética «Fintech Muro» (Task FM6) */}
-      <div className="lg:hidden">
-        <FondoFintech className="px-4 pt-6 pb-8">
+      <div className="-mx-4 -mt-6 -mb-28 lg:hidden">
+        <FondoFintech className="px-4 pt-6 pb-32">
           <div className="flex flex-col gap-4">
             <header className="flex flex-col gap-1">
               <h1 className="text-xl font-semibold tracking-tight text-[#221B14]">
@@ -204,7 +204,7 @@ export default async function PaginaDashboardAdmin() {
 
             {/* Héroe: leads del mes + tendencia de 30 días */}
             <TarjetaGlass variant="hero">
-              <div className="text-[11px] uppercase tracking-wide text-[#8E7F68]">
+              <div className="text-[11px] uppercase tracking-wide text-slate-500">
                 Leads · 30 días
               </div>
               <p className="text-3xl font-bold text-[#221B14]">{leadsUltimos30Dias}</p>
@@ -214,7 +214,7 @@ export default async function PaginaDashboardAdmin() {
             {/* Fila de estadísticas */}
             <div className="grid grid-cols-3 gap-2">
               <TarjetaGlass>
-                <div className="text-[11px] uppercase tracking-wide text-[#8E7F68]">
+                <div className="text-[11px] uppercase tracking-wide text-slate-500">
                   Sin atender
                 </div>
                 <p
@@ -237,11 +237,11 @@ export default async function PaginaDashboardAdmin() {
 
             {/* Pipeline de cápsulas por etapa */}
             <TarjetaGlass>
-              <div className="text-[11px] uppercase tracking-wide text-[#8E7F68]">
+              <div className="text-[11px] uppercase tracking-wide text-slate-500">
                 Pipeline activo
               </div>
               {segmentosPipeline.length === 0 ? (
-                <p className="py-3 text-sm text-[#8E7F68]">
+                <p className="py-3 text-sm text-slate-500">
                   Todavía no hay leads activos en el pipeline
                 </p>
               ) : (
@@ -297,7 +297,7 @@ export default async function PaginaDashboardAdmin() {
                   <p className="text-xl" aria-hidden>
                     🎉
                   </p>
-                  <p className="text-xs text-[#8E7F68]">Ningún lead lleva más de 24 h sin atención</p>
+                  <p className="text-xs text-slate-500">Ningún lead lleva más de 24 h sin atención</p>
                 </TarjetaGlass>
               ) : (
                 <>
@@ -312,7 +312,7 @@ export default async function PaginaDashboardAdmin() {
                             <p className="truncate text-sm font-medium text-[#221B14]">
                               {lead.nombre}
                             </p>
-                            <p className="mt-0.5 text-xs text-[#8E7F68]">
+                            <p className="mt-0.5 text-xs text-slate-500">
                               {lead.asesor?.nombre ?? 'Sin asesor'} ·{' '}
                               <span className="text-[#A34E28]">
                                 {formatDistanceToNow(new Date(referencia), {
@@ -322,13 +322,13 @@ export default async function PaginaDashboardAdmin() {
                               </span>
                             </p>
                           </div>
-                          <ChevronRight aria-hidden className="size-4 shrink-0 text-[#8E7F68]" />
+                          <ChevronRight aria-hidden className="size-4 shrink-0 text-slate-500" />
                         </Link>
                       </li>
                     ))}
                   </ul>
                   {hayMasMovil ? (
-                    <p className="text-center text-xs text-[#8E7F68]">
+                    <p className="text-center text-xs text-slate-500">
                       Mostrando {MAX_SIN_ATENDER_MOVIL} de {sinAtenderTodos.length} leads sin atender
                     </p>
                   ) : null}

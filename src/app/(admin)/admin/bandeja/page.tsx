@@ -60,13 +60,13 @@ export default async function PaginaBandeja() {
   return (
     <>
       {/* Móvil — estética «Fintech Muro» (Task FM7) */}
-      <div className="lg:hidden">
-        <FondoFintech className="px-4 pt-6 pb-8">
+      <div className="-mx-4 -mt-6 -mb-28 lg:hidden">
+        <FondoFintech className="px-4 pt-6 pb-32">
           <div className="flex flex-col gap-4">
             <header className="flex flex-wrap items-start justify-between gap-3">
               <div className="flex flex-col gap-1">
                 <h1 className="text-xl font-semibold tracking-tight text-[#221B14]">Bandeja</h1>
-                <p className="text-sm text-[#8E7F68]">
+                <p className="text-sm text-slate-500">
                   {leads.length === 0
                     ? 'Sin leads pendientes de asignar'
                     : `${leads.length} lead${leads.length === 1 ? '' : 's'} esperando asignación`}
@@ -80,7 +80,7 @@ export default async function PaginaBandeja() {
                 <p className="text-2xl" aria-hidden>
                   🎉
                 </p>
-                <p className="text-sm text-[#8E7F68]">Sin leads pendientes</p>
+                <p className="text-sm text-slate-500">Sin leads pendientes</p>
               </TarjetaGlass>
             ) : (
               <ul className="flex flex-col gap-3">
@@ -96,12 +96,12 @@ export default async function PaginaBandeja() {
                         <div className="min-w-0">
                           <p className="truncate font-semibold text-[#221B14]">{lead.nombre}</p>
                           {lead.propiedad ? (
-                            <p className="mt-0.5 flex items-center gap-1.5 truncate text-sm text-[#8E7F68]">
+                            <p className="mt-0.5 flex items-center gap-1.5 truncate text-sm text-slate-500">
                               <Building2 aria-hidden className="size-3.5 shrink-0" />
                               <span className="truncate">{lead.propiedad.titulo}</span>
                             </p>
                           ) : lead.zona_interes ? (
-                            <p className="mt-0.5 truncate text-sm text-[#8E7F68]">
+                            <p className="mt-0.5 truncate text-sm text-slate-500">
                               Zona de interés: {lead.zona_interes}
                             </p>
                           ) : null}
@@ -109,7 +109,7 @@ export default async function PaginaBandeja() {
                             suppressHydrationWarning
                             className={cn(
                               'mt-1 inline-block text-xs',
-                              urgente ? 'font-semibold text-[#A34E28]' : 'text-[#8E7F68]'
+                              urgente ? 'font-semibold text-[#A34E28]' : 'text-slate-500'
                             )}
                           >
                             {espera}

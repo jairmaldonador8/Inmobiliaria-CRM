@@ -22,7 +22,9 @@ Research completo: `docs/ultrapowers/research/2026-08-05-fintech-muro-research.m
    (`max-w-md` siempre) — restilizar directo, sin guards.
 3. **Contraste AA sin contar el blur** (Safari/iOS no soporta
    `prefers-reduced-transparency`): el texto debe pasar contraste sobre el
-   tinte sólido. Texto secundario `#8E7F68` sobre cristal: verificar siempre.
+   tinte sólido. Convención resuelta: etiquetas y texto secundario pequeño →
+   `text-slate-500` (`#6B5D4E`, ≈5.9:1) — `#8E7F68` NO pasa AA en tamaños
+   chicos sobre cristal (≈3.3–3.6:1 a 11–12px).
 4. **Preservar `data-testid`** existentes (`kpi-bandeja`, `kpi-propiedades`) y
    actualizar `src/app/(admin)/admin/loading.tsx` si cambia la forma del grid.
 5. Animaciones detrás de `motion-safe:` / `@media (prefers-reduced-motion)`.
