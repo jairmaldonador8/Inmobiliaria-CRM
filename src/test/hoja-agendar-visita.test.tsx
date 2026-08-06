@@ -127,13 +127,12 @@ describe('HojaAgendarVisita', () => {
     expect(datos.propiedadId).toBe('prop-1')
     expect(datos.duracionMin).toBe(60) // DURACION_MIN_DEFAULT
 
-    // El input NO lleva offset ('2026-09-15T14:30' es hora LOCAL del
-    // navegador de prueba); la conversión a ISO debe coincidir exactamente
-    // con `new Date(...)` resolviendo el offset local — nunca la cadena
-    // cruda sin procesar, que rompería la hora si el servidor corre en UTC.
-    const esperado = new Date('2026-09-15T14:30').toISOString()
-    expect(datos.fecha).toBe(esperado)
-    expect(datos.fecha).not.toBe('2026-09-15T14:30')
+    // El input NO lleva offset: "2026-09-15" + "14:30" se interpretan como
+    // hora de America/Monterrey (UTC-6, sin horario de verano), NUNCA como
+    // hora del dispositivo que corre la prueba — literal fijo, no
+    // recalculado con la misma fórmula de la implementación, para que un
+    // regreso a "hora local del dispositivo" sí reviente este test.
+    expect(datos.fecha).toBe('2026-09-15T20:30:00.000Z')
   })
 
   it('al agendar con éxito, el toast ofrece «Confirmar por WhatsApp» y refresca', async () => {

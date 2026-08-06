@@ -6,11 +6,15 @@ import { toast } from 'sonner'
 import { CalendarClock, X } from 'lucide-react'
 
 import { agendarVisita } from '@/lib/visitas/acciones'
-import { DURACION_MIN_DEFAULT } from '@/lib/visitas/validacion'
+import { DURACION_MIN_DEFAULT, validarDatosVisita } from '@/lib/visitas/validacion'
 import {
   armarMensajeConfirmacionVisita,
   armarUrlConfirmacionVisita,
 } from '@/components/visitas/confirmacion-whatsapp'
+import {
+  convertirFechaHoraMonterreyAIso,
+  fechaHoyMonterrey,
+} from '@/components/visitas/zona-horaria-monterrey'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -105,6 +109,10 @@ export function HojaAgendarVisita({
     label: ETIQUETA_DURACION[min],
   }))
 
+  // `min` del input de fecha: hoy en America/Monterrey (no la del
+  // dispositivo), calculado una sola vez por apertura de la hoja.
+  const minFecha = useMemo(() => fechaHoyMonterrey(), [])
+
   function alCambiarAbierto(abrir: boolean) {
     setAbierto(abrir)
     if (!abrir) {
@@ -126,19 +134,25 @@ export function HojaAgendarVisita({
     }
 
     // ⚠️ CRÍTICO — zona horaria: los inputs date/time NO llevan offset, solo
-    // valores locales del navegador. `new Date('YYYY-MM-DDTHH:mm')` (forma
-    // fecha+hora, SIN sufijo de zona) se interpreta como HORA LOCAL del
-    // navegador — a diferencia de una fecha sola ('YYYY-MM-DD'), que Date sí
-    // trata como UTC. Como el asesor usa el navegador en Monterrey,
-    // `new Date(...)` resuelve el offset correcto y `.toISOString()` entrega
-    // el instante UTC real que espera el servidor (Vercel corre en UTC): la
-    // hora que el usuario ve en la hoja es la hora que queda guardada.
-    const fechaLocal = new Date(`${fecha}T${hora}`)
-    if (Number.isNaN(fechaLocal.getTime())) {
+    // valores "de pared" sin zona. NO se interpretan con la zona del
+    // DISPOSITIVO (un asesor de viaje, en un municipio fronterizo con
+    // horario de verano de EE. UU., o con el equipo mal configurado
+    // agendaría a la hora equivocada) — toda la app muestra horas en
+    // America/Monterrey, así que lo tecleado también significa esa zona.
+    // Ver `zona-horaria-monterrey.ts` para el cálculo del offset real.
+    const fechaISO = convertirFechaHoraMonterreyAIso(fecha, hora)
+    if (!fechaISO) {
       setError('La fecha no es válida')
       return
     }
-    const fechaISO = fechaLocal.toISOString()
+
+    // Validación de conveniencia en cliente (mejor UX) — la de
+    // `agendarVisita` en el servidor sigue siendo la que manda.
+    const validacion = validarDatosVisita({ fecha: fechaISO, duracionMin })
+    if ('error' in validacion) {
+      setError(validacion.error)
+      return
+    }
 
     const propiedadId = propiedadLeadId ?? propiedadSeleccionada?.id ?? null
     const propiedadTitulo = propiedadLeadTitulo ?? propiedadSeleccionada?.titulo ?? null
@@ -215,7 +229,14 @@ export function HojaAgendarVisita({
           <div className="grid grid-cols-2 gap-3">
             <div className="grid gap-2">
               <Label htmlFor="visita-fecha">Fecha</Label>
-              <Input id="visita-fecha" name="fecha" type="date" required disabled={pendiente} />
+              <Input
+                id="visita-fecha"
+                name="fecha"
+                type="date"
+                required
+                min={minFecha}
+                disabled={pendiente}
+              />
             </div>
             <div className="grid gap-2">
               <Label htmlFor="visita-hora">Hora</Label>
