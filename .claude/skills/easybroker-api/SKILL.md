@@ -39,6 +39,8 @@ await supabase.from('propiedades').upsert(mapped, { onConflict: 'easybroker_id' 
 - Timestamps arrive with `-06:00` offset → normalize to UTC before storing.
 - Store cursors (`updated_after` / `happened_after`) in DB, advance only after a successful page.
 - Detect sold/unpublished via per-status queries + periodic full reconcile of `public_id`s (no delete events).
+- **`estatus` y `activa` NO se derivan solas.** Bug encontrado en producción el 2026-08-06: el sync insertaba con los defaults del esquema (`estatus='published'`, `activa=true`) y nunca los volvía a tocar, así que 21 de 177 propiedades (rentadas, despublicadas) se seguían ofreciendo a los asesores como disponibles. La fase `reconciliarEstatusPropiedades` en `sync.ts` es quien lo mantiene: lee `listing_statuses` completo, mapea `published → activa=true` (y solo `published` — `reserved` ya tiene oferta en curso), y apaga `activa` en las que desaparecieron del catálogo. **Nunca las borra**: pueden estar referenciadas por leads y por seguimientos inmutables.
+- Salvaguarda obligatoria en esa reconciliación: solo marcar «ausente → inactiva» si la paginación de `listing_statuses` se completó y el mapa no vino vacío. Una respuesta parcial desactivaría el catálogo entero.
 - Dedup leads by phone/email before insert; a repeat inquiry becomes a seguimiento with `propiedad_id` on the existing lead.
 
 ## Common mistakes
