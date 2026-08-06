@@ -52,9 +52,17 @@ sincronizar. Este proyecto incluye por tanto una **Fase 0**:
   (validación con RLS existente; seguimiento automático en el lead al agendar,
   patrón de `asignarLead`).
 - Formulario de visita desde la ficha del lead: propiedad (opcional), fecha,
-  hora y duración. Listado simple de próximas visitas del asesor **dentro de
-  su dashboard existente** (sin página nueva ni cambio al tab bar del rediseño
-  Fintech Muro en esta fase). UI móvil según skill `fintech-muro-ui`.
+  hora y duración. La acción «Agendar visita» vive **junto al flujo de chat**
+  (el botón de WhatsApp con plantillas de la ficha): el asesor chatea, acuerda
+  fecha y agenda ahí mismo sin cambiar de pantalla.
+- **Confirmación por WhatsApp al agendar:** tras guardar la visita se ofrece
+  abrir WhatsApp con un mensaje prellenado de confirmación (fecha, hora,
+  propiedad) reutilizando el sistema de plantillas existente (patrón
+  `contextoPlantillasLead` / `BotonWhatsApp`). Opcional — el asesor puede
+  omitirlo.
+- Listado simple de próximas visitas del asesor **dentro de su dashboard
+  existente** (sin página nueva ni cambio al tab bar del rediseño Fintech Muro
+  en esta fase). UI móvil según skill `fintech-muro-ui`.
 - Los hooks de sync de la Fase 1 se cuelgan de estas actions desde el día uno.
 
 ## Datos
@@ -178,7 +186,9 @@ self-scheduling futuro.**
 
 - **Unit:** cifrado/descifrado de tokens; construcción del cuerpo del evento
   (fechas y zona horaria); transición de estados de sync; lógica de backoff;
-  validaciones de las server actions de visitas (Fase 0).
+  validaciones de las server actions de visitas (Fase 0); construcción del
+  mensaje de confirmación por WhatsApp **con y sin propiedad** (la propiedad
+  es opcional en el formulario).
 - **Integración (vitest.integration):** callback OAuth con `state` inválido /
   expirado; endpoint de disponibilidad (Google mockeado) mezclando visitas
   CRM; `gcal-retry` con secret bueno/malo y visitas en cada estado.
