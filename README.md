@@ -34,7 +34,8 @@ No copies los valores de producción a `.env.local`. En agosto de 2026, tenerlos
 Para apuntar un comando puntual a un proyecto concreto:
 
 ```bash
-SUPABASE_PROJECT_REF=<ref> node scripts/aplicar-migracion.mjs --sql "select ..."
+node scripts/aplicar-migracion.mjs --sql "select ..."          # DEV (por defecto)
+node scripts/aplicar-migracion.mjs --prod --sql "select ..."   # producción, avisa en la salida
 ```
 
 Para aplicar una migración al proyecto Supabase (mismo flujo con el que se aplicó la 0007):

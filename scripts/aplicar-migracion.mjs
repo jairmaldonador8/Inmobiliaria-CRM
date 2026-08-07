@@ -16,7 +16,23 @@ import { readFile } from 'node:fs/promises'
 // El proyecto guarda sus secretos en .env.local (dotenv lee .env por default).
 config({ path: '.env.local', quiet: true })
 
-const PROJECT_REF = process.env.SUPABASE_PROJECT_REF ?? 'sdyyczntaydzodyjtpgc'
+const REF_PRODUCCION = 'sdyyczntaydzodyjtpgc'
+
+// Por defecto se apunta a DESARROLLO. Tocar producción exige decirlo en voz
+// alta con --prod (o SUPABASE_PROJECT_REF explícito): este script ejecuta SQL
+// arbitrario y el proyecto de producción tiene datos reales de clientes.
+const pidioProd = process.argv.includes('--prod')
+const PROJECT_REF = pidioProd
+  ? REF_PRODUCCION
+  : (process.env.SUPABASE_PROJECT_REF ?? process.env.SUPABASE_DEV_REF)
+
+if (!PROJECT_REF) {
+  console.error(
+    'No sé a qué proyecto apuntar. Define SUPABASE_DEV_REF en .env.local, ' +
+      'o pasa SUPABASE_PROJECT_REF=<ref>, o usa --prod para producción.'
+  )
+  process.exit(1)
+}
 
 async function ejecutar(sql) {
   const token = process.env.SUPABASE_ACCESS_TOKEN
@@ -49,9 +65,12 @@ async function ejecutar(sql) {
 }
 
 async function main() {
-  const args = process.argv.slice(2)
+  const args = process.argv.slice(2).filter((a) => a !== '--prod')
   if (args.length === 0) {
-    console.error('Uso: node scripts/aplicar-migracion.mjs <archivo.sql | --sql "SELECT ...">')
+    console.error(
+      'Uso: node scripts/aplicar-migracion.mjs [--prod] <archivo.sql | --sql "SELECT ...">\n' +
+        'Sin --prod apunta al proyecto de DESARROLLO (SUPABASE_DEV_REF).'
+    )
     process.exit(1)
   }
 
@@ -60,7 +79,8 @@ async function main() {
     primero === '--sql' ? resto.join(' ') : await readFile(primero, 'utf8')
   const origen = primero === '--sql' ? 'consulta directa' : primero
 
-  console.log(`[migracion] ejecutando ${origen} en proyecto ${PROJECT_REF}…`)
+  const etiqueta = PROJECT_REF === REF_PRODUCCION ? 'PRODUCCIÓN ⚠️' : 'desarrollo'
+  console.log(`[migracion] ejecutando ${origen} en ${etiqueta} (${PROJECT_REF})…`)
   const resultado = await ejecutar(sql)
   console.log('[migracion] OK')
   console.log(JSON.stringify(resultado, null, 2))
