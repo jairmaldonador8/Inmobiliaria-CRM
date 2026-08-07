@@ -19,7 +19,8 @@ import {
 
 import { cambiarEtapa } from '@/lib/leads/acciones-asesor'
 import {
-  ETAPAS_LEAD,
+  ETAPAS_KANBAN,
+  ETAPAS_SELECCIONABLES,
   claseBadgeEtapa,
   etiquetaEtapa,
   etiquetaFuenteConDetalle,
@@ -153,7 +154,11 @@ function TarjetaLead({ lead, onMover }: { lead: LeadKanban; onMover: MoverLead }
             <DropdownMenuSub>
               <DropdownMenuSubTrigger>Mover a…</DropdownMenuSubTrigger>
               <DropdownMenuSubContent>
-                {ETAPAS_LEAD.filter((etapa) => etapa !== lead.etapa).map((etapa) => (
+                {/* Incluye cerrado_ganado/cerrado_perdido a proposito: con
+                    esas etapas fuera del tablero, este menu es una de las
+                    dos rutas para cerrar un lead (la otra es el selector de
+                    etapa de la ficha). */}
+                {ETAPAS_SELECCIONABLES.filter((etapa) => etapa !== lead.etapa).map((etapa) => (
                   <DropdownMenuItem key={etapa} onClick={() => onMover(lead, etapa)}>
                     {etiquetaEtapa(etapa)}
                   </DropdownMenuItem>
@@ -240,8 +245,12 @@ export function KanbanLeads({ leads }: { leads: LeadKanban[] }) {
     useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 8 } })
   )
 
+  // Solo las 5 etapas activas tienen columna: un lead cerrado (o, en teoria,
+  // uno que siga en 'apartado' de antes de la migracion 0012) simplemente no
+  // encuentra bucket aqui y desaparece del tablero -- ya no es trabajo
+  // pendiente. Sigue siendo consultable desde la lista de leads cerrados.
   const columnas = useMemo(() => {
-    const porEtapa = new Map<EtapaLead, LeadKanban[]>(ETAPAS_LEAD.map((e) => [e, []]))
+    const porEtapa = new Map<EtapaLead, LeadKanban[]>(ETAPAS_KANBAN.map((e) => [e, []]))
     for (const lead of leadsVisibles) {
       porEtapa.get(lead.etapa as EtapaLead)?.push(lead)
     }
@@ -267,7 +276,7 @@ export function KanbanLeads({ leads }: { leads: LeadKanban[] }) {
     if (!over) return
     const lead = leadsVisibles.find((l) => l.id === active.id)
     const etapa = String(over.id)
-    if (!lead || !(ETAPAS_LEAD as readonly string[]).includes(etapa)) return
+    if (!lead || !(ETAPAS_KANBAN as readonly string[]).includes(etapa)) return
     mover(lead, etapa as EtapaLead)
   }
 
@@ -276,7 +285,7 @@ export function KanbanLeads({ leads }: { leads: LeadKanban[] }) {
       {/* -mx-4/px-4: el carrusel sangra hasta los bordes de la columna
           angosta del layout del asesor. */}
       <div className="-mx-4 flex snap-x snap-proximity gap-3 overflow-x-auto px-4 pb-2">
-        {ETAPAS_LEAD.map((etapa) => (
+        {ETAPAS_KANBAN.map((etapa) => (
           <ColumnaEtapa
             key={etapa}
             etapa={etapa}

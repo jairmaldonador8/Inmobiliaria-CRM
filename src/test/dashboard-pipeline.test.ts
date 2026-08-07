@@ -1,15 +1,16 @@
 // @vitest-environment node
 /**
  * Tests TDD para src/lib/dashboard/pipeline.ts (Task FM6): agrupa leads
- * activos por etapa, en el orden canónico de ETAPAS_LEAD, para el
- * "pipeline de cápsulas" del dashboard móvil. Función pura, sin I/O.
+ * activos por etapa, en el orden canónico de ETAPAS_KANBAN (las 5 columnas
+ * activas del kanban), para el "pipeline de cápsulas" del dashboard móvil.
+ * Función pura, sin I/O.
  */
 import { describe, expect, it } from 'vitest'
 
 import { agruparPorEtapa } from '@/lib/dashboard/pipeline'
 
 describe('agruparPorEtapa', () => {
-  it('cuenta los leads por etapa y respeta el orden canónico de ETAPAS_LEAD', () => {
+  it('cuenta los leads por etapa y respeta el orden canónico de ETAPAS_KANBAN', () => {
     const leads = [
       { etapa: 'negociacion' },
       { etapa: 'nuevo' },
@@ -30,10 +31,10 @@ describe('agruparPorEtapa', () => {
   })
 
   it('descarta etapas sin leads (no rellena con ceros)', () => {
-    const segmentos = agruparPorEtapa([{ etapa: 'apartado' }])
+    const segmentos = agruparPorEtapa([{ etapa: 'negociacion' }])
 
     expect(segmentos).toHaveLength(1)
-    expect(segmentos[0].etapa).toBe('apartado')
+    expect(segmentos[0].etapa).toBe('negociacion')
   })
 
   it('ignora las etapas cerradas aunque vengan en la entrada', () => {
@@ -44,6 +45,12 @@ describe('agruparPorEtapa', () => {
     ])
 
     expect(segmentos).toEqual([{ etapa: 'nuevo', etiqueta: 'Nuevo', cantidad: 1 }])
+  })
+
+  it('ignora "apartado" (fusionado con "negociacion", ya no es columna del kanban)', () => {
+    const segmentos = agruparPorEtapa([{ etapa: 'apartado' }, { etapa: 'negociacion' }])
+
+    expect(segmentos).toEqual([{ etapa: 'negociacion', etiqueta: 'Negociación', cantidad: 1 }])
   })
 
   it('con una lista vacía devuelve un arreglo vacío', () => {

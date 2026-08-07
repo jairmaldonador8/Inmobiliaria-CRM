@@ -7,6 +7,13 @@
 
 import type { ClasificacionLeadEB } from '@/lib/easybroker/mapeo'
 
+/**
+ * Vocabulario COMPLETO del enum `etapa_lead` de Postgres. No se le quitan
+ * valores aunque la interfaz deje de ofrecer alguno como destino (ver
+ * ETAPAS_KANBAN / ETAPAS_SELECCIONABLES abajo) -- quitar un valor de un enum
+ * es destructivo y hay historial que lo referencia. Sigue siendo la lista
+ * de validacion para `cambiarEtapa`.
+ */
 export const ETAPAS_LEAD = [
   'nuevo',
   'contactado',
@@ -28,6 +35,30 @@ export type FuenteLead = (typeof FUENTES_LEAD)[number]
 export const ETAPAS_CERRADAS = ['cerrado_ganado', 'cerrado_perdido'] as const
 
 /**
+ * Columnas activas del kanban (Task «Reducir el pipeline a 5 etapas»): el
+ * tablero deja de tener columna propia para 'apartado' (se fusiona en
+ * 'negociacion', ver migracion 0012) y para las etapas cerradas (siguen
+ * existiendo, pero un lead cerrado ya no es trabajo pendiente que deba
+ * ocupar una columna permanente).
+ */
+export const ETAPAS_KANBAN = [
+  'nuevo',
+  'contactado',
+  'cita_agendada',
+  'visita_realizada',
+  'negociacion',
+] as const
+
+/**
+ * Etapas que la interfaz ofrece como destino explicito (selector de etapa de
+ * la ficha, menu «Mover a…» de la tarjeta): las 5 columnas activas del
+ * kanban + los dos cierres. 'apartado' queda fuera a proposito -- esta
+ * fusionado con 'negociacion', no es un destino que un asesor deba poder
+ * elegir de nuevo.
+ */
+export const ETAPAS_SELECCIONABLES = [...ETAPAS_KANBAN, ...ETAPAS_CERRADAS] as const
+
+/**
  * Texto exacto del seguimiento de sistema que registra `cambiarEtapa` al
  * mover un lead a un estado cerrado (Task 17). `leads` no tiene una columna
  * de fecha de cierre — este texto + `creado_en` del seguimiento es lo que
@@ -43,7 +74,9 @@ const ETIQUETAS_ETAPA: Record<EtapaLead, string> = {
   nuevo: 'Nuevo',
   contactado: 'Contactado',
   cita_agendada: 'Cita agendada',
-  visita_realizada: 'Visita realizada',
+  // Etiqueta corta a proposito ('Visita realizada' no cabe en una columna
+  // angosta del kanban) -- el VALOR del enum sigue siendo 'visita_realizada'.
+  visita_realizada: 'Visitó',
   negociacion: 'Negociación',
   apartado: 'Apartado',
   cerrado_ganado: 'Cerrado ganado',

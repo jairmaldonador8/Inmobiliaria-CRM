@@ -1,7 +1,13 @@
+import Link from 'next/link'
+import { formatDistanceToNow } from 'date-fns'
+import { es } from 'date-fns/locale'
+
 import { requireAsesor } from '@/lib/auth/usuario-actual'
 import { createClient } from '@/lib/supabase/server'
 import { KanbanLeads, type LeadKanban } from '@/components/leads/kanban-leads'
 import { SheetCapturaRapida } from '@/components/leads/sheet-captura-rapida'
+import { ETAPAS_CERRADAS, claseBadgeEtapa, etiquetaEtapa, formatearTelefono } from '@/lib/leads/formato'
+import { Badge } from '@/components/ui/badge'
 import type { ClasificacionLeadEB } from '@/lib/easybroker/mapeo'
 
 type FilaLead = {
@@ -15,13 +21,106 @@ type FilaLead = {
   propiedad: { titulo: string } | null
 }
 
+type FilaLeadCerrado = {
+  id: string
+  nombre: string
+  telefono: string | null
+  etapa: string
+  creado_en: string
+  propiedad: { titulo: string } | null
+}
+
+/**
+ * Lista de leads cerrados (cerrado_ganado / cerrado_perdido) del asesor. Al
+ * sacar esos dos estados del kanban (Task «Reducir el pipeline a 5 etapas»)
+ * dejaban de ser consultables desde /asesor/leads — esta vista, detrás de
+ * `?vista=cerrados`, es esa ruta de vuelta. Cliente de sesión: RLS ya acota
+ * a los leads propios.
+ */
+async function ListaLeadsCerrados() {
+  const supabase = await createClient()
+
+  const { data, error } = await supabase
+    .from('leads')
+    .select('id, nombre, telefono, etapa, creado_en, propiedad:propiedades(titulo)')
+    .eq('archivado', false)
+    .in('etapa', ETAPAS_CERRADAS)
+    .order('creado_en', { ascending: false })
+
+  if (error) {
+    throw new Error(`No se pudieron cargar los leads cerrados: ${error.message}`)
+  }
+  const filas = (data ?? []) as unknown as FilaLeadCerrado[]
+
+  return (
+    <section className="flex flex-col gap-4">
+      <header className="flex flex-col gap-1">
+        <div className="flex items-center justify-between gap-2">
+          <h1 className="text-xl font-semibold tracking-tight text-slate-900">Leads cerrados</h1>
+          <Link
+            href="/asesor/leads"
+            className="text-sm font-medium text-slate-500 underline-offset-4 hover:text-slate-900 hover:underline"
+          >
+            Volver al pipeline
+          </Link>
+        </div>
+        <p className="text-sm text-slate-500">
+          {filas.length === 0
+            ? 'Aún no tienes leads cerrados'
+            : `${filas.length} lead${filas.length === 1 ? '' : 's'} cerrado${filas.length === 1 ? '' : 's'}`}
+        </p>
+      </header>
+
+      {filas.length === 0 ? (
+        <p className="rounded-lg border border-dashed border-slate-300 px-2 py-8 text-center text-sm text-slate-400">
+          Sin leads cerrados
+        </p>
+      ) : (
+        <ul className="grid gap-3">
+          {filas.map((lead) => (
+            <li key={lead.id}>
+              <Link
+                href={`/asesor/leads/${lead.id}`}
+                className="flex flex-col gap-2 rounded-xl bg-white p-4 ring-1 ring-slate-200 transition-shadow hover:shadow-sm"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="truncate font-medium text-slate-900">{lead.nombre}</p>
+                    <p className="text-sm text-slate-500">{formatearTelefono(lead.telefono)}</p>
+                  </div>
+                  <Badge className={claseBadgeEtapa(lead.etapa)}>{etiquetaEtapa(lead.etapa)}</Badge>
+                </div>
+                {lead.propiedad ? (
+                  <p className="truncate text-sm text-slate-500">{lead.propiedad.titulo}</p>
+                ) : null}
+                <span suppressHydrationWarning className="text-xs text-slate-400">
+                  {formatDistanceToNow(new Date(lead.creado_en), { addSuffix: true, locale: es })}
+                </span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+  )
+}
+
 /**
  * Kanban de leads del asesor. Todas las consultas van con el cliente de
  * SESIÓN: RLS limita automáticamente a los leads propios (y a los
  * seguimientos de esos leads) — sin filtrar por asesor_id a mano.
  */
-export default async function PaginaLeadsAsesor() {
+export default async function PaginaLeadsAsesor({
+  searchParams,
+}: {
+  searchParams: Promise<{ vista?: string }>
+}) {
   await requireAsesor()
+  const { vista } = await searchParams
+  if (vista === 'cerrados') {
+    return <ListaLeadsCerrados />
+  }
+
   const supabase = await createClient()
 
   const [{ data: leads, error }, { data: propiedades }] = await Promise.all([
@@ -31,6 +130,10 @@ export default async function PaginaLeadsAsesor() {
         'id, nombre, fuente, fuente_detalle, etapa, creado_en, clasificacion_eb, propiedad:propiedades(titulo)'
       )
       .eq('archivado', false)
+      // Los cerrados ya no tienen columna en el kanban (ver
+      // ListaLeadsCerrados más arriba para consultarlos) — se excluyen aquí
+      // para que «N leads en tu pipeline» cuente solo trabajo activo.
+      .not('etapa', 'in', `(${ETAPAS_CERRADAS.join(',')})`)
       .order('creado_en', { ascending: false }),
     supabase
       .from('propiedades')
@@ -81,7 +184,15 @@ export default async function PaginaLeadsAsesor() {
   return (
     <section className="flex flex-col gap-4">
       <header className="flex flex-col gap-1">
-        <h1 className="text-xl font-semibold tracking-tight text-slate-900">Leads</h1>
+        <div className="flex items-center justify-between gap-2">
+          <h1 className="text-xl font-semibold tracking-tight text-slate-900">Leads</h1>
+          <Link
+            href="/asesor/leads?vista=cerrados"
+            className="text-sm font-medium text-slate-500 underline-offset-4 hover:text-slate-900 hover:underline"
+          >
+            Ver cerrados
+          </Link>
+        </div>
         <p className="text-sm text-slate-500">
           {items.length === 0
             ? 'Aún no tienes leads asignados'

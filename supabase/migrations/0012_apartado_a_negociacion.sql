@@ -1,0 +1,24 @@
+-- Migracion 0012: fusiona 'apartado' dentro de 'negociacion' (pipeline a 5
+-- columnas activas).
+--
+-- Decision de producto: el kanban pasa de 8 a 5 columnas activas (Nuevo,
+-- Contactado, Cita agendada, Visito, Negociacion). Un lead 'apartado' ya es
+-- en la practica una negociacion cerrandose -- no merece columna propia --
+-- asi que se fusiona con 'negociacion'. Los cierres (cerrado_ganado /
+-- cerrado_perdido) tambien salen del tablero, pero esos SIGUEN siendo
+-- alcanzables desde el selector de etapa / menu de la tarjeta: no se tocan
+-- ni sus datos ni el enum.
+--
+-- IMPORTANTE: esto NO elimina 'apartado' de `etapa_lead`. Quitar un valor de
+-- un enum de Postgres es destructivo (requiere recrear el tipo, y hay
+-- historial -- seguimientos, filtros guardados -- que podria referenciarlo) y
+-- no es necesario: basta con que la interfaz deje de ofrecerlo como destino
+-- (ver ETAPAS_KANBAN / ETAPAS_SELECCIONABLES en src/lib/leads/formato.ts). El
+-- enum se queda exactamente como esta; lo unico que cambia aqui son los
+-- DATOS de los leads que hoy estan en 'apartado'.
+--
+-- Aplicada 2026-08-07 en desarrollo y en produccion; en ambos afecto 0 filas
+-- (dev: 50 leads, prod: 128, todos en 'nuevo' al momento de aplicarla). Se
+-- deja igual por si hay que reaplicarla sobre datos que si tengan
+-- 'apartado' -- el UPDATE es idempotente.
+update leads set etapa = 'negociacion' where etapa = 'apartado';

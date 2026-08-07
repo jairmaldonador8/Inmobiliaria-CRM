@@ -6,7 +6,7 @@ import { toast } from 'sonner'
 
 import { cambiarEtapa } from '@/lib/leads/acciones-asesor'
 import {
-  ETAPAS_LEAD,
+  ETAPAS_SELECCIONABLES,
   claseBadgeEtapa,
   etiquetaEtapa,
   type EtapaLead,
@@ -29,13 +29,20 @@ type Props = {
  * Selector de etapa del detalle de lead (asesor). Reusa cambiarEtapa (la
  * misma action del kanban) con actualización optimista: si el servidor
  * falla, revierte con toast.
+ *
+ * Ofrece ETAPAS_SELECCIONABLES (las 5 activas + cerrado_ganado/perdido), NO
+ * el enum completo: 'apartado' está fusionado con 'negociacion' y ya no es
+ * un destino que se deba poder elegir. Este selector es una de las dos
+ * rutas para CERRAR un lead (la otra es el menú «Mover a…» del kanban) —
+ * sigue siendo posible marcar cerrado_ganado/cerrado_perdido aunque esas
+ * etapas ya no tengan columna propia.
  */
 export function SelectorEtapa({ leadId, etapa }: Props) {
   const router = useRouter()
   const [pendiente, iniciarTransicion] = useTransition()
   const [etapaVisible, setEtapaVisible] = useState(etapa)
 
-  const items = ETAPAS_LEAD.map((e) => ({ value: e, label: etiquetaEtapa(e) }))
+  const items = ETAPAS_SELECCIONABLES.map((e) => ({ value: e, label: etiquetaEtapa(e) }))
 
   function alCambiar(nueva: string) {
     if (nueva === etapaVisible) return

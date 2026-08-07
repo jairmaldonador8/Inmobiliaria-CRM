@@ -4,7 +4,12 @@ import { useEffect, useRef } from 'react'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { Search } from 'lucide-react'
 
-import { ETAPAS_LEAD, FUENTES_LEAD, etiquetaEtapa, etiquetaFuente } from '@/lib/leads/formato'
+import {
+  ETAPAS_SELECCIONABLES,
+  FUENTES_LEAD,
+  etiquetaEtapa,
+  etiquetaFuente,
+} from '@/lib/leads/formato'
 import { Input } from '@/components/ui/input'
 import {
   Select,
@@ -61,9 +66,13 @@ export function FiltrosLeads({ asesores }: Props) {
     { value: 'bandeja', label: 'Bandeja (sin asignar)' },
     ...asesores.map((a) => ({ value: a.userId, label: a.nombre })),
   ]
+  // ETAPAS_SELECCIONABLES (no el enum completo): 'apartado' está fusionado
+  // con 'negociacion' (ver formato.ts) y ya no es una etapa por la que
+  // filtrar; cerrado_ganado/perdido SÍ siguen aquí -- es como el admin
+  // consulta los leads cerrados que salieron del kanban.
   const itemsEtapa = [
     { value: 'todas', label: 'Todas las etapas' },
-    ...ETAPAS_LEAD.map((e) => ({ value: e, label: etiquetaEtapa(e) })),
+    ...ETAPAS_SELECCIONABLES.map((e) => ({ value: e, label: etiquetaEtapa(e) })),
   ]
   const itemsFuente = [
     { value: 'todas', label: 'Todas las fuentes' },
