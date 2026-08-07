@@ -8,6 +8,7 @@ import { KanbanLeads, type LeadKanban } from '@/components/leads/kanban-leads'
 import { SheetCapturaRapida } from '@/components/leads/sheet-captura-rapida'
 import { ETAPAS_CERRADAS, claseBadgeEtapa, etiquetaEtapa, formatearTelefono } from '@/lib/leads/formato'
 import { Badge } from '@/components/ui/badge'
+import { BotonReactivarLead } from '@/components/leads/boton-reactivar-lead'
 import type { ClasificacionLeadEB } from '@/lib/easybroker/mapeo'
 
 type FilaLead = {
@@ -79,13 +80,22 @@ async function ListaLeadsCerrados() {
         <ul className="grid gap-3">
           {filas.map((lead) => (
             <li key={lead.id}>
-              <Link
-                href={`/asesor/leads/${lead.id}`}
-                className="flex flex-col gap-2 rounded-xl bg-white p-4 ring-1 ring-slate-200 transition-shadow hover:shadow-sm"
-              >
+              {/*
+                La tarjeta NO es un <Link> envolvente: el botón de reactivar
+                vive dentro y un <button> anidado en un <a> es HTML inválido
+                (y el clic se pelearía entre navegar y abrir el diálogo). El
+                enlace queda sobre el nombre, que es lo que uno toca para
+                abrir la ficha.
+              */}
+              <div className="flex flex-col gap-2 rounded-xl bg-white p-4 ring-1 ring-slate-200">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="truncate font-medium text-slate-900">{lead.nombre}</p>
+                    <Link
+                      href={`/asesor/leads/${lead.id}`}
+                      className="truncate font-medium text-slate-900 underline-offset-4 hover:underline"
+                    >
+                      {lead.nombre}
+                    </Link>
                     <p className="text-sm text-slate-500">{formatearTelefono(lead.telefono)}</p>
                   </div>
                   <Badge className={claseBadgeEtapa(lead.etapa)}>{etiquetaEtapa(lead.etapa)}</Badge>
@@ -93,10 +103,16 @@ async function ListaLeadsCerrados() {
                 {lead.propiedad ? (
                   <p className="truncate text-sm text-slate-500">{lead.propiedad.titulo}</p>
                 ) : null}
-                <span suppressHydrationWarning className="text-xs text-slate-400">
-                  {formatDistanceToNow(new Date(lead.creado_en), { addSuffix: true, locale: es })}
-                </span>
-              </Link>
+                <div className="flex items-center justify-between gap-3">
+                  <span suppressHydrationWarning className="text-xs text-slate-400">
+                    {formatDistanceToNow(new Date(lead.creado_en), { addSuffix: true, locale: es })}
+                  </span>
+                  {/* Solo los perdidos se reactivan; un ganado no «revive». */}
+                  {lead.etapa === 'cerrado_perdido' ? (
+                    <BotonReactivarLead leadId={lead.id} nombre={lead.nombre} />
+                  ) : null}
+                </div>
+              </div>
             </li>
           ))}
         </ul>

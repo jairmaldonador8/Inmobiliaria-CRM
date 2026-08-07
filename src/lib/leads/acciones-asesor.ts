@@ -82,6 +82,69 @@ export async function cambiarEtapa(
   return { ok: true }
 }
 
+/**
+ * Etapa a la que vuelve un lead reactivado. «Contactado» y no «Nuevo» a
+ * propósito: el lead ya se trabajó alguna vez, y devolverlo a «Nuevo» lo
+ * metería en la cola de «sin atender» con su `creado_en` original —
+ * apareciendo como un lead recién llegado y atrasadísimo a la vez. En
+ * «Contactado» vuelve al tablero sin ensuciar esa métrica.
+ *
+ * SIN `export`: este archivo es `'use server'` y ahí Next solo admite
+ * exports de funciones async. Exportarla tiraba la página entera con
+ * «A "use server" file can only export async functions, found string».
+ */
+const ETAPA_REACTIVACION = 'contactado' as const
+
+/**
+ * Revive un lead CERRADO PERDIDO y lo regresa al tablero.
+ *
+ * Existe porque un lead perdido no es basura: es información de un cliente
+ * real que puede volver (cambió de opinión, se le cayó el crédito y lo
+ * reintenta, aparece otra propiedad que sí le cuadra). El histórico nunca se
+ * borró —`seguimientos` es append-only—, así que reactivar no inventa nada:
+ * solo lo vuelve a poner donde el asesor lo ve.
+ *
+ * Deliberadamente NO acepta `cerrado_ganado`: una operación cerrada con
+ * éxito no se "reactiva", y dejarla fuera evita que un mal clic descuadre
+ * los «cerrados ganados del mes» del dashboard. Si un cliente ganado vuelve
+ * a comprar, eso es un lead nuevo, no este.
+ *
+ * El filtro `.eq('etapa', 'cerrado_perdido')` es la guarda real: si el lead
+ * no está perdido (o no es del asesor, por RLS), afecta 0 filas.
+ */
+export async function reactivarLead(leadId: string): Promise<ResultadoAccionAsesor> {
+  const asesor = await requireAsesor()
+
+  const supabase = await createClient()
+
+  const { data, error } = await supabase
+    .from('leads')
+    .update({ etapa: ETAPA_REACTIVACION })
+    .eq('id', leadId)
+    .eq('archivado', false)
+    .eq('etapa', 'cerrado_perdido')
+    .select('id')
+
+  if (error || !data || data.length === 0) {
+    return { error: 'No se pudo reactivar el lead' }
+  }
+
+  // Rastro en el timeline: sin esto, el lead reaparece en el tablero sin
+  // explicación. Best-effort, igual que el seguimiento de cierre.
+  const { error: errorSeguimiento } = await supabase.from('seguimientos').insert({
+    lead_id: leadId,
+    autor_id: asesor.user_id,
+    tipo: 'sistema',
+    nota: 'Lead reactivado: regresó al pipeline desde «Cerrado perdido»',
+  })
+  if (errorSeguimiento) {
+    console.error('No se pudo registrar la reactivación:', errorSeguimiento.message)
+  }
+
+  revalidatePath(RUTA_KANBAN)
+  return { ok: true }
+}
+
 export type DatosCapturaAsesor = {
   nombre: string
   telefono: string

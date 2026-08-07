@@ -58,6 +58,9 @@ export const ETAPAS_KANBAN = [
  */
 export const ETAPAS_SELECCIONABLES = [...ETAPAS_KANBAN, ...ETAPAS_CERRADAS] as const
 
+/** Una de las 5 columnas activas del tablero. */
+export type EtapaKanban = (typeof ETAPAS_KANBAN)[number]
+
 /**
  * Texto exacto del seguimiento de sistema que registra `cambiarEtapa` al
  * mover un lead a un estado cerrado (Task 17). `leads` no tiene una columna

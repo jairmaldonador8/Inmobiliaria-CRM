@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { CalendarClock, Home } from 'lucide-react'
 
-import { cancelarVisita } from '@/lib/visitas/acciones'
+import { cancelarVisita, marcarVisitaRealizada } from '@/lib/visitas/acciones'
 import type { VisitaLead } from '@/lib/visitas/consultas'
 import {
   claseBadgeEstadoVisita,
@@ -53,6 +53,24 @@ export function ListaVisitasLead({ leadNombre, telefono, asesorNombre, asesorId,
 
   const [visitaEnReagenda, setVisitaEnReagenda] = useState<VisitaLead | null>(null)
   const [visitaPorCancelar, setVisitaPorCancelar] = useState<VisitaLead | null>(null)
+
+  /**
+   * Marcar realizada NO pide confirmación (a diferencia de cancelar): no es
+   * destructivo y es la acción que el asesor va a repetir más veces. Si se
+   * equivoca, el estado de la visita queda en «Realizada» y el lead avanzó
+   * a «Visitó» — ambas cosas se corrigen a mano desde el tablero.
+   */
+  function alMarcarRealizada(visita: VisitaLead) {
+    iniciarTransicion(async () => {
+      const resultado = await marcarVisitaRealizada(visita.id)
+      if ('error' in resultado) {
+        toast.error(resultado.error)
+        return
+      }
+      toast.success('Visita marcada como realizada')
+      router.refresh()
+    })
+  }
 
   function alConfirmarCancelar() {
     if (!visitaPorCancelar) return
@@ -121,7 +139,15 @@ export function ListaVisitasLead({ leadNombre, telefono, asesorNombre, asesorId,
               </div>
 
               {esAgendada ? (
-                <div className="flex shrink-0 gap-2">
+                <div className="flex shrink-0 flex-wrap gap-2">
+                  <Button
+                    type="button"
+                    size="sm"
+                    disabled={pendiente}
+                    onClick={() => alMarcarRealizada(visita)}
+                  >
+                    Marcar realizada
+                  </Button>
                   <Button
                     type="button"
                     variant="outline"

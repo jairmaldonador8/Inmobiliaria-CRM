@@ -27,6 +27,7 @@ import { revalidatePath } from 'next/cache'
 
 import { usuarioActual } from '@/lib/auth/usuario-actual'
 import { createClient } from '@/lib/supabase/server'
+import { avanzarEtapaPorVisita } from '@/lib/leads/avance-automatico'
 import { validarDatosVisita } from '@/lib/visitas/validacion'
 import { formatearFechaHoraMonterrey } from '@/lib/fechas/monterrey'
 import { sincronizarVisita } from '@/lib/google/espejo'
@@ -88,7 +89,9 @@ export async function agendarVisita(
   // RLS: si el lead no es del usuario (ni es admin), esto no devuelve fila.
   const { data: lead, error: errorLead } = await supabase
     .from('leads')
-    .select('id, asesor_id, nombre, telefono')
+    // `etapa` se lee aquí para el avance automático de más abajo: la
+    // consulta ya existía, así que sale gratis y evita un viaje extra.
+    .select('id, asesor_id, nombre, telefono, etapa')
     .eq('id', datos.leadId)
     .eq('archivado', false)
     .maybeSingle()
@@ -128,6 +131,17 @@ export async function agendarVisita(
   if (errorSeguimiento) {
     console.error('No se pudo registrar el seguimiento de la visita:', errorSeguimiento.message)
   }
+
+  // Avance automático: agendar una visita mueve el lead a «Cita agendada»
+  // si venía más atrás. No lo mueve si ya iba más adelante ni si está
+  // cerrado (ver avance-etapa.ts).
+  await avanzarEtapaPorVisita(supabase, {
+    leadId: lead.id,
+    etapaActual: lead.etapa,
+    destino: 'cita_agendada',
+    autorId: usuario.user_id,
+    motivo: 'visita_agendada',
+  })
 
   await sincronizarConGoogleCalendar(visita.id)
 
@@ -171,9 +185,70 @@ export async function reagendarVisita(
 }
 
 /**
+ * Marca una visita como REALIZADA, solo si sigue en estado 'agendada'
+ * (misma guarda que reagendar/cancelar: una visita cancelada no puede
+ * "realizarse", y una ya realizada no se vuelve a marcar).
+ *
+ * No exige que la fecha de la visita ya haya pasado: decisión de producto
+ * explícita del dueño del producto. El asesor sabe si la visita ocurrió —
+ * bloquearlo estorbaría cuando la visita se adelanta o cuando la hora se
+ * capturó mal.
+ *
+ * Efecto sobre el pipeline: empuja el lead a «Visitó» si venía más atrás
+ * (ver `avanzarEtapaPorVisita`). No se sincroniza con Google Calendar: el
+ * evento del calendario ya existe y su fecha no cambia — marcar realizada
+ * es un hecho del CRM, no del calendario.
+ */
+export async function marcarVisitaRealizada(visitaId: string): Promise<ResultadoVisita> {
+  const usuario = await usuarioActual()
+  if (!usuario) return { error: 'Tu sesión no es válida' }
+
+  const supabase = await createClient()
+
+  const { data, error } = await supabase
+    .from('visitas')
+    .update({ estado: 'realizada' })
+    .eq('id', visitaId)
+    .eq('estado', 'agendada')
+    .select('id, lead_id')
+
+  if (error || !data || data.length === 0) {
+    return { error: 'No se pudo marcar la visita como realizada' }
+  }
+
+  const leadId = data[0].lead_id
+
+  // La etapa actual no la teníamos a mano (a diferencia de agendarVisita,
+  // que ya lee el lead): un viaje extra, y con RLS de por medio — si el
+  // lead no es visible, `maybeSingle` devuelve null y no se avanza nada.
+  const { data: lead } = await supabase
+    .from('leads')
+    .select('etapa')
+    .eq('id', leadId)
+    .maybeSingle()
+
+  if (lead) {
+    await avanzarEtapaPorVisita(supabase, {
+      leadId,
+      etapaActual: lead.etapa,
+      destino: 'visita_realizada',
+      autorId: usuario.user_id,
+      motivo: 'visita_realizada',
+    })
+  }
+
+  revalidarRutasVisita(leadId)
+  return { ok: true }
+}
+
+/**
  * Cancela una visita SOLO si sigue en estado 'agendada'. Misma guarda que
  * `reagendarVisita`: 0 filas afectadas = no es tuya, no existe, o ya no
  * aplica.
+ *
+ * NO revierte la etapa del lead (decisión del dueño del producto): revertir
+ * automáticamente pisaría un avance manual del asesor, y con varias visitas
+ * de por medio no hay una etapa anterior obvia a la que regresar.
  */
 export async function cancelarVisita(visitaId: string): Promise<ResultadoVisita> {
   const usuario = await usuarioActual()

@@ -55,7 +55,12 @@ vi.mock('@/lib/google/espejo', () => ({
   sincronizarVisita: sincronizarVisitaMock,
 }))
 
-import { agendarVisita, cancelarVisita, reagendarVisita } from '@/lib/visitas/acciones'
+import {
+  agendarVisita,
+  cancelarVisita,
+  marcarVisitaRealizada,
+  reagendarVisita,
+} from '@/lib/visitas/acciones'
 
 interface ErrorFake {
   message: string
@@ -86,11 +91,20 @@ const DATOS_AGENDAR = {
  *   seguimientos: insert()  (sin .select, awaited directo)
  */
 function crearSupabaseAgendarFake(opts: {
-  lead: { id: string; asesor_id: string | null; nombre: string; telefono: string } | null
+  lead: {
+    id: string
+    asesor_id: string | null
+    nombre: string
+    telefono: string
+    /** Opcional: sin `etapa` el avance automático no dispara (indexOf(undefined) === -1). */
+    etapa?: string
+  } | null
   leadError?: ErrorFake | null
   visita?: { id: string } | null
   visitaError?: ErrorFake | null
   seguimientoError?: ErrorFake | null
+  /** Filas que devuelve el UPDATE de etapa del avance automático. */
+  filasAvance?: { id: string }[]
 }) {
   const maybeSingleLead = vi
     .fn()
@@ -109,8 +123,20 @@ function crearSupabaseAgendarFake(opts: {
 
   const insertSeguimiento = vi.fn().mockResolvedValue({ error: opts.seguimientoError ?? null })
 
+  // Avance automático de etapa:
+  //   leads: update({etapa}).eq('id').eq('archivado').eq('etapa').select('id')
+  const selectAvance = vi
+    .fn()
+    .mockResolvedValue({ data: opts.filasAvance ?? [{ id: 'lead-1' }], error: null })
+  const eqAvanceEtapa = vi.fn(() => ({ select: selectAvance }))
+  const eqAvanceArchivado = vi.fn(() => ({ eq: eqAvanceEtapa }))
+  const eqAvanceId = vi.fn(() => ({ eq: eqAvanceArchivado }))
+  const updateLead = vi.fn<(valores: Record<string, unknown>) => { eq: typeof eqAvanceId }>(() => ({
+    eq: eqAvanceId,
+  }))
+
   const from = vi.fn((table: string) => {
-    if (table === 'leads') return { select: selectLead }
+    if (table === 'leads') return { select: selectLead, update: updateLead }
     if (table === 'visitas') return { insert: insertVisita }
     if (table === 'seguimientos') return { insert: insertSeguimiento }
     throw new Error(`tabla inesperada en el stub: ${table}`)
@@ -126,6 +152,65 @@ function crearSupabaseAgendarFake(opts: {
     insertVisita,
     selectVisita,
     singleVisita,
+    insertSeguimiento,
+    updateLead,
+    eqAvanceEtapa,
+  }
+}
+
+/**
+ * Stub chainable para `marcarVisitaRealizada`, que toca tres tablas:
+ *   visitas: update().eq('id').eq('estado','agendada').select('id, lead_id')
+ *   leads:   select('etapa').eq('id').maybeSingle()   — para el avance
+ *   leads:   update({etapa}).eq().eq().eq().select('id')
+ *   seguimientos: insert()
+ */
+function crearSupabaseRealizadaFake(opts: {
+  filasVisita: { id: string; lead_id: string }[] | null
+  visitaError?: ErrorFake | null
+  etapaLead?: string | null
+  filasAvance?: { id: string }[]
+}) {
+  const selectVisitaTrasUpdate = vi
+    .fn()
+    .mockResolvedValue({ data: opts.filasVisita, error: opts.visitaError ?? null })
+  const eqEstadoVisita = vi.fn(() => ({ select: selectVisitaTrasUpdate }))
+  const eqIdVisita = vi.fn(() => ({ eq: eqEstadoVisita }))
+  const updateVisita = vi.fn(() => ({ eq: eqIdVisita }))
+
+  const maybeSingleLead = vi.fn().mockResolvedValue({
+    data: opts.etapaLead === null || opts.etapaLead === undefined ? null : { etapa: opts.etapaLead },
+    error: null,
+  })
+  const eqSelectLead = vi.fn(() => ({ maybeSingle: maybeSingleLead }))
+  const selectLead = vi.fn(() => ({ eq: eqSelectLead }))
+
+  const selectAvance = vi
+    .fn()
+    .mockResolvedValue({ data: opts.filasAvance ?? [{ id: 'lead-1' }], error: null })
+  const eqAvanceEtapa = vi.fn(() => ({ select: selectAvance }))
+  const eqAvanceArchivado = vi.fn(() => ({ eq: eqAvanceEtapa }))
+  const eqAvanceId = vi.fn(() => ({ eq: eqAvanceArchivado }))
+  const updateLead = vi.fn<(valores: Record<string, unknown>) => { eq: typeof eqAvanceId }>(() => ({
+    eq: eqAvanceId,
+  }))
+
+  const insertSeguimiento = vi.fn().mockResolvedValue({ error: null })
+
+  const from = vi.fn((table: string) => {
+    if (table === 'visitas') return { update: updateVisita }
+    if (table === 'leads') return { select: selectLead, update: updateLead }
+    if (table === 'seguimientos') return { insert: insertSeguimiento }
+    throw new Error(`tabla inesperada en el stub: ${table}`)
+  })
+
+  return {
+    supabase: { from } as unknown as SupabaseClient,
+    updateVisita,
+    eqIdVisita,
+    eqEstadoVisita,
+    updateLead,
+    eqAvanceEtapa,
     insertSeguimiento,
   }
 }
@@ -255,6 +340,166 @@ describe('agendarVisita', () => {
     const resultado = await agendarVisita(DATOS_AGENDAR)
 
     expect(resultado).toEqual({ error: 'No se pudo agendar la visita' })
+  })
+})
+
+describe('agendarVisita — avance automático de etapa', () => {
+  it('un lead «nuevo» avanza a «cita_agendada» y queda registrado en el timeline', async () => {
+    const fake = crearSupabaseAgendarFake({
+      lead: {
+        id: 'lead-1',
+        asesor_id: 'asesor-dueño',
+        nombre: 'Ana',
+        telefono: '5599000001',
+        etapa: 'nuevo',
+      },
+      visita: { id: 'visita-1' },
+    })
+    createClientMock.mockResolvedValue(fake.supabase)
+
+    const resultado = await agendarVisita(DATOS_AGENDAR)
+
+    expect(resultado).toEqual({ ok: true, visitaId: 'visita-1' })
+    expect(fake.updateLead).toHaveBeenCalledWith({ etapa: 'cita_agendada' })
+    // Guarda contra carreras: el update se ancla a la etapa que leímos.
+    expect(fake.eqAvanceEtapa).toHaveBeenCalledWith('etapa', 'nuevo')
+    // Dos seguimientos: el de «Visita agendada» y el del avance de etapa.
+    expect(fake.insertSeguimiento).toHaveBeenCalledTimes(2)
+    expect(fake.insertSeguimiento).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        tipo: 'sistema',
+        nota: 'Etapa movida a «Cita agendada» al agendar una visita',
+      })
+    )
+  })
+
+  it('un lead en «negociacion» NO retrocede: no se toca la etapa ni se registra nada', async () => {
+    const fake = crearSupabaseAgendarFake({
+      lead: {
+        id: 'lead-1',
+        asesor_id: 'asesor-dueño',
+        nombre: 'Ana',
+        telefono: '5599000001',
+        etapa: 'negociacion',
+      },
+      visita: { id: 'visita-1' },
+    })
+    createClientMock.mockResolvedValue(fake.supabase)
+
+    const resultado = await agendarVisita(DATOS_AGENDAR)
+
+    expect(resultado).toEqual({ ok: true, visitaId: 'visita-1' })
+    expect(fake.updateLead).not.toHaveBeenCalled()
+    // Solo el seguimiento de «Visita agendada», ninguno de avance.
+    expect(fake.insertSeguimiento).toHaveBeenCalledTimes(1)
+  })
+
+  it('un lead «cerrado_perdido» NO revive por agendarle una visita', async () => {
+    const fake = crearSupabaseAgendarFake({
+      lead: {
+        id: 'lead-1',
+        asesor_id: 'asesor-dueño',
+        nombre: 'Ana',
+        telefono: '5599000001',
+        etapa: 'cerrado_perdido',
+      },
+      visita: { id: 'visita-1' },
+    })
+    createClientMock.mockResolvedValue(fake.supabase)
+
+    await agendarVisita(DATOS_AGENDAR)
+
+    expect(fake.updateLead).not.toHaveBeenCalled()
+  })
+
+  it('si el avance de etapa falla, la visita ya agendada igual se reporta ok (best-effort)', async () => {
+    const fake = crearSupabaseAgendarFake({
+      lead: {
+        id: 'lead-1',
+        asesor_id: 'asesor-dueño',
+        nombre: 'Ana',
+        telefono: '5599000001',
+        etapa: 'nuevo',
+      },
+      visita: { id: 'visita-1' },
+      filasAvance: [], // 0 filas: RLS lo filtró o alguien más movió el lead
+    })
+    createClientMock.mockResolvedValue(fake.supabase)
+
+    const resultado = await agendarVisita(DATOS_AGENDAR)
+
+    expect(resultado).toEqual({ ok: true, visitaId: 'visita-1' })
+  })
+})
+
+describe('marcarVisitaRealizada', () => {
+  it('filtra por estado=agendada: 0 filas afectadas da un error genérico y no toca el lead', async () => {
+    const fake = crearSupabaseRealizadaFake({ filasVisita: [] })
+    createClientMock.mockResolvedValue(fake.supabase)
+
+    const resultado = await marcarVisitaRealizada('visita-1')
+
+    expect(resultado).toEqual({ error: 'No se pudo marcar la visita como realizada' })
+    expect(fake.eqEstadoVisita).toHaveBeenCalledWith('estado', 'agendada')
+    expect(fake.updateLead).not.toHaveBeenCalled()
+  })
+
+  it('marca la visita realizada y empuja el lead a «visita_realizada»', async () => {
+    const fake = crearSupabaseRealizadaFake({
+      filasVisita: [{ id: 'visita-1', lead_id: 'lead-1' }],
+      etapaLead: 'cita_agendada',
+    })
+    createClientMock.mockResolvedValue(fake.supabase)
+
+    const resultado = await marcarVisitaRealizada('visita-1')
+
+    expect(resultado).toEqual({ ok: true })
+    expect(fake.updateVisita).toHaveBeenCalledWith({ estado: 'realizada' })
+    expect(fake.updateLead).toHaveBeenCalledWith({ etapa: 'visita_realizada' })
+    expect(fake.insertSeguimiento).toHaveBeenCalledWith(
+      expect.objectContaining({
+        nota: 'Etapa movida a «Visitó» al marcar la visita como realizada',
+      })
+    )
+  })
+
+  it('un lead que ya iba en «negociacion» no retrocede al marcar la visita', async () => {
+    const fake = crearSupabaseRealizadaFake({
+      filasVisita: [{ id: 'visita-1', lead_id: 'lead-1' }],
+      etapaLead: 'negociacion',
+    })
+    createClientMock.mockResolvedValue(fake.supabase)
+
+    const resultado = await marcarVisitaRealizada('visita-1')
+
+    expect(resultado).toEqual({ ok: true })
+    expect(fake.updateVisita).toHaveBeenCalledWith({ estado: 'realizada' })
+    expect(fake.updateLead).not.toHaveBeenCalled()
+  })
+
+  it('si el lead no es visible por RLS, la visita igual queda realizada', async () => {
+    const fake = crearSupabaseRealizadaFake({
+      filasVisita: [{ id: 'visita-1', lead_id: 'lead-1' }],
+      etapaLead: null,
+    })
+    createClientMock.mockResolvedValue(fake.supabase)
+
+    const resultado = await marcarVisitaRealizada('visita-1')
+
+    expect(resultado).toEqual({ ok: true })
+    expect(fake.updateLead).not.toHaveBeenCalled()
+  })
+
+  it('NO sincroniza con Google Calendar: el evento ya existe y su fecha no cambia', async () => {
+    const fake = crearSupabaseRealizadaFake({
+      filasVisita: [{ id: 'visita-1', lead_id: 'lead-1' }],
+      etapaLead: 'cita_agendada',
+    })
+    createClientMock.mockResolvedValue(fake.supabase)
+
+    await marcarVisitaRealizada('visita-1')
+
+    expect(sincronizarVisitaMock).not.toHaveBeenCalled()
   })
 })
 

@@ -23,9 +23,11 @@ vi.mock('next/navigation', () => ({
 
 const mockCancelarVisita = vi.fn()
 const mockReagendarVisita = vi.fn()
+const mockMarcarVisitaRealizada = vi.fn()
 vi.mock('@/lib/visitas/acciones', () => ({
   cancelarVisita: (...args: unknown[]) => mockCancelarVisita(...args),
   reagendarVisita: (...args: unknown[]) => mockReagendarVisita(...args),
+  marcarVisitaRealizada: (...args: unknown[]) => mockMarcarVisitaRealizada(...args),
 }))
 
 const mockToastSuccess = vi.fn()
@@ -90,6 +92,39 @@ describe('ListaVisitasLead', () => {
     expect(filaCancelada).toBeInTheDocument()
     expect(within(filaCancelada).queryByRole('button', { name: /reagendar/i })).not.toBeInTheDocument()
     expect(within(filaCancelada).queryByRole('button', { name: /^cancelar$/i })).not.toBeInTheDocument()
+  })
+
+  it('«Marcar realizada» llama a la action DIRECTO, sin diálogo de confirmación', async () => {
+    // A diferencia de cancelar, marcar realizada no es destructivo y es la
+    // acción más repetida — pedir confirmación cada vez sería fricción.
+    mockMarcarVisitaRealizada.mockResolvedValue({ ok: true })
+    renderLista([VISITA_AGENDADA])
+
+    fireEvent.click(screen.getByRole('button', { name: /marcar realizada/i }))
+
+    await vi.waitFor(() => {
+      expect(mockMarcarVisitaRealizada).toHaveBeenCalledWith('visita-agendada')
+    })
+    expect(mockToastSuccess).toHaveBeenCalledWith('Visita marcada como realizada')
+    expect(mockRefresh).toHaveBeenCalledTimes(1)
+  })
+
+  it('una visita ya realizada no ofrece «Marcar realizada» otra vez', () => {
+    renderLista([{ ...VISITA_AGENDADA, id: 'visita-hecha', estado: 'realizada' }])
+
+    expect(screen.queryByRole('button', { name: /marcar realizada/i })).not.toBeInTheDocument()
+  })
+
+  it('si la action falla, avisa con toast de error y no refresca', async () => {
+    mockMarcarVisitaRealizada.mockResolvedValue({ error: 'No se pudo marcar la visita como realizada' })
+    renderLista([VISITA_AGENDADA])
+
+    fireEvent.click(screen.getByRole('button', { name: /marcar realizada/i }))
+
+    await vi.waitFor(() => {
+      expect(mockToastError).toHaveBeenCalledWith('No se pudo marcar la visita como realizada')
+    })
+    expect(mockRefresh).not.toHaveBeenCalled()
   })
 
   it('cancelar EXIGE confirmación: tocar «Cancelar» no llama a cancelarVisita hasta confirmar', async () => {
