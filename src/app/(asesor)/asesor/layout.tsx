@@ -52,7 +52,14 @@ export default async function AsesorLayout({
         ver boton-sugerencia.tsx y sheet-captura-rapida.tsx).
       */}
       <main className="w-full flex-1 px-4 pt-6 pb-52 lg:ml-60 lg:px-10 lg:pt-8 lg:pb-40">
-        {children}
+        {/*
+          Tope de ancho en escritorio: sin él, en un monitor de 2560px el
+          contenido queda pegado al sidebar por un lado y las líneas de
+          texto se estiran sin límite. `max-w-7xl` centrado en el área a la
+          derecha del sidebar da margen a los dos lados sin renunciar al
+          ancho ya ganado en monitores normales (a 1440px cabe de sobra).
+        */}
+        <div className="mx-auto w-full max-w-7xl">{children}</div>
       </main>
 
       <BotonSugerencia className="lg:bottom-6" />

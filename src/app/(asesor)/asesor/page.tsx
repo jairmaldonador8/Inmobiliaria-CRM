@@ -199,14 +199,14 @@ export default async function PaginaInicioAsesor({
           <Flame aria-hidden className="size-4 text-red-500" />
           <h2 className="text-sm font-semibold text-slate-900">Atiende ahora</h2>
           {atiendeAhora.length > 0 ? (
-            <span className="ml-auto rounded-full bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-700">
+            <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-700">
               {atiendeAhora.length}
             </span>
           ) : null}
         </div>
 
         {atiendeAhora.length === 0 ? (
-          <p className="rounded-xl border border-dashed border-slate-300 bg-white/60 px-4 py-6 text-center text-sm text-slate-500">
+          <p className="rounded-xl border border-dashed border-slate-300 bg-white/60 px-4 py-6 text-center text-sm text-slate-500 lg:max-w-sm">
             Sin leads nuevos pendientes. Todo al día 🎉
           </p>
         ) : (
@@ -241,14 +241,14 @@ export default async function PaginaInicioAsesor({
           <AlertTriangle aria-hidden className="size-4 text-amber-500" />
           <h2 className="text-sm font-semibold text-slate-900">Necesitan seguimiento</h2>
           {necesitanSeguimiento.length > 0 ? (
-            <span className="ml-auto rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-700">
+            <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-700">
               {necesitanSeguimiento.length}
             </span>
           ) : null}
         </div>
 
         {necesitanSeguimiento.length === 0 ? (
-          <p className="rounded-xl border border-dashed border-slate-300 bg-white/60 px-4 py-6 text-center text-sm text-slate-500">
+          <p className="rounded-xl border border-dashed border-slate-300 bg-white/60 px-4 py-6 text-center text-sm text-slate-500 lg:max-w-sm">
             Ningún lead lleva más de 24 h sin seguimiento 🎉
           </p>
         ) : (
@@ -283,14 +283,14 @@ export default async function PaginaInicioAsesor({
           <CalendarDays aria-hidden className="size-4 text-sky-500" />
           <h2 className="text-sm font-semibold text-slate-900">Próximas visitas</h2>
           {visitasProximas.length > 0 ? (
-            <span className="ml-auto rounded-full bg-sky-100 px-2 py-0.5 text-xs font-semibold text-sky-700">
+            <span className="rounded-full bg-sky-100 px-2 py-0.5 text-xs font-semibold text-sky-700">
               {visitasProximas.length}
             </span>
           ) : null}
         </div>
 
         {visitasProximas.length === 0 ? (
-          <p className="rounded-xl border border-dashed border-slate-300 bg-white/60 px-4 py-6 text-center text-sm text-slate-500">
+          <p className="rounded-xl border border-dashed border-slate-300 bg-white/60 px-4 py-6 text-center text-sm text-slate-500 lg:max-w-sm">
             Sin visitas agendadas 📅
           </p>
         ) : (
