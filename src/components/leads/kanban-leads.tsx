@@ -280,8 +280,14 @@ export function KanbanLeads({ leads }: { leads: LeadKanban[] }) {
     mover(lead, etapa as EtapaLead)
   }
 
+  // El `id` fijo del DndContext no es cosmético: sin él dnd-kit numera sus
+  // ids de accesibilidad con un contador global que arranca distinto en el
+  // servidor y en el cliente, y React tiraba un error de hidratación real en
+  // cada carga del kanban (aria-describedby="DndDescribedBy-0" contra
+  // "DndDescribedBy-3", de los que React avisa «this won't be patched up»).
+  // Con un id estable los dos lados generan el mismo.
   return (
-    <DndContext sensors={sensores} onDragEnd={alTerminarArrastre}>
+    <DndContext id="kanban-leads" sensors={sensores} onDragEnd={alTerminarArrastre}>
       {/* -mx-4/px-4: el carrusel sangra hasta los bordes de la columna
           angosta del layout del asesor. */}
       <div className="-mx-4 flex snap-x snap-proximity gap-3 overflow-x-auto px-4 pb-2">

@@ -51,7 +51,16 @@ export default async function AsesorLayout({
         BotonSugerencia, y «Registrar lead» en el kanban, en escritorio —
         ver boton-sugerencia.tsx y sheet-captura-rapida.tsx).
       */}
-      <main className="w-full flex-1 px-4 pt-6 pb-52 lg:ml-60 lg:px-10 lg:pt-8 lg:pb-40">
+      {/*
+        SIN `w-full`: junto con `lg:ml-60` daba 100% del viewport MÁS los
+        240px de margen del sidebar, y la página entera desbordaba 240px en
+        horizontal (medido: scrollWidth 1680 en un viewport de 1440, con el
+        enlace «Ver cerrados» fuera de pantalla en x=1509). Como elemento de
+        bloque estirado por el flex-col padre, el ancho automático ya ocupa
+        justo lo que queda a la derecha del sidebar. Es el mismo patrón del
+        <main> de (admin), que nunca tuvo el problema.
+      */}
+      <main className="flex-1 px-4 pt-6 pb-52 lg:ml-60 lg:px-10 lg:pt-8 lg:pb-40">
         {/*
           Tope de ancho en escritorio: sin él, en un monitor de 2560px el
           contenido queda pegado al sidebar por un lado y las líneas de
