@@ -10,6 +10,7 @@ import { etiquetaFuenteConDetalle } from '@/lib/leads/formato'
 import { visitasDelLead } from '@/lib/visitas/consultas'
 import { Badge } from '@/components/ui/badge'
 import { SelectorEtapa } from '@/components/leads/selector-etapa'
+import { EtiquetaClasificacionEB } from '@/components/leads/etiqueta-clasificacion-eb'
 import { BotonWhatsApp, type PlantillaWhatsApp } from '@/components/leads/boton-whatsapp'
 import {
   CardPropiedadInteres,
@@ -128,6 +129,7 @@ export default async function PaginaDetalleLeadAsesor({
           <Badge variant="secondary">
             {etiquetaFuenteConDetalle(leadDetalle.fuente, leadDetalle.fuente_detalle)}
           </Badge>
+          <EtiquetaClasificacionEB clasificacion={leadDetalle.clasificacion_eb} />
           <span suppressHydrationWarning className="text-xs text-slate-400">
             {antiguedad}
           </span>

@@ -5,6 +5,7 @@ import { Building2, ChevronRight, Quote } from 'lucide-react'
 import { formatearTelefono } from '@/lib/leads/formato'
 import { formatearPrecio } from '@/lib/propiedades/formato'
 import type { ContextoPlantilla } from '@/lib/plantillas/rellenar'
+import type { ClasificacionLeadEB } from '@/lib/easybroker/mapeo'
 
 /**
  * Piezas de presentación COMPARTIDAS entre el detalle de lead del asesor
@@ -37,6 +38,7 @@ export type LeadDetalle = {
   creado_en: string
   propiedad_id: string | null
   asesor_id: string | null
+  clasificacion_eb: ClasificacionLeadEB | null
   propiedad: PropiedadInteres | null
 }
 

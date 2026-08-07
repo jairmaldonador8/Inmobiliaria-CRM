@@ -8,6 +8,7 @@ import 'server-only'
 
 import { createAdminClient } from '@/lib/supabase/admin'
 import { ETAPAS_LEAD, FUENTES_LEAD } from '@/lib/leads/formato'
+import type { ClasificacionLeadEB } from '@/lib/easybroker/mapeo'
 
 export type LeadBandeja = {
   id: string
@@ -18,6 +19,7 @@ export type LeadBandeja = {
   fuente_detalle: string | null
   zona_interes: string | null
   creado_en: string
+  clasificacion_eb: ClasificacionLeadEB | null
   propiedad: { titulo: string } | null
 }
 
@@ -62,7 +64,7 @@ export async function leadsBandeja(): Promise<LeadBandeja[]> {
   const { data, error } = await supabase
     .from('leads')
     .select(
-      'id, nombre, telefono, email, fuente, fuente_detalle, zona_interes, creado_en, propiedad:propiedades(titulo)'
+      'id, nombre, telefono, email, fuente, fuente_detalle, zona_interes, creado_en, clasificacion_eb, propiedad:propiedades(titulo)'
     )
     .is('asesor_id', null)
     .eq('archivado', false)

@@ -10,6 +10,7 @@ import { etiquetaFuenteConDetalle, formatearTelefono } from '@/lib/leads/formato
 import { HORA_MS, esUrgente } from '@/lib/leads/urgencia'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
+import { EtiquetaClasificacionEB } from '@/components/leads/etiqueta-clasificacion-eb'
 import { AsignarLead } from '@/components/leads/asignar-lead'
 import { HojaAsignarLead } from '@/components/leads/hoja-asignar-lead'
 import { DialogRegistrarLead } from '@/components/leads/dialog-registrar-lead'
@@ -94,7 +95,10 @@ export default async function PaginaBandeja() {
                     <li key={lead.id}>
                       <TarjetaGlass className="flex flex-col gap-3">
                         <div className="min-w-0">
-                          <p className="truncate font-semibold text-[#221B14]">{lead.nombre}</p>
+                          <div className="flex flex-wrap items-center gap-1.5">
+                            <p className="truncate font-semibold text-[#221B14]">{lead.nombre}</p>
+                            <EtiquetaClasificacionEB clasificacion={lead.clasificacion_eb} />
+                          </div>
                           {lead.propiedad ? (
                             <p className="mt-0.5 flex items-center gap-1.5 truncate text-sm text-slate-500">
                               <Building2 aria-hidden className="size-3.5 shrink-0" />
@@ -186,6 +190,7 @@ export default async function PaginaBandeja() {
                     <Badge variant="secondary">
                       {etiquetaFuenteConDetalle(lead.fuente, lead.fuente_detalle)}
                     </Badge>
+                    <EtiquetaClasificacionEB clasificacion={lead.clasificacion_eb} />
                     <span className={`inline-flex items-center gap-1.5 text-xs ${texto}`}>
                       <span aria-hidden className={`size-2 rounded-full ${punto}`} />
                       {espera}

@@ -13,6 +13,7 @@ import {
   type AvisoConexionGoogle,
   type EstadoConexionGoogleUI,
 } from '@/components/google/card-conexion'
+import type { ClasificacionLeadEB } from '@/lib/easybroker/mapeo'
 
 type LeadCola = {
   id: string
@@ -20,6 +21,7 @@ type LeadCola = {
   etapa: string
   creado_en: string
   asignado_en: string | null
+  clasificacion_eb: ClasificacionLeadEB | null
 }
 
 const MAX_NECESITAN_SEGUIMIENTO = 10
@@ -72,7 +74,7 @@ export default async function PaginaInicioAsesor({
       // del chip «leads activos».
       supabase
         .from('leads')
-        .select('id, nombre, etapa, creado_en, asignado_en')
+        .select('id, nombre, etapa, creado_en, asignado_en, clasificacion_eb')
         .eq('archivado', false)
         .not('etapa', 'in', `(${ETAPAS_CERRADAS.join(',')})`)
         .order('creado_en', { ascending: false }),
@@ -143,14 +145,28 @@ export default async function PaginaInicioAsesor({
   // «Atiende ahora»: asignados (asignado_en no nulo — un lead auto-capturado
   // por el asesor ya se considera atendido, ver acciones-asesor.ts) que
   // TODAVÍA no tienen ningún seguimiento. Más antiguo asignado primero.
+  //
+  // Se excluyen los `clasificacion_eb === 'saliente'` (ver migración 0011 y
+  // skill easybroker-api): esos NO son leads, son al revés — un asesor de
+  // Montana preguntando por una propiedad ajena y el corredor de esa
+  // agencia contestando. Contarlos aquí infla la cola de urgencia y las
+  // métricas de "tiempo de respuesta" con algo que nunca requirió respuesta
+  // nuestra. Siguen siendo visibles en /asesor/leads y en su ficha — solo
+  // salen de las colas de urgencia. `clasificacion_eb == null` (no viene de
+  // EasyBroker, o no se pudo clasificar) SÍ se incluye: no se penaliza al
+  // lead por falta de dato.
   const atiendeAhora = leads
-    .filter((l) => l.asignado_en && !ultimoSeguimiento.has(l.id))
+    .filter(
+      (l) => l.asignado_en && !ultimoSeguimiento.has(l.id) && l.clasificacion_eb !== 'saliente'
+    )
     .sort((a, b) => new Date(a.asignado_en!).getTime() - new Date(b.asignado_en!).getTime())
 
   // «Necesitan seguimiento»: ya tuvieron contacto, pero el último fue hace
-  // más de 24h. Más «abandonado» primero, tope de 10.
+  // más de 24h. Más «abandonado» primero, tope de 10. Misma exclusión de
+  // `saliente` que arriba, y por el mismo motivo.
   const necesitanSeguimiento = leads
     .filter((l) => {
+      if (l.clasificacion_eb === 'saliente') return false
       const ultimo = ultimoSeguimiento.get(l.id)
       return ultimo ? Date.now() - new Date(ultimo).getTime() > 24 * HORA_MS : false
     })

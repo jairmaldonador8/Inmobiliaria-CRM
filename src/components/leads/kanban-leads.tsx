@@ -26,8 +26,10 @@ import {
   type EtapaLead,
 } from '@/lib/leads/formato'
 import { cn } from '@/lib/utils'
+import type { ClasificacionLeadEB } from '@/lib/easybroker/mapeo'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { EtiquetaClasificacionEB } from '@/components/leads/etiqueta-clasificacion-eb'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -45,6 +47,7 @@ export type LeadKanban = {
   fuente_detalle: string | null
   etapa: string
   creado_en: string
+  clasificacion_eb: ClasificacionLeadEB | null
   propiedad_titulo: string | null
   /** creado_en del último seguimiento del lead, o null si no tiene. */
   ultimo_seguimiento: string | null
@@ -116,6 +119,10 @@ function TarjetaLead({ lead, onMover }: { lead: LeadKanban; onMover: MoverLead }
             <Badge variant="secondary" className="px-1.5 text-[0.6875rem]">
               {etiquetaFuenteConDetalle(lead.fuente, lead.fuente_detalle)}
             </Badge>
+            <EtiquetaClasificacionEB
+              clasificacion={lead.clasificacion_eb}
+              className="px-1.5 text-[0.6875rem]"
+            />
             {/* suppressHydrationWarning: «hace X» se calcula en servidor y
                 cliente con milisegundos de diferencia. */}
             <span suppressHydrationWarning className="text-[0.6875rem] text-slate-400">

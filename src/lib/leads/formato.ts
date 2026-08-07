@@ -5,6 +5,8 @@
  * de cliente (filtros, dialogs).
  */
 
+import type { ClasificacionLeadEB } from '@/lib/easybroker/mapeo'
+
 export const ETAPAS_LEAD = [
   'nuevo',
   'contactado',
@@ -90,6 +92,44 @@ export function etiquetaFuente(fuente: string): string {
 export function etiquetaFuenteConDetalle(fuente: string, fuenteDetalle: string | null): string {
   if (fuente === 'portal' && fuenteDetalle) return fuenteDetalle
   return etiquetaFuente(fuente)
+}
+
+// ---------------------------------------------------------------------------
+// Clasificación de leads de EasyBroker (ver src/lib/easybroker/mapeo.ts:
+// ClasificacionLeadEB — el tipo vive ahí, este módulo solo pone el
+// vocabulario de negocio en español para el asesor).
+// ---------------------------------------------------------------------------
+
+/**
+ * Textos de negocio, no los nombres técnicos del enum: un asesor no sabe
+ * qué es "co_broke" o "saliente", pero sí entiende que uno es un corredor
+ * externo y el otro es una gestión propia que no requiere seguimiento como
+ * lead.
+ */
+const ETIQUETAS_CLASIFICACION_EB: Record<ClasificacionLeadEB, string> = {
+  cliente_directo: 'Cliente directo',
+  co_broke: 'Corredor externo',
+  saliente: 'Gestión nuestra',
+}
+
+/** Etiqueta de negocio en español de la clasificación EB. */
+export function etiquetaClasificacionEB(clasificacion: ClasificacionLeadEB): string {
+  return ETIQUETAS_CLASIFICACION_EB[clasificacion]
+}
+
+/**
+ * Clases de color por clasificación: cliente_directo en verde (es EL lead,
+ * priorízalo), co_broke en azul (negociación entre colegas, tono neutro
+ * distinto), saliente en gris (no es un lead, se despriorizar visualmente).
+ */
+const CLASES_CLASIFICACION_EB: Record<ClasificacionLeadEB, string> = {
+  cliente_directo: 'bg-emerald-100 text-emerald-700',
+  co_broke: 'bg-blue-100 text-blue-700',
+  saliente: 'bg-slate-200 text-slate-600',
+}
+
+export function claseBadgeClasificacionEB(clasificacion: ClasificacionLeadEB): string {
+  return CLASES_CLASIFICACION_EB[clasificacion]
 }
 
 /** Presenta '528112345678' como '811 234 5678' (formato local legible). */

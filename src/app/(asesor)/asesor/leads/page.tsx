@@ -2,6 +2,7 @@ import { requireAsesor } from '@/lib/auth/usuario-actual'
 import { createClient } from '@/lib/supabase/server'
 import { KanbanLeads, type LeadKanban } from '@/components/leads/kanban-leads'
 import { SheetCapturaRapida } from '@/components/leads/sheet-captura-rapida'
+import type { ClasificacionLeadEB } from '@/lib/easybroker/mapeo'
 
 type FilaLead = {
   id: string
@@ -10,6 +11,7 @@ type FilaLead = {
   fuente_detalle: string | null
   etapa: string
   creado_en: string
+  clasificacion_eb: ClasificacionLeadEB | null
   propiedad: { titulo: string } | null
 }
 
@@ -26,7 +28,7 @@ export default async function PaginaLeadsAsesor() {
     supabase
       .from('leads')
       .select(
-        'id, nombre, fuente, fuente_detalle, etapa, creado_en, propiedad:propiedades(titulo)'
+        'id, nombre, fuente, fuente_detalle, etapa, creado_en, clasificacion_eb, propiedad:propiedades(titulo)'
       )
       .eq('archivado', false)
       .order('creado_en', { ascending: false }),
@@ -69,6 +71,7 @@ export default async function PaginaLeadsAsesor() {
     fuente_detalle: lead.fuente_detalle,
     etapa: lead.etapa,
     creado_en: lead.creado_en,
+    clasificacion_eb: lead.clasificacion_eb,
     propiedad_titulo: lead.propiedad?.titulo ?? null,
     ultimo_seguimiento: ultimoSeguimiento.get(lead.id) ?? null,
   }))
