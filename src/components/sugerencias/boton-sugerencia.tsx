@@ -64,10 +64,13 @@ export function BotonSugerencia({ className }: { className?: string }) {
             size="icon-lg"
             aria-label="Enviar sugerencia"
             className={cn(
-              // bottom-36: encima de la barra inferior del asesor (h-16) Y del
-              // botón «+ Registrar lead» del kanban (bottom-20 + h-12). El
-              // layout admin no tiene ninguno de los dos y sobreescribe con
-              // bottom-6.
+              // bottom-36 por defecto: encima de la barra de pestañas
+              // inferior (h-16) Y del botón «+ Registrar lead» del kanban
+              // del asesor (bottom-20 + h-12) — es el valor que usa
+              // asesor/layout.tsx. El admin no tiene ese segundo botón y
+              // sobreescribe a bottom-24 en móvil. En escritorio (`lg`, sin
+              // barra de pestañas) ambos layouts sobreescriben a bottom-6
+              // vía `className` (ver admin/layout.tsx y asesor/layout.tsx).
               'fixed right-4 bottom-36 z-40 size-11 rounded-full shadow-lg',
               className
             )}

@@ -8,7 +8,7 @@ export default async function PaginaPerfil() {
   const usuario = await requireAsesor()
 
   return (
-    <section className="flex flex-col gap-6">
+    <section className="flex flex-col gap-6 lg:max-w-md">
       <h1 className="text-2xl font-semibold tracking-tight text-slate-900">
         Perfil
       </h1>

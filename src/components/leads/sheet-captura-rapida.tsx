@@ -104,7 +104,11 @@ export function SheetCapturaRapida({ propiedades }: { propiedades: OpcionPropied
         render={
           <Button
             size="lg"
-            className="fixed right-4 bottom-20 z-40 h-12 rounded-full px-5 shadow-lg"
+            // bottom-20 (móvil): encima de la barra de pestañas (h-16).
+            // lg:bottom-24 (escritorio, sin barra de pestañas): encima de
+            // BotonSugerencia (lg:bottom-6, ver layout del asesor) — mismo
+            // apilado que ya usa banner-instalacion.tsx para este mismo FAB.
+            className="fixed right-4 bottom-20 z-40 h-12 rounded-full px-5 shadow-lg lg:bottom-24"
           />
         }
       >

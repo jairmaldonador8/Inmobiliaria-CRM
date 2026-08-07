@@ -109,7 +109,7 @@ export default async function PaginaDetalleLeadAsesor({
   })
 
   return (
-    <section className="flex flex-col gap-4">
+    <section className="mx-auto flex w-full max-w-2xl flex-col gap-4">
       <div>
         <Link
           href="/asesor/leads"

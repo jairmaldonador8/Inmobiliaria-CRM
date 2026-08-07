@@ -12,7 +12,9 @@ export default async function PaginaNotificacionesAsesor() {
         <h1 className="text-xl font-semibold tracking-tight text-slate-900">Notificaciones</h1>
       </header>
 
-      <ListaNotificaciones notificaciones={notificaciones} />
+      <div className="lg:max-w-lg">
+        <ListaNotificaciones notificaciones={notificaciones} />
+      </div>
     </section>
   )
 }

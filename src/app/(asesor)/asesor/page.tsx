@@ -210,7 +210,7 @@ export default async function PaginaInicioAsesor({
             Sin leads nuevos pendientes. Todo al día 🎉
           </p>
         ) : (
-          <ul className="flex flex-col gap-2">
+          <ul className="flex flex-col gap-2 lg:grid lg:grid-cols-2 lg:gap-3 xl:grid-cols-3">
             {atiendeAhora.map((lead) => (
               <li key={lead.id}>
                 <Link
@@ -252,7 +252,7 @@ export default async function PaginaInicioAsesor({
             Ningún lead lleva más de 24 h sin seguimiento 🎉
           </p>
         ) : (
-          <ul className="flex flex-col gap-2">
+          <ul className="flex flex-col gap-2 lg:grid lg:grid-cols-2 lg:gap-3 xl:grid-cols-3">
             {necesitanSeguimiento.map((lead) => (
               <li key={lead.id}>
                 <Link
@@ -294,7 +294,7 @@ export default async function PaginaInicioAsesor({
             Sin visitas agendadas 📅
           </p>
         ) : (
-          <ul className="flex flex-col gap-2">
+          <ul className="flex flex-col gap-2 lg:grid lg:grid-cols-2 lg:gap-3 xl:grid-cols-3">
             {visitasProximas.map((visita) => (
               <li key={visita.id}>
                 <Link
@@ -336,7 +336,7 @@ export default async function PaginaInicioAsesor({
           <TrendingUp aria-hidden className="size-4 text-slate-500" />
           <h2 className="text-sm font-semibold text-slate-900">Mis números del mes</h2>
         </div>
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-3 gap-2 lg:max-w-xl lg:gap-3">
           <div className="rounded-xl bg-white p-3 text-center shadow-xs ring-1 ring-slate-200">
             <p className="text-xl font-semibold tracking-tight text-slate-900">{leadsActivos}</p>
             <p className="mt-0.5 text-[0.6875rem] leading-tight text-slate-500">Leads activos</p>

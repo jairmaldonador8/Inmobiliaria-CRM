@@ -67,7 +67,7 @@ export default async function PaginaPropiedadesAsesor({
           )}
         </div>
       ) : (
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-4 lg:grid lg:grid-cols-2 lg:gap-5 xl:grid-cols-3">
           {filas.map((propiedad) => (
             <TarjetaPropiedadAsesor
               key={propiedad.id}
