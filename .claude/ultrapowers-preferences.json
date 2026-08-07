@@ -1,5 +1,5 @@
 {
   "autoCommit": true,
-  "autoPush": true,
+  "autoPush": false,
   "commitDesignDocs": true
 }
