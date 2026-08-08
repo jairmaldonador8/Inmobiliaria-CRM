@@ -9,6 +9,14 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "assets.easybroker.com",
       },
+      // El sandbox de EasyBroker (api.stagingeb.com, el que usa DEV) sirve las
+      // fotos desde un host ficticio. Sin esto, la lista de propiedades en
+      // local revienta con "Invalid src prop" y no se puede probar la pantalla.
+      // Fuera de producción únicamente: en Vercel NODE_ENV es "production" al
+      // compilar, así que el host falso nunca llega al build real.
+      ...(process.env.NODE_ENV === "production"
+        ? []
+        : [{ protocol: "https" as const, hostname: "assets.example.test" }]),
     ],
   },
   async headers() {
