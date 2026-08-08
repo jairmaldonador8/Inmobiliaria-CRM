@@ -1,11 +1,19 @@
 import Link from 'next/link'
 import { format, formatDistanceToNow } from 'date-fns'
 import { es } from 'date-fns/locale'
-import { AlertTriangle, CalendarDays, ChevronRight, Flame, TrendingUp } from 'lucide-react'
+import {
+  AlertTriangle,
+  CalendarDays,
+  ChevronRight,
+  Flame,
+  MessageCircle,
+  TrendingUp,
+} from 'lucide-react'
 
 import { requireAsesor } from '@/lib/auth/usuario-actual'
 import { createClient } from '@/lib/supabase/server'
 import { proximasVisitas } from '@/lib/dashboard/consultas'
+import { leadsSinRespuesta } from '@/lib/contactos/consultas'
 import { ETAPAS_CERRADAS, NOTA_CIERRE } from '@/lib/leads/formato'
 import { formatearFechaHoraMonterrey } from '@/lib/fechas/monterrey'
 import {
@@ -125,6 +133,10 @@ export default async function PaginaInicioAsesor({
   // Último seguimiento por lead: mismo patrón que el kanban (src/app/(asesor)/asesor/leads/page.tsx)
   // — segunda consulta ordenada desc; el primer registro visto por lead es el más reciente.
   const ultimoSeguimiento = new Map<string, string>()
+  // Contactos de WhatsApp de esos mismos leads: alimentan la lista «Sin
+  // respuesta». Se declara fuera del `if` para que la derivación de abajo lo
+  // vea aunque no haya leads.
+  let contactos: { lead_id: string; resultado: string; creado_en: string }[] = []
   if (leads.length > 0) {
     const { data: seguimientos } = await supabase
       .from('seguimientos')
@@ -139,6 +151,25 @@ export default async function PaginaInicioAsesor({
       if (!ultimoSeguimiento.has(s.lead_id)) {
         ultimoSeguimiento.set(s.lead_id, s.creado_en)
       }
+    }
+
+    const { data: datosContactos } = await supabase
+      .from('contactos_whatsapp')
+      .select('lead_id, resultado, creado_en')
+      .in(
+        'lead_id',
+        leads.map((l) => l.id)
+      )
+    contactos = datosContactos ?? []
+  }
+
+  // Fecha del contacto más reciente por lead, para el subtítulo de las cards
+  // de «Sin respuesta» (la consulta no viene ordenada: se toma el mayor).
+  const ultimoContacto = new Map<string, string>()
+  for (const contacto of contactos) {
+    const previo = ultimoContacto.get(contacto.lead_id)
+    if (!previo || new Date(contacto.creado_en) > new Date(previo)) {
+      ultimoContacto.set(contacto.lead_id, contacto.creado_en)
     }
   }
 
@@ -161,12 +192,29 @@ export default async function PaginaInicioAsesor({
     )
     .sort((a, b) => new Date(a.asignado_en!).getTime() - new Date(b.asignado_en!).getTime())
 
+  // «Sin respuesta»: les mandaste WhatsApp y su contacto MÁS RECIENTE sigue
+  // en `pendiente`/`no_contesto`. Cierra el hueco entre las otras dos colas:
+  // en cuanto un lead recibe un seguimiento sale de «Atiende ahora» y todavía
+  // no califica para «Necesitan seguimiento», así que quedaba invisible 24 h.
+  // La regla vive en `leadsSinRespuesta` (pura, testeable) e incluye la misma
+  // exclusión de `saliente`. Más antiguo primero: el que lleva más callado.
+  const sinRespuesta = leadsSinRespuesta(leads, contactos).sort(
+    (a, b) =>
+      new Date(ultimoContacto.get(a.id)!).getTime() -
+      new Date(ultimoContacto.get(b.id)!).getTime()
+  )
+  const idsSinRespuesta = new Set(sinRespuesta.map((l) => l.id))
+
   // «Necesitan seguimiento»: ya tuvieron contacto, pero el último fue hace
   // más de 24h. Más «abandonado» primero, tope de 10. Misma exclusión de
-  // `saliente` que arriba, y por el mismo motivo.
+  // `saliente` que arriba, y por el mismo motivo. Se descartan además los que
+  // ya salen en «Sin respuesta»: un lead no debe aparecer en dos colas.
+  // («Atiende ahora» no necesita el filtro: un lead con contacto tiene
+  // seguimiento por fuerza, así que nunca está ahí.)
   const necesitanSeguimiento = leads
     .filter((l) => {
       if (l.clasificacion_eb === 'saliente') return false
+      if (idsSinRespuesta.has(l.id)) return false
       const ultimo = ultimoSeguimiento.get(l.id)
       return ultimo ? Date.now() - new Date(ultimo).getTime() > 24 * HORA_MS : false
     })
@@ -222,6 +270,48 @@ export default async function PaginaInicioAsesor({
                     <p suppressHydrationWarning className="mt-0.5 text-xs text-slate-500">
                       Asignado{' '}
                       {formatDistanceToNow(new Date(lead.asignado_en!), {
+                        addSuffix: true,
+                        locale: es,
+                      })}
+                    </p>
+                  </div>
+                  <ChevronRight aria-hidden className="size-4 shrink-0 text-slate-400" />
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
+      {/* Sin respuesta: les escribiste por WhatsApp y no han contestado */}
+      <div className="flex flex-col gap-3">
+        <div className="flex items-center gap-2">
+          <MessageCircle aria-hidden className="size-4 text-emerald-500" />
+          <h2 className="text-sm font-semibold text-slate-900">Sin respuesta</h2>
+          {sinRespuesta.length > 0 ? (
+            <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-700">
+              {sinRespuesta.length}
+            </span>
+          ) : null}
+        </div>
+
+        {sinRespuesta.length === 0 ? (
+          <p className="rounded-xl border border-dashed border-slate-300 bg-white/60 px-4 py-6 text-center text-sm text-slate-500 lg:max-w-sm">
+            Nadie te quedó a deber respuesta 🎉
+          </p>
+        ) : (
+          <ul className="flex flex-col gap-2 lg:grid lg:grid-cols-2 lg:gap-3 xl:grid-cols-3">
+            {sinRespuesta.map((lead) => (
+              <li key={lead.id}>
+                <Link
+                  href={`/asesor/leads/${lead.id}`}
+                  className="flex items-center justify-between gap-2 rounded-xl bg-white p-3 shadow-xs ring-1 ring-emerald-200 transition-colors active:bg-emerald-50"
+                >
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium text-slate-900">{lead.nombre}</p>
+                    <p suppressHydrationWarning className="mt-0.5 text-xs text-slate-500">
+                      Le escribiste{' '}
+                      {formatDistanceToNow(new Date(ultimoContacto.get(lead.id)!), {
                         addSuffix: true,
                         locale: es,
                       })}
