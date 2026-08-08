@@ -27,7 +27,7 @@ import { revalidatePath } from 'next/cache'
 
 import { usuarioActual } from '@/lib/auth/usuario-actual'
 import { createClient } from '@/lib/supabase/server'
-import { avanzarEtapaPorVisita } from '@/lib/leads/avance-automatico'
+import { avanzarEtapaPorEvento } from '@/lib/leads/avance-automatico'
 import { validarDatosVisita } from '@/lib/visitas/validacion'
 import { formatearFechaHoraMonterrey } from '@/lib/fechas/monterrey'
 import { sincronizarVisita } from '@/lib/google/espejo'
@@ -135,7 +135,7 @@ export async function agendarVisita(
   // Avance automático: agendar una visita mueve el lead a «Cita agendada»
   // si venía más atrás. No lo mueve si ya iba más adelante ni si está
   // cerrado (ver avance-etapa.ts).
-  await avanzarEtapaPorVisita(supabase, {
+  await avanzarEtapaPorEvento(supabase, {
     leadId: lead.id,
     etapaActual: lead.etapa,
     destino: 'cita_agendada',
@@ -195,7 +195,7 @@ export async function reagendarVisita(
  * capturó mal.
  *
  * Efecto sobre el pipeline: empuja el lead a «Visitó» si venía más atrás
- * (ver `avanzarEtapaPorVisita`). No se sincroniza con Google Calendar: el
+ * (ver `avanzarEtapaPorEvento`). No se sincroniza con Google Calendar: el
  * evento del calendario ya existe y su fecha no cambia — marcar realizada
  * es un hecho del CRM, no del calendario.
  */
@@ -228,7 +228,7 @@ export async function marcarVisitaRealizada(visitaId: string): Promise<Resultado
     .maybeSingle()
 
   if (lead) {
-    await avanzarEtapaPorVisita(supabase, {
+    await avanzarEtapaPorEvento(supabase, {
       leadId,
       etapaActual: lead.etapa,
       destino: 'visita_realizada',

@@ -30,6 +30,10 @@ describe('etapaTrasEvento — avanza', () => {
     // tablero: no lo obligamos a pasar por las etapas intermedias.
     expect(etapaTrasEvento('nuevo', 'visita_realizada')).toBe('visita_realizada')
   })
+
+  it('un lead «nuevo» al que le escriben por WhatsApp pasa a «contactado»', () => {
+    expect(etapaTrasEvento('nuevo', 'contactado')).toBe('contactado')
+  })
 })
 
 describe('etapaTrasEvento — NO retrocede', () => {
@@ -44,6 +48,10 @@ describe('etapaTrasEvento — NO retrocede', () => {
   it('un lead ya en la etapa destino se queda igual (no reescribe ni registra nada)', () => {
     expect(etapaTrasEvento('cita_agendada', 'cita_agendada')).toBeNull()
     expect(etapaTrasEvento('visita_realizada', 'visita_realizada')).toBeNull()
+  })
+
+  it('un lead «negociacion» al que le escriben por WhatsApp NO retrocede', () => {
+    expect(etapaTrasEvento('negociacion', 'contactado')).toBeNull()
   })
 })
 
@@ -60,6 +68,10 @@ describe('etapaTrasEvento — no toca lo que salió del tablero', () => {
 
   it('«apartado» (fusionado en la migración 0012) se deja intacto', () => {
     expect(etapaTrasEvento('apartado', 'cita_agendada')).toBeNull()
+  })
+
+  it('un lead «apartado» (fuera del tablero tras la 0012) no se mueve', () => {
+    expect(etapaTrasEvento('apartado', 'contactado')).toBeNull()
   })
 
   it('una etapa desconocida no mueve nada — ante la duda, no tocar', () => {

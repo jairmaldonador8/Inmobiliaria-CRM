@@ -1,11 +1,13 @@
 /**
  * Aplica el avance automático de etapa (la regla vive en `avance-etapa.ts`)
- * sobre la base, y deja rastro en el timeline del lead.
+ * sobre la base, y deja rastro en el timeline del lead. Sirve a CUALQUIER
+ * evento que empuje el pipeline hacia adelante (visita agendada/realizada,
+ * WhatsApp enviado, …) — cada caller decide el `destino` y el `motivo`.
  *
  * BEST-EFFORT POR DISEÑO: esta función NUNCA lanza ni devuelve error. Es un
- * efecto secundario de agendar/realizar una visita, y la visita ya se guardó
- * con éxito cuando llegamos aquí — si el pipeline no se mueve, lo peor que
- * pasa es que el asesor arrastre la tarjeta a mano. Mismo criterio que el
+ * efecto secundario del evento que la dispara, y ese evento ya se guardó con
+ * éxito cuando llegamos aquí — si el pipeline no se mueve, lo peor que pasa
+ * es que el asesor arrastre la tarjeta a mano. Mismo criterio que el
  * seguimiento de sistema de `agendarVisita` y el espejo de Google Calendar.
  *
  * Se usa el cliente de SESIÓN que le pasa quien llama, nunca service-role:
@@ -22,11 +24,12 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import { etapaTrasEvento } from '@/lib/leads/avance-etapa'
 import { etiquetaEtapa, type EtapaKanban } from '@/lib/leads/formato'
 
-export type MotivoAvance = 'visita_agendada' | 'visita_realizada'
+export type MotivoAvance = 'visita_agendada' | 'visita_realizada' | 'whatsapp_enviado'
 
 const TEXTO_MOTIVO: Record<MotivoAvance, string> = {
   visita_agendada: 'al agendar una visita',
   visita_realizada: 'al marcar la visita como realizada',
+  whatsapp_enviado: 'al enviar un WhatsApp',
 }
 
 /**
@@ -34,7 +37,7 @@ const TEXTO_MOTIVO: Record<MotivoAvance, string> = {
  * a la que se movió, o `null` si no hubo movimiento (que es lo normal en la
  * mayoría de los casos: lead ya avanzado, cerrado, o etapa desconocida).
  */
-export async function avanzarEtapaPorVisita(
+export async function avanzarEtapaPorEvento(
   supabase: SupabaseClient,
   parametros: {
     leadId: string
