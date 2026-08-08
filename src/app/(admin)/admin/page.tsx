@@ -55,6 +55,13 @@ export default async function PaginaDashboardAdmin() {
   const usuario = await requireAdmin()
   const supabase = await createClient()
 
+  // Instante "actual" calculado una sola vez, fuera de cualquier .filter/.map
+  // del render (mismo patrón que el dashboard del asesor): un `Date.now()`
+  // suelto dentro del filtro deja que el encabezado y el corte de «sin
+  // atender» lean instantes distintos, y se congelaría en build time si esta
+  // página dejara de ser dinámica.
+  const ahora = new Date()
+
   const inicioMes = new Date()
   inicioMes.setDate(1)
   inicioMes.setHours(0, 0, 0, 0)
@@ -140,7 +147,8 @@ export default async function PaginaDashboardAdmin() {
     }))
     .filter(
       (item): item is { lead: LeadSinAsesor; referencia: string } =>
-        item.referencia !== null && Date.now() - new Date(item.referencia).getTime() > 24 * HORA_MS
+        item.referencia !== null &&
+        ahora.getTime() - new Date(item.referencia).getTime() > 24 * HORA_MS
     )
     .sort((a, b) => new Date(a.referencia).getTime() - new Date(b.referencia).getTime())
 

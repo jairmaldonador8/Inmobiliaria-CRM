@@ -216,7 +216,7 @@ export default async function PaginaInicioAsesor({
       if (l.clasificacion_eb === 'saliente') return false
       if (idsSinRespuesta.has(l.id)) return false
       const ultimo = ultimoSeguimiento.get(l.id)
-      return ultimo ? Date.now() - new Date(ultimo).getTime() > 24 * HORA_MS : false
+      return ultimo ? ahora.getTime() - new Date(ultimo).getTime() > 24 * HORA_MS : false
     })
     .sort(
       (a, b) =>
