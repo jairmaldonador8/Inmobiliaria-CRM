@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Klo-Ser — Exploración de logotipo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@200;300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   KLO-SER · Exploración de logotipo · «Muro»
+   Serie tipográfica — referencia ORLA del moodboard:
+   monoline, caps, tracking amplio, sobre fotografía
+   ============================================================ */
+:root {
+  --bg: #F2EDE4;
+  --bg-2: #EAE3D6;
+  --panel: #FAF7F1;
+  --ink: #221B14;
+  --ink-2: #6B5D4E;
+  --ink-3: #A2947F;
+  --cafe: #6B4A33;
+  --ocre: #C98A3B;
+  --rule: rgba(34, 27, 20, 0.14);
+  --rule-strong: #221B14;
+  --font: "Poppins", sans-serif;
+  --snap: cubic-bezier(0.22, 1, 0.36, 1);
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--ink);
+  font-size: 15px;
+  line-height: 1.65;
+  overflow-x: hidden;
+}
+body::after {
+  content: "";
+  position: fixed; inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+  opacity: 0.03;
+  pointer-events: none;
+  z-index: 1000;
+  mix-blend-mode: multiply;
+}
+::selection { background: rgba(201, 138, 59, 0.3); }
+img { display: block; width: 100%; height: 100%; object-fit: cover; }
+
+.wrap { max-width: 1160px; margin: 0 auto; padding: 0 32px 90px; }
+
+/* ---------- Masthead ---------- */
+.masthead {
+  display: flex; align-items: center; gap: 14px;
+  padding: 24px 0;
+  border-bottom: 2px solid var(--rule-strong);
+  font-size: 10.5px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--ink-2);
+  font-weight: 500;
+}
+.masthead .right { margin-left: auto; display: flex; gap: 28px; }
+.mh-name { font-weight: 600; font-size: 16px; letter-spacing: -0.02em; text-transform: none; color: var(--ink); }
+
+/* ---------- Intro ---------- */
+.intro { padding: 64px 0 0; }
+.intro .folio {
+  font-size: 10.5px; letter-spacing: 0.24em; text-transform: uppercase; color: var(--cafe);
+  font-weight: 600;
+  display: flex; align-items: center; gap: 12px;
+}
+.intro .folio::before { content: ""; width: 36px; height: 2px; background: var(--cafe); }
+.intro h1 {
+  font-size: clamp(36px, 5.4vw, 62px);
+  font-weight: 600; letter-spacing: -0.035em; line-height: 1.04;
+  text-transform: uppercase;
+  margin-top: 24px; max-width: 860px;
+}
+.intro h1 .cafe { color: var(--cafe); }
+.intro p { color: var(--ink-2); font-size: 15px; max-width: 620px; margin-top: 20px; }
+.intro p b { color: var(--ink); font-weight: 600; }
+
+/* ---------- Opción ---------- */
+.opcion { margin-top: 64px; border: 2px solid var(--rule-strong); background: var(--panel); }
+.op-head {
+  display: flex; align-items: center; gap: 16px;
+  padding: 15px 24px;
+  border-bottom: 2px solid var(--rule-strong);
+}
+.op-num {
+  font-size: 11px; font-weight: 700; letter-spacing: 0.14em;
+  background: var(--ink); color: var(--bg);
+  padding: 4px 12px;
+}
+.op-head h2 { font-size: 18px; font-weight: 600; letter-spacing: -0.015em; text-transform: uppercase; }
+.op-head .pick-badge {
+  margin-left: auto;
+  font-size: 10px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase;
+  background: var(--cafe); color: #F2EDE4;
+  padding: 5px 14px;
+}
+.op-stage {
+  min-height: 250px;
+  display: grid; place-items: center;
+  padding: 54px 40px;
+  background: var(--bg);
+}
+.op-note {
+  display: grid; grid-template-columns: 1.6fr 1fr;
+  border-top: 2px solid var(--rule-strong);
+}
+.op-note p {
+  font-size: 13px; color: var(--ink-2); line-height: 1.7;
+  padding: 20px 26px;
+}
+.op-note p b { color: var(--ink); font-weight: 600; }
+.op-note .sizes {
+  border-left: 2px solid var(--rule-strong);
+  display: flex; align-items: center; justify-content: center; gap: 22px;
+  padding: 18px;
+  background: var(--bg-2);
+}
+
+/* Marcas tipográficas */
+.t-light {
+  font-weight: 200;
+  letter-spacing: 0.42em;
+  text-transform: uppercase;
+  line-height: 1;
+  display: flex; align-items: center;
+  white-space: nowrap;
+}
+.t-light .d {
+  width: 0.72em; height: 2.5px;
+  background: var(--cafe);
+  margin: 0 0.42em 0 0.06em;
+  flex-shrink: 0;
+}
+.t-stack {
+  text-align: center;
+  font-weight: 300;
+  letter-spacing: 0.5em;
+  text-transform: uppercase;
+  line-height: 1.35;
+}
+.t-stack .d {
+  width: 44px; height: 3px; background: var(--cafe);
+  margin: 10px auto;
+}
+
+/* ---------- Aplicación fotográfica ---------- */
+.photo-apply {
+  margin-top: 64px;
+  border: 2px solid var(--rule-strong);
+  position: relative;
+  min-height: 520px;
+  overflow: hidden;
+  display: grid; place-items: center;
+}
+.photo-apply .phbg { position: absolute; inset: 0; }
+.photo-apply .phbg img { filter: saturate(0.35) contrast(0.96) brightness(1.02) sepia(0.22); }
+.photo-apply .phbg::after { content: ""; position: absolute; inset: 0; background: rgba(34, 27, 20, 0.14); }
+.photo-apply .mark { position: relative; z-index: 2; color: #F6F1E8; }
+.photo-apply .cap {
+  position: absolute; z-index: 2; left: 0; bottom: 0;
+  background: var(--bg);
+  border-top: 2px solid var(--rule-strong);
+  border-right: 2px solid var(--rule-strong);
+  padding: 10px 18px;
+  font-size: 9.5px; font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--ink-2);
+}
+
+/* ---------- Sistema / pareja ---------- */
+.pair { margin-top: 64px; border: 2px solid var(--rule-strong); background: var(--panel); }
+.pair-body { display: grid; grid-template-columns: repeat(3, 1fr); }
+.pair-cell {
+  min-height: 210px;
+  display: grid; place-items: center;
+  padding: 30px;
+  border-right: 2px solid var(--rule-strong);
+  text-align: center;
+}
+.pair-cell:last-child { border-right: 0; }
+.pair-cell .lbl {
+  font-size: 9px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--ink-3); margin-top: 18px;
+}
+.pair-cell.cafe { background: var(--cafe); }
+.pair-cell.cafe .lbl { color: rgba(242, 237, 228, 0.6); }
+
+/* ---------- Comparativa ---------- */
+.compare { margin-top: 76px; }
+.compare .sec-head {
+  display: flex; align-items: baseline; gap: 18px;
+  border-top: 2px solid var(--rule-strong);
+  padding-top: 20px;
+}
+.compare .sec-num { font-size: 11px; font-weight: 600; letter-spacing: 0.1em; color: var(--cafe); }
+.compare h2 { font-size: clamp(24px, 3.4vw, 34px); font-weight: 600; letter-spacing: -0.025em; text-transform: uppercase; }
+.reco-note {
+  margin-top: 28px;
+  border: 2px solid var(--rule-strong);
+  background: var(--bg-2);
+  padding: 24px 28px;
+  display: flex; gap: 18px; align-items: flex-start;
+}
+.reco-note .rn-tag {
+  font-size: 10px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase;
+  background: var(--cafe); color: #F2EDE4;
+  padding: 5px 14px; flex-shrink: 0;
+}
+.reco-note p { font-size: 13.5px; color: var(--ink-2); }
+.reco-note p b { color: var(--ink); font-weight: 600; }
+
+footer {
+  margin-top: 90px;
+  border-top: 2px solid var(--rule-strong);
+  padding-top: 24px;
+  display: flex; align-items: center; gap: 16px;
+  color: var(--ink-3); font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; font-weight: 600;
+}
+footer .right { margin-left: auto; }
+
+.reveal { opacity: 0; transform: translateY(26px); transition: opacity 0.8s var(--snap), transform 0.8s var(--snap); }
+.reveal.in { opacity: 1; transform: none; }
+
+@media (max-width: 920px) {
+  .op-note { grid-template-columns: 1fr; }
+  .op-note .sizes { border-left: 0; border-top: 2px solid var(--rule-strong); }
+  .pair-body { grid-template-columns: 1fr; }
+  .pair-cell { border-right: 0; border-bottom: 2px solid var(--rule-strong); }
+  .pair-cell:last-child { border-bottom: 0; }
+  .t-light { letter-spacing: 0.3em; }
+}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <!-- ══════════ MASTHEAD ══════════ -->
+  <div class="masthead">
+    <span class="mh-name">Klo-Ser</span>
+    <div class="right">
+      <span>Identidad</span>
+      <span>Serie tipográfica</span>
+      <span>2026</span>
+    </div>
+  </div>
+
+  <!-- ══════════ INTRO ══════════ -->
+  <div class="intro">
+    <div class="folio">Referencia: la rotulación ORLA de tu moodboard</div>
+    <h1>El nombre, trazado <span class="cafe">a mano de obra.</span></h1>
+    <p>Sin símbolos: <b>la palabra es el logo</b>. Mayúsculas ligeras, tracking generoso, trazos monoline con cortes geométricos — y el guion como firma de la marca. Tres tratamientos para elegir, aplicados sobre tu fotografía.</p>
+  </div>
+
+  <!-- ══════════ OPCIÓN 01 · ROTULACIÓN MONOLINE ══════════ -->
+  <div class="opcion reveal">
+    <div class="op-head"><span class="op-num">01</span><h2>La rotulación — trazo propio</h2><span class="pick-badge">Recomendada</span></div>
+    <div class="op-stage">
+      <svg width="min(640px, 82vw)" viewBox="0 0 616 120" fill="none">
+        <!-- K -->
+        <g stroke="#221B14" stroke-width="7">
+          <path d="M14 18 V102"/>
+          <path d="M62 18 L18 64"/>
+          <path d="M34 48 L64 102"/>
+        </g>
+        <!-- L -->
+        <g stroke="#221B14" stroke-width="7">
+          <path d="M96 18 V98.5 M92.5 98.5 H144"/>
+        </g>
+        <!-- O -->
+        <circle cx="218" cy="60" r="42" stroke="#221B14" stroke-width="7"/>
+        <!-- guion -->
+        <path d="M286 60 H328" stroke="#6B4A33" stroke-width="7"/>
+        <!-- S -->
+        <g stroke="#221B14" stroke-width="7">
+          <path d="M410 21.5 H364 V56.5 H410 V98.5 H360"/>
+        </g>
+        <!-- E -->
+        <g stroke="#221B14" stroke-width="7">
+          <path d="M492 21.5 H446 V98.5 H492 M446 56.5 H484"/>
+        </g>
+        <!-- R -->
+        <g stroke="#221B14" stroke-width="7">
+          <path d="M524 102 V21.5 H562 a21 21 0 0 1 0 42 H524"/>
+          <path d="M558 63.5 L590 102"/>
+        </g>
+      </svg>
+    </div>
+    <div class="op-note">
+      <p><b>Dibujada, no tipeada.</b> Cada letra es un trazo monoline de 7 unidades — la K de vigas, la O perfecta como patio circular, la S y la E en escuadra, la R con pierna diagonal (el guiño a ORLA). El guion café interrumpe la palabra exactamente como en el nombre. Es rotulación de obra: única, registrable, y escala de un espectacular a un grabado en llave.</p>
+      <div class="sizes">
+        <svg width="150" viewBox="0 0 616 120" fill="none"><g stroke="#221B14" stroke-width="9"><path d="M14 18 V102"/><path d="M62 18 L18 64"/><path d="M34 48 L64 102"/><path d="M96 18 V98.5 M92.5 98.5 H144"/></g><circle cx="218" cy="60" r="42" stroke="#221B14" stroke-width="9"/><path d="M286 60 H328" stroke="#6B4A33" stroke-width="9"/><g stroke="#221B14" stroke-width="9"><path d="M410 21.5 H364 V56.5 H410 V98.5 H360"/><path d="M492 21.5 H446 V98.5 H492 M446 56.5 H484"/><path d="M524 102 V21.5 H562 a21 21 0 0 1 0 42 H524"/><path d="M558 63.5 L590 102"/></g></svg>
+        <svg width="84" viewBox="0 0 616 120" fill="none"><g stroke="#221B14" stroke-width="12"><path d="M14 18 V102"/><path d="M62 18 L18 64"/><path d="M34 48 L64 102"/><path d="M96 18 V98.5 M92.5 98.5 H144"/></g><circle cx="218" cy="60" r="42" stroke="#221B14" stroke-width="12"/><path d="M286 60 H328" stroke="#6B4A33" stroke-width="12"/><g stroke="#221B14" stroke-width="12"><path d="M410 21.5 H364 V56.5 H410 V98.5 H360"/><path d="M492 21.5 H446 V98.5 H492 M446 56.5 H484"/><path d="M524 102 V21.5 H562 a21 21 0 0 1 0 42 H524"/><path d="M558 63.5 L590 102"/></g></svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ OPCIÓN 02 · LA LIGERA ══════════ -->
+  <div class="opcion reveal">
+    <div class="op-head"><span class="op-num">02</span><h2>La ligera — Poppins 200 espaciada</h2></div>
+    <div class="op-stage">
+      <div class="t-light" style="font-size:clamp(28px, 5vw, 54px)">KLO<span class="d"></span>SER</div>
+    </div>
+    <div class="op-note">
+      <p><b>La versión inmediata.</b> Poppins ExtraLight en mayúsculas con tracking de 0.42em y el guion como línea café a media altura. No requiere dibujo custom — se implementa hoy mismo en web, PDF y firma de correo, y ya respira como la referencia. Ideal como interina mientras la rotulación 01 se pule.</p>
+      <div class="sizes">
+        <div class="t-light" style="font-size:19px">KLO<span class="d"></span>SER</div>
+        <div class="t-light" style="font-size:12px">KLO<span class="d"></span>SER</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ OPCIÓN 03 · LA COLUMNA ══════════ -->
+  <div class="opcion reveal">
+    <div class="op-head"><span class="op-num">03</span><h2>La columna — apilada</h2></div>
+    <div class="op-stage">
+      <div class="t-stack" style="font-size:clamp(26px, 3.6vw, 40px)">
+        <div>KLO</div>
+        <div class="d"></div>
+        <div>SER</div>
+      </div>
+    </div>
+    <div class="op-note">
+      <p><b>Para formatos verticales.</b> El nombre apilado con el guion como dintel entre las dos sílabas — señalética de edificio, lomo de carpeta, stories y pósters angostos. No sustituye a la horizontal: la acompaña como variante de sistema.</p>
+      <div class="sizes">
+        <div class="t-stack" style="font-size:15px"><div>KLO</div><div class="d" style="width:26px;margin:6px auto"></div><div>SER</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ APLICACIÓN FOTOGRÁFICA ══════════ -->
+  <div class="photo-apply reveal">
+    <div class="phbg"><img src="assets/mood-00.jpg" alt="Muro de concreto" style="object-position: center 30%"></div>
+    <div class="mark">
+      <svg width="min(560px, 74vw)" viewBox="0 0 616 120" fill="none">
+        <g stroke="#F6F1E8" stroke-width="7">
+          <path d="M14 18 V102"/><path d="M62 18 L18 64"/><path d="M34 48 L64 102"/>
+          <path d="M96 18 V98.5 M92.5 98.5 H144"/>
+        </g>
+        <circle cx="218" cy="60" r="42" stroke="#F6F1E8" stroke-width="7"/>
+        <path d="M286 60 H328" stroke="#C98A3B" stroke-width="7"/>
+        <g stroke="#F6F1E8" stroke-width="7">
+          <path d="M410 21.5 H364 V56.5 H410 V98.5 H360"/>
+          <path d="M492 21.5 H446 V98.5 H492 M446 56.5 H484"/>
+          <path d="M524 102 V21.5 H562 a21 21 0 0 1 0 42 H524"/>
+          <path d="M558 63.5 L590 102"/>
+        </g>
+      </svg>
+    </div>
+    <div class="cap">Aplicación · rotulación sobre obra — como la referencia de tu moodboard</div>
+  </div>
+
+  <!-- ══════════ EL SISTEMA COMPLETO ══════════ -->
+  <div class="pair reveal">
+    <div class="op-head"><span class="op-num">+</span><h2>El sistema — cómo conviven</h2></div>
+    <div class="pair-body">
+      <div class="pair-cell">
+        <div>
+          <svg width="190" viewBox="0 0 616 120" fill="none">
+            <g stroke="#221B14" stroke-width="8"><path d="M14 18 V102"/><path d="M62 18 L18 64"/><path d="M34 48 L64 102"/><path d="M96 18 V98.5 M92.5 98.5 H144"/></g>
+            <circle cx="218" cy="60" r="42" stroke="#221B14" stroke-width="8"/>
+            <path d="M286 60 H328" stroke="#6B4A33" stroke-width="8"/>
+            <g stroke="#221B14" stroke-width="8"><path d="M410 21.5 H364 V56.5 H410 V98.5 H360"/><path d="M492 21.5 H446 V98.5 H492 M446 56.5 H484"/><path d="M524 102 V21.5 H562 a21 21 0 0 1 0 42 H524"/><path d="M558 63.5 L590 102"/></g>
+          </svg>
+          <div class="lbl">Principal · rotulación horizontal</div>
+        </div>
+      </div>
+      <div class="pair-cell cafe">
+        <div>
+          <div class="t-stack" style="font-size:24px;color:#F2EDE4"><div>KLO</div><div class="d" style="background:#C98A3B"></div><div>SER</div></div>
+          <div class="lbl">Vertical · señalética y stories</div>
+        </div>
+      </div>
+      <div class="pair-cell">
+        <div>
+          <svg width="64" height="64" viewBox="0 0 120 120"><rect x="14" y="14" width="92" height="92" fill="#6B4A33"/><rect x="58" y="40" width="34" height="13" rx="6.5" fill="#F2EDE4"/></svg>
+          <div class="lbl">Ícono de app y favicon · «la ventana»</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ RECOMENDACIÓN ══════════ -->
+  <div class="compare reveal">
+    <div class="sec-head"><span class="sec-num">∑</span><h2>Mi lectura</h2></div>
+    <div class="reco-note">
+      <span class="rn-tag">Propuesta</span>
+      <p><b>01 La rotulación</b> como logotipo principal — es la que está a la altura de tu referencia: dibujada, elegante, inconfundible. <b>03 La columna</b> como variante vertical del sistema, y <b>«la ventana»</b> (el bloque café con el guion abierto) solo donde se necesita un cuadrado: ícono de app, favicon, avatar de WhatsApp. Un solo lenguaje, tres piezas. Si quieres ajustar la rotulación — más ligera, más ancha, otra K — es SVG: la afinamos en minutos.</p>
+    </div>
+  </div>
+
+  <!-- ══════════ FOOTER ══════════ -->
+  <footer>
+    <span>Klo-Ser × Montana Realty</span>
+    <span class="right">Serie tipográfica · Campaña «Muro» · 2026</span>
+  </footer>
+
+</div>
+
+<script>
+const io = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }
+  });
+}, { threshold: 0.1 });
+document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+</script>
+</body>
+</html>

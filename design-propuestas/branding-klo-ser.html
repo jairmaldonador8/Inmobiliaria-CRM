@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Klo-Ser — Propuesta de branding</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Instrument+Sans:ital,wght@0,400..700;1,400&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   KLO-SER · Propuesta de branding v1
+   Sistema «Obsidiana» — fondo negro, acento lima
+   ============================================================ */
+:root {
+  --bg: #000000;
+  --surface: #0B101B;
+  --surface-2: #0E1420;
+  --surface-3: #182034;
+  --stroke: rgba(148, 163, 184, 0.11);
+  --stroke-strong: rgba(148, 163, 184, 0.20);
+  --text: #EDF1F9;
+  --text-2: #9AA5BB;
+  --text-3: #616D85;
+  --accent: #BEE84B;
+  --accent-deep: #65A30D;
+  --accent-ink: #0C1405;
+  --c2: #0891B2;
+  --danger: #F87171;
+  --wa: #25D366;
+  --r-lg: 22px;
+  --r-md: 16px;
+  --font-display: "Bricolage Grotesque", sans-serif;
+  --font-body: "Instrument Sans", sans-serif;
+  --shadow-card: 0 1px 0 rgba(255,255,255,0.03) inset, 0 12px 32px -16px rgba(0,0,0,0.55);
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { color-scheme: dark; scroll-behavior: smooth; }
+body {
+  font-family: var(--font-body);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 14.5px;
+  line-height: 1.55;
+  font-feature-settings: "tnum";
+  overflow-x: hidden;
+}
+body::before {
+  content: "";
+  position: fixed; inset: 0;
+  background:
+    radial-gradient(1100px 800px at 108% -12%, rgba(8,145,178,0.12), transparent 58%),
+    radial-gradient(1300px 900px at -12% 112%, rgba(101,163,13,0.14), transparent 56%),
+    radial-gradient(800px 800px at 88% 42%, rgba(190,232,75,0.07), transparent 62%);
+  pointer-events: none;
+}
+body::after {
+  content: "";
+  position: fixed; inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)' opacity='0.35'/%3E%3C/svg%3E");
+  opacity: 0.035;
+  pointer-events: none;
+  z-index: 1000;
+  mix-blend-mode: overlay;
+}
+::selection { background: rgba(190, 232, 75, 0.25); }
+h1, h2, h3 { font-family: var(--font-display); }
+
+.wrap { max-width: 1080px; margin: 0 auto; padding: 0 32px 100px; position: relative; }
+
+section { margin-top: 72px; }
+.sec-tag {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-size: 11px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 14px;
+}
+.sec-tag::before { content: ""; width: 22px; height: 2px; background: var(--accent); border-radius: 2px; }
+h2 { font-size: 27px; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 8px; }
+.sec-sub { color: var(--text-2); font-size: 14px; max-width: 620px; }
+
+.card {
+  background:
+    linear-gradient(165deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.006) 42%),
+    var(--surface);
+  border: 1px solid var(--stroke);
+  border-radius: var(--r-lg);
+  padding: 24px 26px;
+  box-shadow: 0 1px 0 rgba(255,255,255,0.05) inset, 0 24px 60px -28px rgba(0,0,0,0.9);
+}
+
+/* ---------- HERO ---------- */
+.hero {
+  min-height: 88vh;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  text-align: center;
+  padding-top: 40px;
+}
+.hero-kicker {
+  font-size: 11.5px; letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--text-3); font-weight: 600;
+  animation: rise 0.7s cubic-bezier(0.22,1,0.36,1) both;
+}
+.wordmark {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(64px, 12vw, 128px);
+  letter-spacing: -0.045em;
+  line-height: 1;
+  margin: 18px 0 0;
+  display: flex; align-items: center;
+  animation: rise 0.7s 0.12s cubic-bezier(0.22,1,0.36,1) both;
+}
+.wordmark .dash {
+  display: inline-block;
+  width: 0.52em; height: 0.16em;
+  background: var(--accent);
+  border-radius: 99px;
+  margin: 0 0.09em;
+  box-shadow: 0 0 10px rgba(190, 232, 75, 0.22), 0 0 34px rgba(190, 232, 75, 0.13);
+  animation: dashIn 1s 0.8s cubic-bezier(0.22,1,0.36,1) both;
+  transform-origin: left center;
+}
+@keyframes dashIn { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+.hero-tagline {
+  margin-top: 22px;
+  font-size: 17px; color: var(--text-2);
+  animation: rise 0.7s 0.3s cubic-bezier(0.22,1,0.36,1) both;
+}
+.hero-tagline b { color: var(--accent); font-weight: 700; }
+.hero-ring { margin-top: 46px; animation: rise 0.7s 0.45s cubic-bezier(0.22,1,0.36,1) both; }
+.say {
+  margin-top: 14px; font-size: 12px; color: var(--text-3);
+  animation: rise 0.7s 0.5s cubic-bezier(0.22,1,0.36,1) both;
+}
+.say b { color: var(--text-2); font-style: italic; }
+@keyframes rise { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+
+/* anillo que se cierra */
+.ring-demo circle.track { stroke: var(--surface-3); }
+.ring-demo circle.arc {
+  stroke: var(--text-2);
+  stroke-dasharray: 264;
+  stroke-dashoffset: 264;
+  animation: draw 1.6s 0.9s cubic-bezier(0.22,1,0.36,1) forwards;
+}
+.ring-demo rect.closer {
+  fill: var(--accent);
+  opacity: 0;
+  animation: pop 0.5s 2.3s cubic-bezier(0.22,1,0.36,1) forwards;
+}
+@keyframes draw { to { stroke-dashoffset: 40; } }
+@keyframes pop { from { opacity: 0; transform: scale(0.4); transform-origin: center; } to { opacity: 1; transform: scale(1); } }
+
+/* ---------- NAMING ---------- */
+.name-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 26px; }
+.name-card h3 { font-size: 16px; margin-bottom: 8px; display: flex; align-items: center; gap: 9px; }
+.name-card h3 .n {
+  width: 26px; height: 26px; border-radius: 8px;
+  background: var(--accent); color: var(--accent-ink);
+  display: inline-grid; place-items: center;
+  font-size: 13px; font-weight: 800;
+}
+.name-card p { font-size: 13px; color: var(--text-2); }
+.name-card b { color: var(--text); }
+
+/* ---------- DIRECCIONES DE LOGO ---------- */
+.logo-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 26px; }
+.logo-card { display: flex; flex-direction: column; gap: 0; overflow: hidden; padding: 0; }
+.logo-stage {
+  height: 210px;
+  display: grid; place-items: center;
+  background:
+    radial-gradient(260px 160px at 50% 40%, rgba(190,232,75,0.06), transparent 70%),
+    var(--bg);
+  border-bottom: 1px solid var(--stroke);
+}
+.logo-body { padding: 20px 22px 24px; display: flex; flex-direction: column; gap: 8px; flex: 1; }
+.logo-body h3 { font-size: 16.5px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.logo-body p { font-size: 12.5px; color: var(--text-2); }
+.reco {
+  font-size: 9.5px; font-weight: 800; letter-spacing: 0.1em;
+  background: var(--accent); color: var(--accent-ink);
+  padding: 3px 9px; border-radius: 99px;
+}
+.logo-card.pick { border-color: rgba(190, 232, 75, 0.35); }
+.icon-row { display: flex; gap: 10px; margin-top: 12px; align-items: flex-end; }
+.app-tile {
+  border-radius: 22%;
+  background: linear-gradient(150deg, #161D2E, #0B0F18 65%);
+  border: 1px solid var(--stroke-strong);
+  display: grid; place-items: center;
+  overflow: hidden;
+}
+.app-tile.lime { background: linear-gradient(150deg, #D6F581, var(--accent) 45%, #7fb318); border: none; }
+.t64 { width: 64px; height: 64px; }
+.t44 { width: 44px; height: 44px; }
+.t28 { width: 28px; height: 28px; }
+
+/* ---------- CONSTRUCCIÓN ---------- */
+.construct { display: grid; grid-template-columns: 1.2fr 1fr; gap: 14px; margin-top: 26px; }
+.spec-rows { display: flex; flex-direction: column; }
+.spec-row {
+  display: flex; justify-content: space-between; gap: 14px;
+  padding: 11px 0; border-bottom: 1px solid var(--stroke);
+  font-size: 13px;
+}
+.spec-row:last-child { border-bottom: 0; }
+.spec-row .k { color: var(--text-3); }
+.spec-row .v { font-weight: 600; text-align: right; }
+.spec-row .v.lima { color: var(--accent); }
+
+.dont-list { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 14px; }
+.dont {
+  border: 1px solid rgba(248, 113, 113, 0.25);
+  border-radius: var(--r-md);
+  padding: 14px;
+  text-align: center;
+  font-size: 11.5px; color: var(--text-3);
+  background: var(--bg);
+}
+.dont .x { color: var(--danger); font-weight: 800; margin-right: 5px; }
+.dont .demo {
+  height: 64px; display: grid; place-items: center; margin-bottom: 10px;
+  font-family: var(--font-display); font-weight: 800; font-size: 22px; letter-spacing: -0.03em;
+}
+
+/* ---------- TAGLINE ---------- */
+.tag-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 26px; }
+.tag-card { text-align: center; padding: 30px 22px; }
+.tag-card .t {
+  font-family: var(--font-display); font-size: 20px; font-weight: 700; letter-spacing: -0.015em;
+}
+.tag-card .t .dash-s {
+  display: inline-block; width: 16px; height: 5px; border-radius: 99px;
+  background: var(--accent); vertical-align: middle; margin: 0 2px 3px;
+}
+.tag-card .u { font-size: 11.5px; color: var(--text-3); margin-top: 10px; }
+.tag-card.pick { border-color: rgba(190, 232, 75, 0.35); }
+
+/* ---------- VOZ ---------- */
+.voice-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 26px; }
+.voice-col h3 { font-size: 14px; margin-bottom: 12px; }
+.voice-item {
+  display: flex; gap: 10px; align-items: flex-start;
+  padding: 9px 0; font-size: 13px; color: var(--text-2);
+}
+.voice-item .ok { color: var(--accent); font-weight: 800; }
+.voice-item .no { color: var(--danger); font-weight: 800; }
+.voice-item b { color: var(--text); }
+
+/* ---------- APLICACIONES ---------- */
+.apps-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 26px; }
+
+/* sidebar preview */
+.side-preview {
+  background: var(--bg);
+  border: 1px solid var(--stroke);
+  border-radius: var(--r-md);
+  padding: 18px 16px;
+  width: 100%;
+}
+.sp-brand { display: flex; align-items: center; gap: 11px; margin-bottom: 16px; }
+.sp-nav { display: flex; flex-direction: column; gap: 3px; }
+.sp-item {
+  display: flex; align-items: center; gap: 9px;
+  font-size: 12.5px; font-weight: 500; color: var(--text-2);
+  padding: 8px 11px; border-radius: 10px;
+}
+.sp-item.on {
+  background: linear-gradient(120deg, rgba(190,232,75,0.14), rgba(190,232,75,0.05));
+  border: 1px solid rgba(190,232,75,0.22);
+  color: var(--accent);
+}
+.sp-item svg { width: 15px; height: 15px; stroke-width: 1.8; }
+
+/* login preview */
+.login-preview {
+  background:
+    radial-gradient(240px 130px at 50% -20%, rgba(190,232,75,0.13), transparent 70%),
+    var(--bg);
+  border: 1px solid var(--stroke-strong);
+  border-radius: 20px;
+  padding: 30px 26px 24px;
+  text-align: center;
+}
+.login-preview .lp-name {
+  font-family: var(--font-display); font-weight: 800; font-size: 24px; letter-spacing: -0.04em;
+  display: flex; align-items: center; justify-content: center;
+  margin-top: 14px;
+}
+.login-preview .lp-name .dash { width: 0.5em; height: 0.15em; background: var(--accent); border-radius: 99px; margin: 0 0.08em; box-shadow: 0 0 14px rgba(190,232,75,0.5); }
+.lp-sub { font-size: 9.5px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--text-3); margin-top: 5px; }
+.lp-field { height: 38px; background: var(--surface); border: 1px solid var(--stroke-strong); border-radius: 11px; margin-top: 11px; }
+.lp-btn {
+  height: 40px; background: var(--accent); border-radius: 11px; margin-top: 14px;
+  display: grid; place-items: center;
+  color: var(--accent-ink); font-weight: 700; font-size: 13px;
+  box-shadow: 0 10px 24px -10px rgba(190,232,75,0.5);
+}
+
+/* WhatsApp preview */
+.wa-preview {
+  background: var(--bg);
+  border: 1px solid var(--stroke);
+  border-radius: var(--r-md);
+  padding: 18px;
+  display: flex; flex-direction: column; gap: 10px;
+}
+.wa-bubble {
+  max-width: 88%;
+  background: #12291c;
+  border: 1px solid rgba(37, 211, 102, 0.2);
+  border-radius: 4px 14px 14px 14px;
+  padding: 11px 14px;
+  font-size: 12.5px; color: #D9E7DD; line-height: 1.6;
+}
+.wa-bubble .sig { color: var(--wa); font-weight: 600; }
+.wa-meta { font-size: 10px; color: var(--text-3); }
+
+/* pantalla de carga */
+.splash-preview {
+  background: var(--bg);
+  border: 1px solid var(--stroke);
+  border-radius: var(--r-md);
+  height: 240px;
+  display: grid; place-items: center;
+}
+
+/* favicon strip */
+.fav-strip { display: flex; align-items: center; gap: 18px; margin-top: 14px; }
+.browser-tab {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--surface-2);
+  border: 1px solid var(--stroke-strong);
+  border-radius: 10px 10px 0 0;
+  padding: 8px 16px;
+  font-size: 12px; color: var(--text-2);
+}
+
+/* ---------- Footer next ---------- */
+.next-steps { margin-top: 30px; }
+.step-row {
+  display: flex; gap: 14px; align-items: baseline;
+  padding: 12px 0; border-bottom: 1px solid var(--stroke);
+  font-size: 13.5px;
+}
+.step-row:last-child { border-bottom: 0; }
+.step-row .num {
+  font-family: var(--font-display); font-weight: 800; color: var(--accent); font-size: 15px;
+  width: 22px; flex-shrink: 0;
+}
+.step-row .muted { color: var(--text-3); font-size: 12px; }
+
+@media (max-width: 900px) {
+  .name-grid, .logo-grid, .tag-grid, .dont-list { grid-template-columns: 1fr; }
+  .construct, .voice-grid, .apps-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <!-- ══════════ HERO ══════════ -->
+  <div class="hero">
+    <div class="hero-kicker">Propuesta de branding · v1 · Sistema Obsidiana</div>
+    <div class="wordmark">klo<span class="dash"></span>ser</div>
+    <div class="hero-tagline">El CRM que convierte leads en <b>cierres</b>.</div>
+    <div class="hero-ring">
+      <svg class="ring-demo" width="120" height="120" viewBox="0 0 120 120">
+        <circle class="track" cx="60" cy="60" r="42" fill="none" stroke-width="10"/>
+        <circle class="arc" cx="60" cy="60" r="42" fill="none" stroke-width="10" stroke-linecap="round" transform="rotate(-64 60 60)"/>
+        <rect class="closer" x="76" y="18" width="30" height="10" rx="5" transform="rotate(38 91 23)"/>
+      </svg>
+    </div>
+    <div class="say">Se pronuncia <b>«clóser»</b> — el asesor que cierra la venta.</div>
+  </div>
+
+  <!-- ══════════ NAMING ══════════ -->
+  <section>
+    <div class="sec-tag">01 · El nombre</div>
+    <h2>Por qué Klo-Ser funciona</h2>
+    <p class="sec-sub">No es un nombre inventado al azar: es la palabra que todo equipo de ventas inmobiliarias usa a diario, con una ortografía propia que lo hace marca registrable y un guion que se convierte en todo el sistema visual.</p>
+    <div class="name-grid">
+      <div class="card name-card">
+        <h3><span class="n">1</span> Significa algo</h3>
+        <p>En ventas, el <b>closer</b> es quien lleva el trato a la firma. Klo-Ser le pone nombre a la promesa del producto: no gestionar leads, <b>cerrarlos</b>.</p>
+      </div>
+      <div class="card name-card">
+        <h3><span class="n">2</span> El guion es el logo</h3>
+        <p>El guion de Klo-Ser no es puntuación: es <b>la pieza que cierra</b>. En el logotipo es la barra lima que completa el círculo — el mismo trazo que ya usas en barras de progreso y KPIs del sistema.</p>
+      </div>
+      <div class="card name-card">
+        <h3><span class="n">3</span> Se dice fácil</h3>
+        <p>Dos sílabas, se pronuncia igual en español («clóser»), se escribe distinto a la palabra inglesa — <b>buscable, registrable y con dominio disponible</b> en variantes como kloser.mx / klo-ser.com.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════ LOGO ══════════ -->
+  <section>
+    <div class="sec-tag">02 · Logotipo</div>
+    <h2>Tres direcciones, una recomendada</h2>
+    <p class="sec-sub">Las tres nacen del guion. La dirección A es la recomendada: cuenta la historia completa del producto en un solo trazo.</p>
+
+    <div class="logo-grid">
+      <!-- A: El círculo que cierra -->
+      <div class="card logo-card pick">
+        <div class="logo-stage">
+          <svg width="130" height="130" viewBox="0 0 120 120">
+            <circle cx="60" cy="60" r="42" fill="none" stroke="#9AA5BB" stroke-width="11" stroke-linecap="round"
+              stroke-dasharray="224 40" transform="rotate(-64 60 60)"/>
+            <rect x="76" y="17" width="31" height="11" rx="5.5" fill="#BEE84B" transform="rotate(38 91 22)"/>
+          </svg>
+        </div>
+        <div class="logo-body">
+          <h3>A · El círculo que cierra <span class="reco">Recomendada</span></h3>
+          <p>Un anillo casi completo — el proceso de venta — y el guion lima que <b>cierra el círculo</b>. Es el funnel, el seguimiento y el cierre en un solo símbolo. Funciona en 16 px y anima precioso (el guion «encaja» al cargar).</p>
+          <div class="icon-row">
+            <div class="app-tile t64"><svg width="38" height="38" viewBox="0 0 120 120"><circle cx="60" cy="60" r="42" fill="none" stroke="#EDF1F9" stroke-width="12" stroke-linecap="round" stroke-dasharray="224 40" transform="rotate(-64 60 60)"/><rect x="75" y="15" width="33" height="13" rx="6.5" fill="#BEE84B" transform="rotate(38 91 21)"/></svg></div>
+            <div class="app-tile t44"><svg width="26" height="26" viewBox="0 0 120 120"><circle cx="60" cy="60" r="42" fill="none" stroke="#EDF1F9" stroke-width="13" stroke-linecap="round" stroke-dasharray="224 40" transform="rotate(-64 60 60)"/><rect x="74" y="13" width="35" height="15" rx="7.5" fill="#BEE84B" transform="rotate(38 91 20)"/></svg></div>
+            <div class="app-tile t28"><svg width="17" height="17" viewBox="0 0 120 120"><circle cx="60" cy="60" r="42" fill="none" stroke="#EDF1F9" stroke-width="15" stroke-linecap="round" stroke-dasharray="224 40" transform="rotate(-64 60 60)"/><rect x="72" y="11" width="38" height="17" rx="8.5" fill="#BEE84B" transform="rotate(38 91 19)"/></svg></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- B: Monograma K- -->
+      <div class="card logo-card">
+        <div class="logo-stage">
+          <svg width="120" height="120" viewBox="0 0 120 120">
+            <path d="M34 22v76" stroke="#EDF1F9" stroke-width="13" stroke-linecap="round"/>
+            <path d="M82 24 44 60l38 36" stroke="#EDF1F9" stroke-width="13" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+            <rect x="62" y="53.5" width="34" height="13" rx="6.5" fill="#BEE84B"/>
+          </svg>
+        </div>
+        <div class="logo-body">
+          <h3>B · Monograma K‑</h3>
+          <p>La «K» con el guion lima incrustado en el brazo — directo, tipográfico, muy legible como avatar o app icon. Menos narrativo que A, pero contundente y fácil de reproducir en bordado, sello o merch.</p>
+          <div class="icon-row">
+            <div class="app-tile t64"><svg width="36" height="36" viewBox="0 0 120 120"><path d="M34 22v76" stroke="#EDF1F9" stroke-width="14" stroke-linecap="round"/><path d="M82 24 44 60l38 36" stroke="#EDF1F9" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" fill="none"/><rect x="60" y="52.5" width="36" height="15" rx="7.5" fill="#BEE84B"/></svg></div>
+            <div class="app-tile t44 lime"><svg width="25" height="25" viewBox="0 0 120 120"><path d="M34 22v76" stroke="#0C1405" stroke-width="14" stroke-linecap="round"/><path d="M82 24 44 60l38 36" stroke="#0C1405" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" fill="none"/><rect x="60" y="52.5" width="36" height="15" rx="7.5" fill="#0C1405"/></svg></div>
+            <div class="app-tile t28"><svg width="16" height="16" viewBox="0 0 120 120"><path d="M34 22v76" stroke="#EDF1F9" stroke-width="16" stroke-linecap="round"/><path d="M82 24 44 60l38 36" stroke="#EDF1F9" stroke-width="16" stroke-linecap="round" stroke-linejoin="round" fill="none"/><rect x="58" y="51" width="40" height="18" rx="9" fill="#BEE84B"/></svg></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- C: La llave -->
+      <div class="card logo-card">
+        <div class="logo-stage">
+          <svg width="126" height="126" viewBox="0 0 120 120">
+            <g transform="rotate(-45 60 60)">
+              <circle cx="34" cy="60" r="15" fill="none" stroke="#EDF1F9" stroke-width="11"/>
+              <path d="M49 60h44" stroke="#EDF1F9" stroke-width="11" stroke-linecap="round"/>
+              <rect x="68" y="60" width="11" height="18" rx="5.5" fill="#BEE84B"/>
+              <rect x="86" y="60" width="11" height="24" rx="5.5" fill="#BEE84B"/>
+            </g>
+          </svg>
+        </div>
+        <div class="logo-body">
+          <h3>C · La llave</h3>
+          <p>El símbolo eterno del cierre inmobiliario: <b>entregar la llave</b>. Los dientes en lima son dos guiones apilados. Emocional e inconfundiblemente de bienes raíces — aunque menos diferenciada (hay muchas llaves en el sector).</p>
+          <div class="icon-row">
+            <div class="app-tile t64"><svg width="38" height="38" viewBox="0 0 120 120"><g transform="rotate(-45 60 60)"><circle cx="34" cy="60" r="15" fill="none" stroke="#EDF1F9" stroke-width="12"/><path d="M49 60h44" stroke="#EDF1F9" stroke-width="12" stroke-linecap="round"/><rect x="66" y="60" width="12" height="19" rx="6" fill="#BEE84B"/><rect x="85" y="60" width="12" height="25" rx="6" fill="#BEE84B"/></g></svg></div>
+            <div class="app-tile t44"><svg width="27" height="27" viewBox="0 0 120 120"><g transform="rotate(-45 60 60)"><circle cx="34" cy="60" r="15" fill="none" stroke="#EDF1F9" stroke-width="13"/><path d="M49 60h44" stroke="#EDF1F9" stroke-width="13" stroke-linecap="round"/><rect x="66" y="60" width="13" height="20" rx="6.5" fill="#BEE84B"/><rect x="85" y="60" width="13" height="26" rx="6.5" fill="#BEE84B"/></g></svg></div>
+            <div class="app-tile t28"><svg width="17" height="17" viewBox="0 0 120 120"><g transform="rotate(-45 60 60)"><circle cx="34" cy="60" r="16" fill="none" stroke="#EDF1F9" stroke-width="15"/><path d="M50 60h43" stroke="#EDF1F9" stroke-width="15" stroke-linecap="round"/><rect x="64" y="60" width="15" height="22" rx="7.5" fill="#BEE84B"/><rect x="84" y="60" width="15" height="28" rx="7.5" fill="#BEE84B"/></g></svg></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════ CONSTRUCCIÓN ══════════ -->
+  <section>
+    <div class="sec-tag">03 · Sistema del logotipo</div>
+    <h2>Construcción y reglas</h2>
+    <p class="sec-sub">Cómo se arma la marca recomendada (A) junto al logotipo, y las tres cosas que nunca hay que hacerle.</p>
+
+    <div class="construct">
+      <div class="card" style="display:grid;place-items:center;padding:40px">
+        <svg width="360" height="110" viewBox="0 0 360 110">
+          <!-- símbolo -->
+          <circle cx="52" cy="55" r="33" fill="none" stroke="#EDF1F9" stroke-width="9" stroke-linecap="round"
+            stroke-dasharray="176 32" transform="rotate(-64 52 55)"/>
+          <rect x="64" y="21" width="25" height="9" rx="4.5" fill="#BEE84B" transform="rotate(38 76.5 25.5)"/>
+          <!-- wordmark -->
+          <text x="110" y="72" font-family="Bricolage Grotesque" font-weight="800" font-size="46" letter-spacing="-2" fill="#EDF1F9">klo</text>
+          <rect x="184" y="52" width="24" height="8" rx="4" fill="#BEE84B"/>
+          <text x="216" y="72" font-family="Bricolage Grotesque" font-weight="800" font-size="46" letter-spacing="-2" fill="#EDF1F9">ser</text>
+        </svg>
+      </div>
+      <div class="card">
+        <div class="spec-rows">
+          <div class="spec-row"><span class="k">Wordmark</span><span class="v">Bricolage Grotesque 800, minúsculas, tracking −0.045em</span></div>
+          <div class="spec-row"><span class="k">El guion</span><span class="v lima">Siempre lima #BEE84B, nunca un «-» tipográfico</span></div>
+          <div class="spec-row"><span class="k">Proporción guion</span><span class="v">0.52 × altura de x · radio completo</span></div>
+          <div class="spec-row"><span class="k">Área de respeto</span><span class="v">1 diámetro del guion alrededor</span></div>
+          <div class="spec-row"><span class="k">Tamaño mínimo</span><span class="v">16 px (solo símbolo) · 72 px (lockup completo)</span></div>
+          <div class="spec-row"><span class="k">Sobre fondo claro</span><span class="v">Anillo en #0C1405, guion lima se mantiene</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="dont-list">
+      <div class="dont">
+        <div class="demo" style="color:#EDF1F9">klo-ser</div>
+        <span class="x">✕</span>No usar un guion tipográfico gris — el guion siempre es la barra lima.
+      </div>
+      <div class="dont">
+        <div class="demo" style="color:#EDF1F9">Klo-Ser <span style="font-size:11px;color:#616D85">(en UI)</span></div>
+        <span class="x">✕</span>En el logotipo siempre minúsculas. «Klo-Ser» con mayúsculas solo en texto corrido.
+      </div>
+      <div class="dont">
+        <div class="demo"><span style="background:linear-gradient(90deg,#BEE84B,#0891B2);-webkit-background-clip:text;background-clip:text;color:transparent">kloser</span></div>
+        <span class="x">✕</span>Sin degradados en el texto y sin quitar el guion — es la marca.
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════ TAGLINE ══════════ -->
+  <section>
+    <div class="sec-tag">04 · Tagline</div>
+    <h2>La frase que acompaña</h2>
+    <p class="sec-sub">Tres opciones probadas contra el mismo criterio: que le hable al asesor, no al software.</p>
+    <div class="tag-grid">
+      <div class="card tag-card pick">
+        <div class="t">Del lead al cierre<span class="dash-s"></span></div>
+        <div class="u">Recomendada — describe el recorrido completo del producto y termina en el guion de la marca. Úsala en login, App Store y presentaciones.</div>
+      </div>
+      <div class="card tag-card">
+        <div class="t">Cierra más. Persigue menos.</div>
+        <div class="u">Más agresiva, buena para venta del producto a inmobiliarias (pitch, landing comercial).</div>
+      </div>
+      <div class="card tag-card">
+        <div class="t">Tu día, en orden de cierre.</div>
+        <div class="u">Habla de la cola del día — ideal para onboarding de asesores y notificaciones.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════ VOZ ══════════ -->
+  <section>
+    <div class="sec-tag">05 · Voz</div>
+    <h2>Cómo habla Klo-Ser</h2>
+    <p class="sec-sub">La voz del sistema en botones, notificaciones y estados vacíos. Klo-Ser es un compañero de ventas con experiencia: directo, cálido y sin jerga de software.</p>
+    <div class="voice-grid">
+      <div class="card voice-col">
+        <h3 style="color:var(--accent)">Así sí</h3>
+        <div class="voice-item"><span class="ok">✓</span><span><b>«Isabel lleva 2 h esperando tu primer mensaje.»</b> — urgencia con nombre propio, no métricas frías.</span></div>
+        <div class="voice-item"><span class="ok">✓</span><span><b>«Todo al día. Ve por un café ☕»</b> — celebra la cola vacía, permiso de descansar.</span></div>
+        <div class="voice-item"><span class="ok">✓</span><span><b>«3 leads se enfriaron esta semana. ¿Los reactivamos?»</b> — propone la acción, no solo reporta.</span></div>
+        <div class="voice-item"><span class="ok">✓</span><span><b>«Cerraste 3 este mes. Vas 1 arriba de julio.»</b> — números en contexto, tono de coach.</span></div>
+      </div>
+      <div class="card voice-col">
+        <h3 style="color:var(--danger)">Así no</h3>
+        <div class="voice-item"><span class="no">✕</span><span>«Error 500: falló la operación de sincronización.» — jerga técnica al asesor.</span></div>
+        <div class="voice-item"><span class="no">✕</span><span>«¡¡Felicidades!! 🎉🎉🥳 ¡Eres increíble!» — entusiasmo vacío que devalúa el logro real.</span></div>
+        <div class="voice-item"><span class="no">✕</span><span>«Se requiere completar el registro de seguimiento.» — voz pasiva burocrática.</span></div>
+        <div class="voice-item"><span class="no">✕</span><span>«KPI de conversión: 14.2%» a un asesor — las métricas frías viven en el dashboard admin, no en la cola del día.</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════ APLICACIONES ══════════ -->
+  <section>
+    <div class="sec-tag">06 · Aplicaciones</div>
+    <h2>La marca en su hábitat</h2>
+    <p class="sec-sub">Así se ve Klo-Ser en los puntos de contacto reales del sistema — con Montana Realty como cliente del piloto.</p>
+
+    <div class="apps-grid">
+      <div class="card">
+        <div class="sec-tag" style="margin-bottom:12px">Sidebar del sistema</div>
+        <div class="side-preview">
+          <div class="sp-brand">
+            <svg width="30" height="30" viewBox="0 0 120 120"><circle cx="60" cy="60" r="42" fill="none" stroke="#EDF1F9" stroke-width="12" stroke-linecap="round" stroke-dasharray="224 40" transform="rotate(-64 60 60)"/><rect x="75" y="15" width="33" height="13" rx="6.5" fill="#BEE84B" transform="rotate(38 91 21)"/></svg>
+            <div>
+              <div style="font-family:var(--font-display);font-weight:800;font-size:15px;letter-spacing:-0.03em;display:flex;align-items:center">klo<span style="width:8px;height:3px;background:var(--accent);border-radius:99px;margin:0 1.5px"></span>ser</div>
+              <div style="font-size:9.5px;color:var(--text-3);letter-spacing:0.08em;text-transform:uppercase">Montana Realty</div>
+            </div>
+          </div>
+          <div class="sp-nav">
+            <div class="sp-item on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg> Dashboard</div>
+            <div class="sp-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.5 5h13l3.5 7v5a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-5z"/></svg> Bandeja</div>
+            <div class="sp-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 21h18"/><path d="M5 21V7l7-4 7 4v14"/><path d="M9 21v-6h6v6"/></svg> Propiedades</div>
+          </div>
+        </div>
+        <p style="font-size:11.5px;color:var(--text-3);margin-top:12px">La marca del cliente (Montana Realty) vive debajo del wordmark — Klo-Ser es el sistema, el cliente es el contexto. Listo para multi-inmobiliaria.</p>
+      </div>
+
+      <div class="card">
+        <div class="sec-tag" style="margin-bottom:12px">Login</div>
+        <div class="login-preview">
+          <svg width="46" height="46" viewBox="0 0 120 120"><circle cx="60" cy="60" r="42" fill="none" stroke="#EDF1F9" stroke-width="11" stroke-linecap="round" stroke-dasharray="224 40" transform="rotate(-64 60 60)"/><rect x="76" y="16" width="32" height="12" rx="6" fill="#BEE84B" transform="rotate(38 91 21)"/></svg>
+          <div class="lp-name">klo<span class="dash"></span>ser</div>
+          <div class="lp-sub">Del lead al cierre</div>
+          <div class="lp-field"></div>
+          <div class="lp-field"></div>
+          <div class="lp-btn">Entrar</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="sec-tag" style="margin-bottom:12px">Firma en WhatsApp</div>
+        <div class="wa-preview">
+          <div class="wa-bubble">
+            Hola María Fernanda, te confirmo la visita a <b>Casa Valle Real</b> este miércoles a las 11:00. ¿Te queda bien la hora?<br>
+            <span class="sig">— Alejandra · Montana Realty</span>
+          </div>
+          <div class="wa-meta">Enviado desde Klo-Ser · plantilla «Confirmar cita»</div>
+        </div>
+        <p style="font-size:11.5px;color:var(--text-3);margin-top:12px">Con el cliente final firma el asesor y la inmobiliaria — Klo-Ser nunca aparece frente al comprador. La marca del sistema es para el equipo, no para el lead.</p>
+      </div>
+
+      <div class="card">
+        <div class="sec-tag" style="margin-bottom:12px">Pantalla de carga · PWA</div>
+        <div class="splash-preview">
+          <div style="text-align:center">
+            <svg width="64" height="64" viewBox="0 0 120 120" style="animation: spin 2.4s linear infinite">
+              <circle cx="60" cy="60" r="42" fill="none" stroke="#2A3348" stroke-width="11"/>
+              <circle cx="60" cy="60" r="42" fill="none" stroke="#BEE84B" stroke-width="11" stroke-linecap="round" stroke-dasharray="66 198" transform="rotate(-90 60 60)"/>
+            </svg>
+            <style>@keyframes spin { to { transform: rotate(360deg); } }</style>
+            <div style="font-family:var(--font-display);font-weight:800;font-size:20px;letter-spacing:-0.03em;margin-top:14px;display:flex;align-items:center;justify-content:center">klo<span style="width:10px;height:4px;background:var(--accent);border-radius:99px;margin:0 2px"></span>ser</div>
+          </div>
+        </div>
+        <p style="font-size:11.5px;color:var(--text-3);margin-top:12px">El anillo del logo <b>es</b> el spinner de carga — la marca trabaja hasta cuando esperas.</p>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:14px">
+      <div class="sec-tag" style="margin-bottom:12px">Favicon y pestaña</div>
+      <div class="fav-strip">
+        <div class="browser-tab">
+          <svg width="15" height="15" viewBox="0 0 120 120"><circle cx="60" cy="60" r="42" fill="none" stroke="#EDF1F9" stroke-width="15" stroke-linecap="round" stroke-dasharray="224 40" transform="rotate(-64 60 60)"/><rect x="72" y="11" width="38" height="17" rx="8.5" fill="#BEE84B" transform="rotate(38 91 19)"/></svg>
+          Klo-Ser · Cola del día
+          <span style="color:var(--text-3);margin-left:6px">✕</span>
+        </div>
+        <span style="font-size:11.5px;color:var(--text-3)">A 16 px el símbolo sigue leyéndose: anillo + chispa lima.</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════ SIGUIENTES PASOS ══════════ -->
+  <section>
+    <div class="sec-tag">07 · Siguientes pasos</div>
+    <h2>Para hacerlo real</h2>
+    <div class="card next-steps">
+      <div class="step-row"><span class="num">1</span><span>Elegir dirección de símbolo (A, B o C) y tagline. <span class="muted">Mi recomendación: A + «Del lead al cierre».</span></span></div>
+      <div class="step-row"><span class="num">2</span><span>Aplicar el rebrand al mockup Obsidiana y al app real: sidebar, login, manifest de la PWA, favicon y pantalla de carga. <span class="muted">~1 sesión de trabajo.</span></span></div>
+      <div class="step-row"><span class="num">3</span><span>Verificar dominio y registro de marca. <span class="muted">kloser.mx / klo-ser.com y clase 42 (software) ante el IMPI.</span></span></div>
+      <div class="step-row"><span class="num">4</span><span>Generar los assets: SVG maestro, iconos PWA 192/512, favicon.ico, og-image. <span class="muted">Todo sale del SVG de esta página.</span></span></div>
+    </div>
+  </section>
+
+</div>
+
+<script>
+/* Reveal on scroll */
+const io = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      e.target.style.opacity = '1';
+      e.target.style.transform = 'none';
+      io.unobserve(e.target);
+    }
+  });
+}, { threshold: 0.12 });
+document.querySelectorAll('section').forEach(s => {
+  s.style.opacity = '0';
+  s.style.transform = 'translateY(22px)';
+  s.style.transition = 'opacity 0.7s cubic-bezier(0.22,1,0.36,1), transform 0.7s cubic-bezier(0.22,1,0.36,1)';
+  io.observe(s);
+});
+</script>
+</body>
+</html>

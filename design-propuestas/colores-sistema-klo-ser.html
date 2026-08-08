@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Klo-Ser — Color de superficies · Cuatro propuestas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Jost:wght@200;300&display=swap" rel="stylesheet">
+<style>
+:root {
+  --ink: #221B14;
+  --cafe: #6B4A33;
+  --cafe-deep: #503524;
+  --barro: #9C6B4A;
+  --ocre: #C98A3B;
+  --arena: #D8C9B0;
+  --urgente: #A34E28;
+  --ok: #7D8A5C;
+  --font: "Poppins", sans-serif;
+  --logo: "Jost", sans-serif;
+  --r-xl: 26px;
+  --r-lg: 20px;
+  --r-md: 14px;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: var(--font); color: var(--ink); background: #EFE9DD; }
+
+.top {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 26px clamp(24px, 6vw, 72px);
+  border-bottom: 1px solid rgba(34,27,20,0.12);
+}
+.top .mark { font-family: var(--logo); font-weight: 300; letter-spacing: 0.34em; font-size: 17px; }
+.top .tag { font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--cafe); font-weight: 500; }
+
+.intro { padding: 64px clamp(24px, 6vw, 72px) 56px; max-width: 880px; }
+.intro .kicker {
+  display: flex; align-items: center; gap: 12px;
+  font-size: 11px; letter-spacing: 0.24em; text-transform: uppercase;
+  color: var(--cafe); font-weight: 600; margin-bottom: 18px;
+}
+.intro .kicker::before { content: ""; width: 34px; height: 2px; background: var(--cafe); }
+.intro h1 { font-size: clamp(30px, 4.4vw, 46px); font-weight: 700; line-height: 1.08; letter-spacing: -0.01em; }
+.intro h1 em { font-style: normal; color: var(--cafe); }
+.intro p { margin-top: 18px; font-size: 15.5px; line-height: 1.7; color: rgba(34,27,20,0.72); max-width: 62ch; }
+.intro p b { color: var(--ink); }
+
+.diag {
+  margin: 0 clamp(24px, 6vw, 72px) 20px;
+  border: 1px solid rgba(34,27,20,0.16); border-radius: var(--r-lg);
+  background: #FAF7F1; padding: 22px 26px;
+  display: flex; gap: 20px; align-items: center; flex-wrap: wrap;
+}
+.diag .chip {
+  width: 92px; height: 60px; border-radius: 12px; background: #FAF7F1;
+  border: 1px solid rgba(34,27,20,0.09); flex-shrink: 0;
+  box-shadow: inset 0 0 0 8px #EFE9DD;
+}
+.diag p { font-size: 13.5px; line-height: 1.65; color: rgba(34,27,20,0.75); flex: 1; min-width: 260px; }
+.diag p b { color: var(--urgente); }
+
+/* ---- bandas de propuesta ---- */
+.band { padding: 58px clamp(24px, 6vw, 72px) 64px; border-top: 1px solid rgba(34,27,20,0.10); }
+.band-head { display: flex; align-items: baseline; gap: 16px; flex-wrap: wrap; margin-bottom: 8px; }
+.band-head .num {
+  font-family: var(--logo); font-weight: 300; font-size: 15px; letter-spacing: 0.18em;
+  padding: 5px 13px; border-radius: 999px; border: 1px solid currentColor;
+}
+.band-head h2 { font-size: clamp(21px, 2.6vw, 27px); font-weight: 700; letter-spacing: -0.01em; }
+.band-head .ratio { font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; font-weight: 600; opacity: 0.6; }
+.band > .desc { font-size: 14.5px; line-height: 1.65; max-width: 66ch; opacity: 0.78; margin-bottom: 30px; }
+.band > .desc b { opacity: 1; }
+
+.stage { display: grid; grid-template-columns: minmax(300px, 1.35fr) minmax(240px, 1fr); gap: 22px; align-items: start; }
+@media (max-width: 780px) { .stage { grid-template-columns: 1fr; } }
+
+/* tarjeta de muestra: cola del día */
+.q-card { border-radius: var(--r-xl); padding: 24px 24px 20px; }
+.q-card .q-title { font-size: 16px; font-weight: 600; }
+.q-card .q-sub { font-size: 12.5px; opacity: 0.62; margin-top: 3px; }
+.q-sec {
+  margin-top: 18px; font-size: 10.5px; letter-spacing: 0.2em; text-transform: uppercase;
+  font-weight: 600; color: var(--urgente);
+}
+.lead { display: flex; align-items: center; gap: 13px; padding: 13px 0; }
+.lead + .lead { border-top: 1px solid rgba(34,27,20,0.08); }
+.lead .avatar {
+  width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0;
+  display: grid; place-items: center; font-size: 12px; font-weight: 600;
+  background: var(--arena); color: var(--cafe-deep);
+}
+.lead .who { flex: 1; min-width: 0; }
+.lead .who .name { font-size: 13.5px; font-weight: 600; }
+.lead .who .meta { font-size: 11.5px; opacity: 0.58; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lead .cta {
+  font-size: 11.5px; font-weight: 600; padding: 7px 14px; border-radius: 999px;
+  background: var(--cafe); color: #F6F1E8; white-space: nowrap;
+}
+.badge {
+  font-size: 10px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase;
+  padding: 4px 9px; border-radius: 999px; background: rgba(163,78,40,0.12); color: var(--urgente);
+}
+
+/* columna derecha: tiles + propiedad */
+.tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.tile { border-radius: var(--r-md); padding: 14px 14px 12px; }
+.tile .n { font-size: 22px; font-weight: 700; }
+.tile .l { font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; opacity: 0.6; margin-top: 2px; }
+.prop { margin-top: 12px; border-radius: var(--r-lg); overflow: hidden; }
+.prop .ph { height: 88px; background: linear-gradient(120deg, var(--barro), var(--ocre) 70%, var(--arena)); }
+.prop .bd { padding: 14px 16px 15px; }
+.prop .price { font-size: 16px; font-weight: 700; }
+.prop .addr { font-size: 12px; opacity: 0.6; margin-top: 2px; }
+
+/* fichas de tokens */
+.tokens { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 26px; }
+.tok {
+  display: flex; align-items: center; gap: 9px; font-size: 11.5px;
+  padding: 7px 13px 7px 8px; border-radius: 999px; border: 1px solid rgba(34,27,20,0.14);
+  background: rgba(255,255,255,0.5);
+}
+.tok i { width: 18px; height: 18px; border-radius: 50%; display: block; border: 1px solid rgba(34,27,20,0.18); }
+.tok code { font-family: ui-monospace, monospace; font-size: 11px; opacity: 0.75; }
+
+/* ---- A · papel definido ---- */
+.band-a { background: #EFE9DD; }
+.band-a .band-head { color: var(--cafe-deep); }
+.band-a .q-card, .band-a .tile, .band-a .prop {
+  background: #FFFFFF; border: 1px solid rgba(34,27,20,0.14);
+  box-shadow: 0 18px 40px -26px rgba(80,53,36,0.38);
+}
+.band-a .prop { border: 1px solid rgba(34,27,20,0.14); }
+
+/* ---- B · muro profundo ---- */
+.band-b { background: #E5DAC4; }
+.band-b .band-head { color: var(--cafe-deep); }
+.band-b .q-card, .band-b .tile, .band-b .prop {
+  background: #FAF7F1; border: 1px solid rgba(34,27,20,0.10);
+  box-shadow: 0 22px 46px -30px rgba(60,42,26,0.42);
+}
+.band-b .tok { background: rgba(250,247,241,0.6); }
+
+/* ---- C · lino y crema ---- */
+.band-c { background: #EFE9DD; }
+.band-c .band-head { color: var(--cafe-deep); }
+.band-c .q-card, .band-c .tile, .band-c .prop {
+  background: #FFFDF8; border: 1.5px solid #D8C9B0;
+  box-shadow: 0 14px 34px -26px rgba(107,74,51,0.30);
+}
+
+/* ---- D · tinta al frente ---- */
+.band-d { background: #E8DFCC; }
+.band-d .band-head { color: var(--cafe-deep); }
+.band-d .q-card {
+  background: #262019; color: #F2EDE4; border: 1px solid rgba(34,27,20,0.5);
+  box-shadow: 0 26px 54px -30px rgba(20,14,8,0.55);
+}
+.band-d .q-card .lead + .lead { border-top-color: rgba(246,241,232,0.10); }
+.band-d .q-card .avatar { background: #4A3A2B; color: #EAD9C4; }
+.band-d .q-card .cta { background: var(--ocre); color: #2A1D0C; }
+.band-d .q-card .badge { background: rgba(201,138,59,0.18); color: #E0A75C; }
+.band-d .q-card .q-sec { color: #E0A75C; }
+.band-d .tile, .band-d .prop {
+  background: #FFFFFF; border: 1px solid rgba(34,27,20,0.14);
+  box-shadow: 0 16px 36px -26px rgba(60,42,26,0.35);
+}
+
+/* cierre */
+.outro { padding: 56px clamp(24px, 6vw, 72px) 72px; border-top: 1px solid rgba(34,27,20,0.10); max-width: 880px; }
+.outro h2 { font-size: 22px; font-weight: 700; margin-bottom: 12px; }
+.outro p { font-size: 14.5px; line-height: 1.7; color: rgba(34,27,20,0.75); }
+.outro p b { color: var(--ink); }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="mark">KLO&#8202;&#8212;&#8202;SER</div>
+  <div class="tag">Color de superficies &middot; 2026</div>
+</header>
+
+<section class="intro">
+  <div class="kicker">El problema, en corto</div>
+  <h1>Las tarjetas se pierden. <em>Cuatro maneras de separarlas del muro.</em></h1>
+  <p>Hoy el panel (<b>#FAF7F1</b>) descansa sobre el beige (<b>#EFE9DD</b>) con una separación de apenas <b>1.13&nbsp;:&nbsp;1</b> y un borde de tinta al 9&nbsp;% — a media luz son la misma superficie. Cada propuesta ataca el mismo síntoma desde un ángulo distinto; todas conservan la paleta café&#8202;/&#8202;arena&#8202;/&#8202;ocre de la marca.</p>
+</section>
+
+<div class="diag">
+  <div class="chip" aria-hidden="true"></div>
+  <p><b>Estado actual:</b> panel #FAF7F1 sobre fondo #EFE9DD (la muestra de la izquierda, tal cual se ve hoy). El ojo no encuentra el límite de la tarjeta: la jerarquía la está cargando solo la sombra, y la sombra actual es demasiado difusa para ese trabajo.</p>
+</div>
+
+<!-- ══════════════ A ══════════════ -->
+<section class="band band-a">
+  <div class="band-head">
+    <span class="num">A</span>
+    <h2>Papel definido</h2>
+    <span class="ratio">Separación 1.21 : 1 + borde al 14 %</span>
+  </div>
+  <p class="desc">La intervención mínima: el fondo no se toca. Las tarjetas suben a <b>blanco puro</b>, el borde pasa del 9&nbsp;% al <b>14&nbsp;%</b> y la sombra se vuelve más corta y cálida. El límite lo dibuja el borde, no la sombra. Es la opción que menos cambia el carácter actual del sitio.</p>
+  <div class="stage">
+    <div class="q-card">
+      <div class="q-title">Tu cola de hoy</div>
+      <div class="q-sub">Martes 4 de agosto &middot; 2 leads urgentes primero</div>
+      <div class="q-sec">&#9650; Atiende ahora</div>
+      <div class="lead">
+        <div class="avatar">IR</div>
+        <div class="who"><div class="name">Isabel Rentería</div><div class="meta">Asignada hace 24 min &middot; Casa Bosques 214</div></div>
+        <span class="badge">Nuevo</span>
+        <span class="cta">Contactar &rarr;</span>
+      </div>
+      <div class="lead">
+        <div class="avatar">HM</div>
+        <div class="who"><div class="name">Héctor Morales</div><div class="meta">Sin primer contacto &middot; WhatsApp</div></div>
+        <span class="badge">Nuevo</span>
+        <span class="cta">Contactar &rarr;</span>
+      </div>
+    </div>
+    <div>
+      <div class="tiles">
+        <div class="tile"><div class="n">14</div><div class="l">Leads activos</div></div>
+        <div class="tile"><div class="n">9</div><div class="l">Por seguir</div></div>
+        <div class="tile"><div class="n">3</div><div class="l">Visitas hoy</div></div>
+      </div>
+      <div class="prop">
+        <div class="ph"></div>
+        <div class="bd"><div class="price">$6,200,000 <small>MXN</small></div><div class="addr">Casa Valle Real &middot; Zapopan</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="tokens">
+    <span class="tok"><i style="background:#EFE9DD"></i>--bg <code>#EFE9DD</code></span>
+    <span class="tok"><i style="background:#FFFFFF"></i>--panel <code>#FFFFFF</code></span>
+    <span class="tok"><i style="background:rgba(34,27,20,0.14)"></i>--stroke <code>14 %</code></span>
+  </div>
+</section>
+
+<!-- ══════════════ B ══════════════ -->
+<section class="band band-b">
+  <div class="band-head">
+    <span class="num">B</span>
+    <h2>Muro profundo</h2>
+    <span class="ratio">Separación 1.30 : 1</span>
+  </div>
+  <p class="desc">El movimiento inverso: las tarjetas no cambian — <b>el fondo baja</b> a un arena más profundo (#E5DAC4). El panel crema de siempre ahora flota solo, sin pedirle nada al borde. Es la que más refuerza la metáfora de la marca: papel sobre muro de obra. El cambio se siente en todo el sitio, no tarjeta por tarjeta.</p>
+  <div class="stage">
+    <div class="q-card">
+      <div class="q-title">Tu cola de hoy</div>
+      <div class="q-sub">Martes 4 de agosto &middot; 2 leads urgentes primero</div>
+      <div class="q-sec">&#9650; Atiende ahora</div>
+      <div class="lead">
+        <div class="avatar">IR</div>
+        <div class="who"><div class="name">Isabel Rentería</div><div class="meta">Asignada hace 24 min &middot; Casa Bosques 214</div></div>
+        <span class="badge">Nuevo</span>
+        <span class="cta">Contactar &rarr;</span>
+      </div>
+      <div class="lead">
+        <div class="avatar">HM</div>
+        <div class="who"><div class="name">Héctor Morales</div><div class="meta">Sin primer contacto &middot; WhatsApp</div></div>
+        <span class="badge">Nuevo</span>
+        <span class="cta">Contactar &rarr;</span>
+      </div>
+    </div>
+    <div>
+      <div class="tiles">
+        <div class="tile"><div class="n">14</div><div class="l">Leads activos</div></div>
+        <div class="tile"><div class="n">9</div><div class="l">Por seguir</div></div>
+        <div class="tile"><div class="n">3</div><div class="l">Visitas hoy</div></div>
+      </div>
+      <div class="prop">
+        <div class="ph"></div>
+        <div class="bd"><div class="price">$6,200,000 <small>MXN</small></div><div class="addr">Casa Valle Real &middot; Zapopan</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="tokens">
+    <span class="tok"><i style="background:#E5DAC4"></i>--bg <code>#E5DAC4</code></span>
+    <span class="tok"><i style="background:#FAF7F1"></i>--panel <code>#FAF7F1</code></span>
+    <span class="tok"><i style="background:rgba(34,27,20,0.10)"></i>--stroke <code>10 %</code></span>
+  </div>
+</section>
+
+<!-- ══════════════ C ══════════════ -->
+<section class="band band-c">
+  <div class="band-head">
+    <span class="num">C</span>
+    <h2>Lino y crema</h2>
+    <span class="ratio">Separación 1.19 : 1 + borde arena 1.5 px</span>
+  </div>
+  <p class="desc">El límite deja de ser una sombra y se convierte en <b>trazo</b>: borde arena (#D8C9B0) de 1.5&nbsp;px, visible y deliberado, sobre tarjetas crema cálido (#FFFDF8). Es la más artesanal de las cuatro — el guiño a la rotulación del logo: la línea es parte del lenguaje, no un recurso técnico.</p>
+  <div class="stage">
+    <div class="q-card">
+      <div class="q-title">Tu cola de hoy</div>
+      <div class="q-sub">Martes 4 de agosto &middot; 2 leads urgentes primero</div>
+      <div class="q-sec">&#9650; Atiende ahora</div>
+      <div class="lead">
+        <div class="avatar">IR</div>
+        <div class="who"><div class="name">Isabel Rentería</div><div class="meta">Asignada hace 24 min &middot; Casa Bosques 214</div></div>
+        <span class="badge">Nuevo</span>
+        <span class="cta">Contactar &rarr;</span>
+      </div>
+      <div class="lead">
+        <div class="avatar">HM</div>
+        <div class="who"><div class="name">Héctor Morales</div><div class="meta">Sin primer contacto &middot; WhatsApp</div></div>
+        <span class="badge">Nuevo</span>
+        <span class="cta">Contactar &rarr;</span>
+      </div>
+    </div>
+    <div>
+      <div class="tiles">
+        <div class="tile"><div class="n">14</div><div class="l">Leads activos</div></div>
+        <div class="tile"><div class="n">9</div><div class="l">Por seguir</div></div>
+        <div class="tile"><div class="n">3</div><div class="l">Visitas hoy</div></div>
+      </div>
+      <div class="prop">
+        <div class="ph"></div>
+        <div class="bd"><div class="price">$6,200,000 <small>MXN</small></div><div class="addr">Casa Valle Real &middot; Zapopan</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="tokens">
+    <span class="tok"><i style="background:#EFE9DD"></i>--bg <code>#EFE9DD</code></span>
+    <span class="tok"><i style="background:#FFFDF8"></i>--panel <code>#FFFDF8</code></span>
+    <span class="tok"><i style="background:#D8C9B0"></i>--stroke <code>#D8C9B0 · 1.5 px</code></span>
+  </div>
+</section>
+
+<!-- ══════════════ D ══════════════ -->
+<section class="band band-d">
+  <div class="band-head">
+    <span class="num">D</span>
+    <h2>Tinta al frente</h2>
+    <span class="ratio">Separación 12.84 : 1 en la pieza clave</span>
+  </div>
+  <p class="desc">La jerarquía por contraste total: <b>la tarjeta que importa</b> (la cola del día) se imprime en tinta oscura, y el resto del contenido queda en blanco sobre un fondo apenas más profundo. Nada compite con la pieza principal. Es la más dramática — y la que mejor dialoga con los mockups oscuros que ya viven en la página del sistema.</p>
+  <div class="stage">
+    <div class="q-card">
+      <div class="q-title">Tu cola de hoy</div>
+      <div class="q-sub">Martes 4 de agosto &middot; 2 leads urgentes primero</div>
+      <div class="q-sec">&#9650; Atiende ahora</div>
+      <div class="lead">
+        <div class="avatar">IR</div>
+        <div class="who"><div class="name">Isabel Rentería</div><div class="meta">Asignada hace 24 min &middot; Casa Bosques 214</div></div>
+        <span class="badge">Nuevo</span>
+        <span class="cta">Contactar &rarr;</span>
+      </div>
+      <div class="lead">
+        <div class="avatar">HM</div>
+        <div class="who"><div class="name">Héctor Morales</div><div class="meta">Sin primer contacto &middot; WhatsApp</div></div>
+        <span class="badge">Nuevo</span>
+        <span class="cta">Contactar &rarr;</span>
+      </div>
+    </div>
+    <div>
+      <div class="tiles">
+        <div class="tile"><div class="n">14</div><div class="l">Leads activos</div></div>
+        <div class="tile"><div class="n">9</div><div class="l">Por seguir</div></div>
+        <div class="tile"><div class="n">3</div><div class="l">Visitas hoy</div></div>
+      </div>
+      <div class="prop">
+        <div class="ph"></div>
+        <div class="bd"><div class="price">$6,200,000 <small>MXN</small></div><div class="addr">Casa Valle Real &middot; Zapopan</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="tokens">
+    <span class="tok"><i style="background:#E8DFCC"></i>--bg <code>#E8DFCC</code></span>
+    <span class="tok"><i style="background:#262019"></i>--panel-hero <code>#262019</code></span>
+    <span class="tok"><i style="background:#FFFFFF"></i>--panel <code>#FFFFFF</code></span>
+  </div>
+</section>
+
+<section class="outro">
+  <h2>Recomendación</h2>
+  <p><b>B es la corrección de fondo; A es el ajuste fino.</b> Y combinan: bajar el muro a #E5DAC4 <em>y</em> subir el borde al 12&#8211;14&nbsp;% resuelve el problema en todas las densidades — dashboard lleno, tarjeta suelta, modal. C es la alternativa si quieres que el sistema herede el trazo de la rotulación; D conviene reservarla solo para la pieza jerárquica (una tarjeta de tinta por pantalla, nunca dos). Dime cuál — o qué mezcla — y la aplico a la página del sistema completa.</p>
+</section>
+
+</body>
+</html>

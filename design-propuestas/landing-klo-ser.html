@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Klo-Ser — Un buen cierre se construye</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Jost:wght@200;300&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   KLO-SER · Landing pre-login · v3 «Muro»
+   Brutalismo elegante en claro — hueso, arena, cafés
+   ============================================================ */
+:root {
+  --bg: #F2EDE4;
+  --bg-2: #EAE3D6;
+  --panel: #FAF7F1;
+  --ink: #221B14;
+  --ink-2: #6B5D4E;
+  --ink-3: #A2947F;
+  --cafe: #6B4A33;
+  --cafe-deep: #503524;
+  --barro: #9C6B4A;
+  --ocre: #C98A3B;
+  --urgente: #A34E28;
+  --rule: rgba(34, 27, 20, 0.14);
+  --rule-strong: #221B14;
+  --font: "Poppins", sans-serif;
+  --snap: cubic-bezier(0.22, 1, 0.36, 1);
+  --overshoot: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--ink);
+  font-size: 15px;
+  line-height: 1.65;
+  font-feature-settings: "tnum";
+  overflow-x: hidden;
+}
+body::after {
+  content: "";
+  position: fixed; inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+  opacity: 0.03;
+  pointer-events: none;
+  z-index: 1000;
+  mix-blend-mode: multiply;
+}
+::selection { background: rgba(201, 138, 59, 0.3); }
+img { display: block; width: 100%; height: 100%; object-fit: cover; }
+
+.wrap { max-width: 1160px; margin: 0 auto; padding: 0 32px; }
+
+/* ---------- Topnav ---------- */
+.topnav {
+  display: flex; align-items: center; gap: 16px;
+  padding: 22px 0;
+  border-bottom: 2px solid var(--rule-strong);
+}
+.nav-brand { display: flex; align-items: center; gap: 11px; }
+.brand-symbol { width: 32px; height: 32px; flex-shrink: 0; }
+/* Logotipo final: Jost 200 · caps · tracking 0.42em · guion café a media altura */
+.wm-name {
+  font-family: "Jost", sans-serif;
+  font-weight: 200;
+  text-transform: uppercase;
+  letter-spacing: 0.42em; line-height: 1;
+  display: flex; align-items: center;
+  white-space: nowrap;
+}
+.wm-name .wm-dash {
+  width: 0.72em; height: 2px;
+  background: var(--cafe);
+  margin: 0 0.42em 0 0.04em;
+  flex-shrink: 0;
+}
+.nav-links { margin-left: auto; display: flex; align-items: center; gap: 30px; }
+.nav-links a { text-decoration: none; }
+.nav-links a.link {
+  color: var(--ink-2); font-size: 12px; font-weight: 600;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  transition: color 0.15s;
+}
+.nav-links a.link:hover { color: var(--ink); }
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 9px;
+  padding: 13px 28px;
+  font-family: var(--font); font-size: 13px; font-weight: 600;
+  letter-spacing: 0.06em; text-transform: uppercase;
+  cursor: pointer; border: 2px solid var(--rule-strong);
+  text-decoration: none;
+  transition: transform 0.18s var(--snap), box-shadow 0.18s var(--snap), background 0.15s, color 0.15s;
+}
+.btn:hover { transform: translate(-3px, -3px); box-shadow: 6px 6px 0 0 rgba(34, 27, 20, 0.18); }
+.btn-primary { background: var(--cafe); color: #F2EDE4; border-color: var(--cafe-deep); }
+.btn-primary:hover { background: var(--cafe-deep); }
+.btn-ghost { background: transparent; color: var(--ink); }
+.btn svg { width: 15px; height: 15px; stroke-width: 2.2; }
+
+/* ---------- Hero ---------- */
+.hero {
+  display: grid; grid-template-columns: 1.2fr 1fr;
+  border-bottom: 2px solid var(--rule-strong);
+}
+.hero-copy { padding: 70px 54px 60px 0; }
+.hero-kicker {
+  display: inline-flex; align-items: center; gap: 10px;
+  font-size: 10.5px; font-weight: 600; letter-spacing: 0.24em; text-transform: uppercase;
+  color: var(--cafe);
+  animation: rise 0.7s var(--snap) both;
+}
+.hero-kicker::before { content: ""; width: 36px; height: 2px; background: var(--cafe); }
+.hero-wm {
+  font-family: "Jost", sans-serif;
+  font-weight: 200;
+  text-transform: uppercase;
+  font-size: clamp(36px, 5.6vw, 68px);
+  letter-spacing: 0.42em; line-height: 1;
+  display: flex; align-items: center;
+  margin-top: 34px;
+  white-space: nowrap;
+}
+.hero-wm .wm-k { animation: wmL 0.8s 0.25s var(--snap) both; }
+.hero-wm .wm-s { animation: wmR 0.8s 0.25s var(--snap) both; }
+.hero-wm .wm-dash {
+  width: 0.72em; height: 3.5px;
+  background: var(--cafe);
+  margin: 0 0.42em 0 0.04em;
+  flex-shrink: 0;
+  animation: wmD 0.5s 0.95s var(--overshoot) both;
+}
+@keyframes wmL { from { opacity: 0; transform: translateX(-46px); } to { opacity: 1; transform: none; } }
+@keyframes wmR { from { opacity: 0; transform: translateX(46px); } to { opacity: 1; transform: none; } }
+@keyframes wmD { from { opacity: 0; transform: scaleX(0); } to { opacity: 1; transform: scaleX(1); } }
+@keyframes rise { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+.hero h1.head {
+  font-size: clamp(28px, 3.8vw, 44px);
+  font-weight: 600; letter-spacing: -0.03em; line-height: 1.08;
+  text-transform: uppercase;
+  margin-top: 30px;
+  animation: rise 0.7s 0.5s var(--snap) both;
+}
+.hero h1.head .cafe { color: var(--cafe); }
+.hero .sub {
+  color: var(--ink-2); font-size: 15.5px; max-width: 480px; margin-top: 20px;
+  line-height: 1.75;
+  animation: rise 0.7s 0.62s var(--snap) both;
+}
+.hero .sub b { color: var(--ink); font-weight: 600; }
+.hero-ctas {
+  display: flex; gap: 14px; margin-top: 34px;
+  animation: rise 0.7s 0.74s var(--snap) both;
+}
+.hero-img {
+  border-left: 2px solid var(--rule-strong);
+  min-height: 560px;
+  overflow: hidden;
+  position: relative;
+  animation: heroimg 1.1s 0.2s var(--snap) both;
+}
+@keyframes heroimg { from { opacity: 0; clip-path: inset(0 0 100% 0); } to { opacity: 1; clip-path: inset(0); } }
+.hero-img .ph-tag {
+  position: absolute; left: 0; bottom: 0;
+  background: var(--bg);
+  border-top: 2px solid var(--rule-strong);
+  border-right: 2px solid var(--rule-strong);
+  padding: 10px 18px;
+  font-size: 9.5px; font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--ink-2);
+}
+
+/* ---------- Cinta de producto ---------- */
+.product-band { padding: 64px 0 0; }
+.pb-head {
+  display: flex; align-items: baseline; gap: 18px;
+  margin-bottom: 26px;
+}
+.pb-head .n { font-size: 10.5px; font-weight: 600; letter-spacing: 0.14em; color: var(--cafe); text-transform: uppercase; }
+.pb-head h2 { font-size: 20px; font-weight: 600; letter-spacing: -0.02em; text-transform: uppercase; }
+.preview-grid {
+  display: grid;
+  grid-template-columns: 1.05fr 1.35fr 1.05fr;
+  gap: 0;
+  border: 2px solid var(--rule-strong);
+  background: var(--panel);
+}
+.pcard { padding: 22px 24px; border-right: 2px solid var(--rule-strong); }
+.pcard:last-child { border-right: 0; }
+.p-label {
+  font-size: 9.5px; font-weight: 600; letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--ink-3);
+  display: flex; align-items: center; gap: 7px;
+}
+.p-label svg { width: 13px; height: 13px; stroke-width: 2.2; color: var(--cafe); }
+.p-big { font-weight: 600; font-size: 36px; letter-spacing: -0.03em; margin-top: 8px; line-height: 1; }
+.p-delta {
+  font-size: 10.5px; font-weight: 700;
+  background: rgba(107, 74, 51, 0.12); color: var(--cafe);
+  padding: 3px 9px; margin-left: 8px;
+  vertical-align: middle;
+}
+.p-sub { font-size: 11.5px; color: var(--ink-3); margin-top: 6px; }
+.p-lead { display: flex; align-items: center; gap: 11px; margin-top: 14px; }
+.p-lead .ava {
+  width: 30px; height: 30px; flex-shrink: 0;
+  display: grid; place-items: center;
+  font-size: 10px; font-weight: 700; color: #F2EDE4;
+  background: var(--barro);
+}
+.p-lead .ava.b { background: var(--cafe); }
+.p-lead .ava.c { background: var(--ocre); }
+.p-lead .nm { font-size: 12.5px; font-weight: 600; }
+.p-lead .mt { font-size: 10.5px; color: var(--ink-3); }
+.p-chip {
+  margin-left: auto;
+  font-size: 9px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+  padding: 4px 9px;
+  background: var(--bg-2); color: var(--ink-2);
+  white-space: nowrap;
+}
+.p-chip.hot { background: rgba(163, 78, 40, 0.14); color: var(--urgente); }
+.p-ring { display: flex; align-items: center; gap: 16px; }
+.p-ring .ringbox { position: relative; width: 76px; height: 76px; flex-shrink: 0; }
+.p-ring .n { font-weight: 600; font-size: 19px; position: absolute; inset: 0; display: grid; place-items: center; letter-spacing: -0.02em; }
+.p-ring .lbl { font-size: 12.5px; color: var(--ink-2); line-height: 1.55; }
+.p-foot { font-size: 11px; color: var(--ink-3); margin-top: 16px; border-top: 1px solid var(--rule); padding-top: 12px; }
+.p-foot b { color: var(--cafe); font-weight: 600; }
+
+/* ---------- Strip ---------- */
+.strip {
+  display: flex; justify-content: space-between; gap: 20px; flex-wrap: wrap;
+  padding: 26px 0;
+  margin-top: 64px;
+  border-top: 2px solid var(--rule-strong);
+  border-bottom: 2px solid var(--rule-strong);
+  color: var(--ink-2); font-size: 11px; font-weight: 600;
+  letter-spacing: 0.12em; text-transform: uppercase;
+}
+.strip span { display: flex; align-items: center; gap: 10px; }
+.strip svg { width: 15px; height: 15px; stroke-width: 2; color: var(--cafe); }
+
+/* ---------- Secciones ---------- */
+section.block { padding: 88px 0 0; }
+.sec-tag {
+  display: inline-flex; align-items: center; gap: 12px;
+  font-size: 10.5px; font-weight: 600; letter-spacing: 0.24em; text-transform: uppercase;
+  color: var(--cafe); margin-bottom: 16px;
+}
+.sec-tag::before { content: ""; width: 36px; height: 2px; background: var(--cafe); }
+.block h2 {
+  font-size: clamp(26px, 3.6vw, 38px);
+  font-weight: 600; letter-spacing: -0.03em; line-height: 1.1;
+  text-transform: uppercase;
+  max-width: 640px;
+}
+.block h2 .cafe { color: var(--cafe); }
+.block .lead { color: var(--ink-2); font-size: 14.5px; max-width: 560px; margin-top: 16px; }
+
+/* Features */
+.feat-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 0; margin-top: 40px;
+  border: 2px solid var(--rule-strong);
+  background: var(--panel);
+}
+.feat {
+  padding: 28px 26px;
+  border-right: 2px solid var(--rule-strong);
+  border-bottom: 2px solid var(--rule-strong);
+  transition: background 0.2s;
+}
+.feat:nth-child(3n) { border-right: 0; }
+.feat:nth-child(n+4) { border-bottom: 0; }
+.feat:hover { background: var(--bg-2); }
+.feat-num { font-size: 10px; font-weight: 600; letter-spacing: 0.14em; color: var(--ink-3); }
+.feat-ico {
+  width: 44px; height: 44px;
+  display: grid; place-items: center;
+  margin: 16px 0;
+  background: var(--bg);
+  border: 1.5px solid var(--rule-strong);
+}
+.feat-ico svg { width: 20px; height: 20px; stroke-width: 1.8; color: var(--cafe); }
+.feat h3 { font-size: 15.5px; font-weight: 600; letter-spacing: -0.01em; text-transform: uppercase; }
+.feat p { font-size: 12.5px; color: var(--ink-2); margin-top: 8px; line-height: 1.7; }
+.feat p b { color: var(--ink); font-weight: 600; }
+
+/* Interludio fotográfico */
+.photo-break {
+  margin-top: 88px;
+  border: 2px solid var(--rule-strong);
+  position: relative;
+  min-height: 340px;
+  overflow: hidden;
+  display: flex; align-items: flex-end;
+}
+.photo-break .phbg { position: absolute; inset: 0; }
+.photo-break .phbg::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(20, 14, 8, 0.5), rgba(20, 14, 8, 0.05) 55%); }
+.photo-break .inner { position: relative; z-index: 2; padding: 40px 44px; color: #F6F1E8; }
+.photo-break .q {
+  font-size: clamp(20px, 2.8vw, 30px);
+  font-weight: 600; letter-spacing: -0.02em; line-height: 1.15;
+  text-transform: uppercase;
+  max-width: 520px;
+}
+.photo-break .q .ocre { color: var(--ocre); }
+
+/* Cómo funciona */
+.steps {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 0; margin-top: 40px;
+  border: 2px solid var(--rule-strong);
+  background: var(--panel);
+  counter-reset: paso;
+}
+.step-card { padding: 30px 28px; border-right: 2px solid var(--rule-strong); position: relative; }
+.step-card:last-child { border-right: 0; }
+.step-card .num {
+  font-weight: 600; font-size: 13px;
+  width: 38px; height: 38px;
+  background: var(--cafe); color: #F2EDE4;
+  display: grid; place-items: center;
+  margin-bottom: 18px;
+}
+.step-card h3 { font-size: 15.5px; font-weight: 600; text-transform: uppercase; letter-spacing: -0.01em; }
+.step-card p { font-size: 12.5px; color: var(--ink-2); margin-top: 8px; line-height: 1.7; }
+.step-card p b { color: var(--ink); font-weight: 600; }
+
+/* CTA final */
+.final-cta {
+  margin-top: 96px;
+  border: 2px solid var(--rule-strong);
+  position: relative;
+  overflow: hidden;
+  min-height: 380px;
+  display: grid; place-items: center;
+  text-align: center;
+}
+.final-cta .phbg { position: absolute; inset: 0; }
+.final-cta .phbg::after { content: ""; position: absolute; inset: 0; background: rgba(20, 14, 8, 0.52); }
+.final-cta .inner { position: relative; z-index: 2; color: #F6F1E8; padding: 60px 30px; }
+.final-cta .wm-name { font-size: clamp(26px, 4vw, 42px); justify-content: center; }
+.final-cta .wm-name .wm-dash { background: var(--ocre); height: 3px; }
+.final-cta .cta-claim {
+  margin-top: 14px; font-size: 12px; font-weight: 600;
+  letter-spacing: 0.26em; text-transform: uppercase;
+  opacity: 0.9;
+}
+.final-cta .btn { margin-top: 30px; background: var(--ocre); border-color: #F6F1E8; color: #221B14; }
+.final-cta .btn:hover { background: #D99A4E; box-shadow: 6px 6px 0 0 rgba(246, 241, 232, 0.25); }
+
+/* Footer */
+footer {
+  margin-top: 84px;
+  border-top: 2px solid var(--rule-strong);
+  padding: 26px 0 46px;
+  display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+  color: var(--ink-3); font-size: 10px; font-weight: 600;
+  letter-spacing: 0.18em; text-transform: uppercase;
+}
+footer .nav-brand .wm-name { font-size: 15px; }
+footer .right { margin-left: auto; display: flex; gap: 24px; }
+footer .right .claim { color: var(--cafe); }
+
+/* Reveal */
+.reveal { opacity: 0; transform: translateY(24px); transition: opacity 0.7s var(--snap), transform 0.7s var(--snap); }
+.reveal.in { opacity: 1; transform: none; }
+
+@media (max-width: 920px) {
+  .hero { grid-template-columns: 1fr; }
+  .hero-copy { padding-right: 0; }
+  .hero-img { border-left: 0; border-top: 2px solid var(--rule-strong); min-height: 340px; }
+  .preview-grid, .feat-grid, .steps { grid-template-columns: 1fr; }
+  .pcard, .step-card { border-right: 0; border-bottom: 2px solid var(--rule-strong); }
+  .pcard:last-child, .step-card:last-child { border-bottom: 0; }
+  .feat { border-right: 0 !important; border-bottom: 2px solid var(--rule-strong) !important; }
+  .feat:last-child { border-bottom: 0 !important; }
+  .nav-links a.link { display: none; }
+}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <!-- ══════════ TOPNAV ══════════ -->
+  <nav class="topnav">
+    <div class="nav-brand">
+      <div class="wm-name" style="font-size:17px">klo<span class="wm-dash"></span>ser</div>
+    </div>
+    <div class="nav-links">
+      <a class="link" href="#modulos">Módulos</a>
+      <a class="link" href="#como">Cómo funciona</a>
+      <a class="btn btn-primary" href="sistema-klo-ser.html">
+        Iniciar sesión
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </a>
+    </div>
+  </nav>
+
+  <!-- ══════════ HERO ══════════ -->
+  <header class="hero">
+    <div class="hero-copy">
+      <div class="hero-kicker">CRM inmobiliario · Montana Realty</div>
+
+      <div class="hero-wm">
+        <span class="wm-k">klo</span><span class="wm-dash"></span><span class="wm-s">ser</span>
+      </div>
+
+      <h1 class="head">Un buen cierre se <span class="cafe">construye.</span></h1>
+      <p class="sub">Klo-Ser junta tus leads de EasyBroker, WhatsApp y referidos en una sola cola que te dice <b>a quién atender primero</b> — y no suelta a nadie hasta la firma.</p>
+
+      <div class="hero-ctas">
+        <a class="btn btn-primary" href="sistema-klo-ser.html">
+          Entrar al sistema
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </a>
+        <a class="btn btn-ghost" href="#modulos">Los módulos</a>
+      </div>
+    </div>
+    <div class="hero-img">
+      <img src="assets/mood-01.jpg" alt="Volumen ocre contra cielo turquesa">
+      <div class="ph-tag">Obra 01 · Moodboard Klo-Ser</div>
+    </div>
+  </header>
+
+  <!-- ══════════ CINTA DE PRODUCTO ══════════ -->
+  <div class="product-band">
+    <div class="pb-head"><span class="n">El sistema</span><h2>Así se ve tu día adentro</h2></div>
+    <div class="preview-grid">
+      <div class="pcard">
+        <div class="p-label">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M20 6 9 17l-5-5"/></svg>
+          Cierres · Agosto
+        </div>
+        <div class="p-big">6<span class="p-delta">▲ 2</span></div>
+        <div class="p-sub">Tasa de cierre 14% · vas 1 arriba de julio</div>
+        <div class="p-foot">Cierre registrado — <b>Lucía Martínez · Terreno Zibatá</b></div>
+      </div>
+
+      <div class="pcard">
+        <div class="p-label">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+          Tu cola de hoy
+        </div>
+        <div class="p-lead">
+          <div class="ava">IR</div>
+          <div><div class="nm">Isabel Rentería</div><div class="mt">Sin primer contacto · hace 2 h</div></div>
+          <span class="p-chip hot">Atiende ahora</span>
+        </div>
+        <div class="p-lead">
+          <div class="ava b">HM</div>
+          <div><div class="nm">Héctor Morales</div><div class="mt">WhatsApp · busca casa 3R</div></div>
+          <span class="p-chip hot">Atiende ahora</span>
+        </div>
+        <div class="p-lead">
+          <div class="ava c">MF</div>
+          <div><div class="nm">María Fernanda López</div><div class="mt">Cita mañana 11:00 · confirmada</div></div>
+          <span class="p-chip">Cita agendada</span>
+        </div>
+      </div>
+
+      <div class="pcard">
+        <div class="p-ring">
+          <div class="ringbox">
+            <svg width="76" height="76">
+              <circle cx="38" cy="38" r="31" fill="none" stroke="#EAE3D6" stroke-width="7"/>
+              <circle cx="38" cy="38" r="31" fill="none" stroke="#6B4A33" stroke-width="7"
+                stroke-linecap="butt" stroke-dasharray="195" stroke-dashoffset="78"
+                transform="rotate(-90 38 38)"/>
+            </svg>
+            <div class="n">60%</div>
+          </div>
+          <div class="lbl">de tu cola de hoy ya está atendida</div>
+        </div>
+        <div class="p-foot">Sync EasyBroker <b>✓ hace 12 min</b></div>
+      </div>
+    </div>
+
+    <!-- Strip -->
+    <div class="strip">
+      <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 3v6h-6"/></svg> EasyBroker cada 15 min</span>
+      <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 11.5a8.38 8.38 0 0 1-8.5 8.5 8.5 8.5 0 0 1-4-1L3 20l1-5.5a8.38 8.38 0 0 1-1-4A8.5 8.5 0 0 1 11.5 2a8.38 8.38 0 0 1 8.5 8.5z"/></svg> WhatsApp con plantillas</span>
+      <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/></svg> Instalable en tu teléfono</span>
+    </div>
+  </div>
+
+  <!-- ══════════ MÓDULOS ══════════ -->
+  <section class="block" id="modulos">
+    <div class="reveal">
+      <div class="sec-tag">Los módulos</div>
+      <h2>Seis piezas, un objetivo: que nada se <span class="cafe">enfríe</span></h2>
+      <p class="lead">Cada módulo existe para empujar al lead un paso más cerca de la firma — desde que llega hasta que le entregas la llave.</p>
+    </div>
+
+    <div class="feat-grid reveal">
+      <div class="feat">
+        <div class="feat-num">M·01</div>
+        <div class="feat-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg></div>
+        <h3>Cola del día</h3>
+        <p>Abres la app y ya sabes qué hacer: <b>«Atiende ahora»</b> para los nuevos sin contacto y <b>«Necesitan seguimiento»</b> para los que llevan más de 24 h en silencio.</p>
+      </div>
+      <div class="feat">
+        <div class="feat-num">M·02</div>
+        <div class="feat-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="5" height="18" rx="1"/><rect x="10" y="3" width="5" height="12" rx="1"/><rect x="17" y="3" width="5" height="8" rx="1"/></svg></div>
+        <h3>Kanban de leads</h3>
+        <p>Tu cartera completa de <b>Nuevo a Apartado</b>, arrastrando tarjetas entre etapas. Los leads abandonados se marcan solos.</p>
+      </div>
+      <div class="feat">
+        <div class="feat-num">M·03</div>
+        <div class="feat-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 11.5a8.38 8.38 0 0 1-8.5 8.5 8.5 8.5 0 0 1-4-1L3 20l1-5.5a8.38 8.38 0 0 1-1-4A8.5 8.5 0 0 1 11.5 2a8.38 8.38 0 0 1 8.5 8.5z"/></svg></div>
+        <h3>WhatsApp con plantillas</h3>
+        <p>Un clic y el mensaje sale con el <b>nombre, propiedad y cita ya rellenos</b>. Sin teclear lo mismo dos veces.</p>
+      </div>
+      <div class="feat">
+        <div class="feat-num">M·04</div>
+        <div class="feat-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.5 5h13l3.5 7v5a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-5z"/></svg></div>
+        <h3>Bandeja de asignación</h3>
+        <p>Los leads nuevos caen en una bandeja central y el admin los <b>reparte en segundos</b>. Ningún lead se queda sin dueño.</p>
+      </div>
+      <div class="feat">
+        <div class="feat-num">M·05</div>
+        <div class="feat-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 21h18"/><path d="M5 21V7l7-4 7 4v14"/><path d="M9 21v-6h6v6"/></svg></div>
+        <h3>Inventario sincronizado</h3>
+        <p>Las propiedades llegan solas desde <b>EasyBroker cada 15 minutos</b>: precios, fotos y disponibilidad al día.</p>
+      </div>
+      <div class="feat">
+        <div class="feat-num">M·06</div>
+        <div class="feat-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg></div>
+        <h3>Alertas que no perdonan</h3>
+        <p>Si un lead lleva <b>más de 24 h sin atención</b>, el admin y el asesor lo ven marcado. La velocidad es la mitad del cierre.</p>
+      </div>
+    </div>
+
+    <!-- Interludio fotográfico -->
+    <div class="photo-break reveal">
+      <div class="phbg"><img src="assets/mood-00.jpg" alt="Muro de concreto al sol" style="object-position: center 60%"></div>
+      <div class="inner">
+        <div class="q">Cada seguimiento, una <span class="ocre">columna.</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════ CÓMO FUNCIONA ══════════ -->
+  <section class="block" id="como">
+    <div class="reveal">
+      <div class="sec-tag">Cómo funciona</div>
+      <h2>Del primer clic a la llave, en tres <span class="cafe">pasos</span></h2>
+    </div>
+
+    <div class="steps reveal">
+      <div class="step-card">
+        <div class="num">01</div>
+        <h3>El lead llega solo</h3>
+        <p>Desde el portal de EasyBroker, un WhatsApp o un referido — cae en la <b>bandeja central</b> con su propiedad de interés ya vinculada.</p>
+      </div>
+      <div class="step-card">
+        <div class="num">02</div>
+        <h3>Su asesor lo toma</h3>
+        <p>El admin lo asigna y aparece en la <b>cola del día</b> del asesor: primer contacto por WhatsApp con plantilla, cita agendada, visita.</p>
+      </div>
+      <div class="step-card">
+        <div class="num">03</div>
+        <h3>Nada se enfría hasta firmar</h3>
+        <p>Cada seguimiento queda en el historial y las alertas de 24 h empujan hasta que la tarjeta llega a <b>«Cerrado ganado»</b>.</p>
+      </div>
+    </div>
+
+    <!-- CTA final -->
+    <div class="final-cta reveal">
+      <div class="phbg"><img src="assets/mood-05.jpg" alt="Volúmenes de barro y concreto" style="object-position: center 45%"></div>
+      <div class="inner">
+        <div class="wm-name">klo<span class="wm-dash"></span>ser</div>
+        <div class="cta-claim">Un buen cierre se construye</div>
+        <a class="btn" href="sistema-klo-ser.html" style="display:inline-flex">
+          Iniciar sesión
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════ FOOTER ══════════ -->
+  <footer>
+    <div class="nav-brand">
+      <div class="wm-name" style="font-size:13px">klo<span class="wm-dash"></span>ser</div>
+    </div>
+    <span>Sistema interno de Montana Realty</span>
+    <div class="right">
+      <span class="claim">Un buen cierre se construye</span>
+      <span>© 2026</span>
+    </div>
+  </footer>
+
+</div>
+
+<script>
+const io = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      e.target.classList.add('in');
+      io.unobserve(e.target);
+    }
+  });
+}, { threshold: 0.12 });
+document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+</script>
+</body>
+</html>

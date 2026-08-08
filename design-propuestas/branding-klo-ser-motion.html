@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Klo-Ser en movimiento — Ideas de marca animada</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Instrument+Sans:ital,wght@0,400..700;1,400&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   KLO-SER · Ideas de marca en movimiento · v1
+   La animación ES la identidad
+   ============================================================ */
+:root {
+  --bg: #000000;
+  --surface: #0B101B;
+  --surface-2: #0E1420;
+  --surface-3: #182034;
+  --stroke: rgba(148, 163, 184, 0.11);
+  --stroke-strong: rgba(148, 163, 184, 0.20);
+  --text: #EDF1F9;
+  --text-2: #9AA5BB;
+  --text-3: #616D85;
+  --accent: #BEE84B;
+  --accent-ink: #0C1405;
+  --c2: #0891B2;
+  --danger: #F87171;
+  --ok: #4ADE80;
+  --wa: #25D366;
+  --r-lg: 26px;
+  --r-md: 18px;
+  --font-display: "Bricolage Grotesque", sans-serif;
+  --font-body: "Instrument Sans", sans-serif;
+  --snap: cubic-bezier(0.22, 1, 0.36, 1);
+  --overshoot: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { color-scheme: dark; scroll-behavior: smooth; }
+body {
+  font-family: var(--font-body);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 14.5px;
+  line-height: 1.55;
+  overflow-x: hidden;
+}
+body::before {
+  content: "";
+  position: fixed; inset: 0;
+  background:
+    radial-gradient(1100px 800px at 108% -12%, rgba(8,145,178,0.12), transparent 58%),
+    radial-gradient(1300px 900px at -12% 112%, rgba(101,163,13,0.14), transparent 56%),
+    radial-gradient(800px 800px at 88% 42%, rgba(190,232,75,0.06), transparent 62%);
+  pointer-events: none;
+}
+body::after {
+  content: "";
+  position: fixed; inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)' opacity='0.35'/%3E%3C/svg%3E");
+  opacity: 0.035;
+  pointer-events: none;
+  z-index: 1000;
+  mix-blend-mode: overlay;
+}
+::selection { background: rgba(190, 232, 75, 0.25); }
+h1, h2, h3 { font-family: var(--font-display); }
+
+.wrap { max-width: 1080px; margin: 0 auto; padding: 70px 32px 100px; position: relative; }
+
+.page-head { text-align: center; margin-bottom: 60px; }
+.page-head .kicker { font-size: 11.5px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--text-3); font-weight: 600; }
+.page-head h1 { font-size: clamp(34px, 6vw, 54px); font-weight: 800; letter-spacing: -0.04em; margin-top: 12px; }
+.page-head h1 .lime { color: var(--accent); }
+.page-head p { color: var(--text-2); max-width: 560px; margin: 14px auto 0; }
+
+section { margin-top: 64px; }
+.sec-tag {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-size: 11px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--accent); margin-bottom: 12px;
+}
+.sec-tag::before { content: ""; width: 22px; height: 2px; background: var(--accent); border-radius: 2px; }
+h2 { font-size: 25px; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 6px; }
+.sec-sub { color: var(--text-2); font-size: 13.5px; max-width: 620px; margin-bottom: 24px; }
+
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+
+.card {
+  background:
+    linear-gradient(165deg, rgba(255,255,255,0.045), rgba(255,255,255,0.006) 42%),
+    var(--surface);
+  border: 1px solid var(--stroke);
+  border-radius: var(--r-lg);
+  box-shadow: 0 1px 0 rgba(255,255,255,0.05) inset, 0 24px 60px -28px rgba(0,0,0,0.9);
+  overflow: hidden;
+}
+.demo-stage {
+  height: 190px;
+  display: grid; place-items: center;
+  background: radial-gradient(300px 170px at 50% 45%, rgba(190,232,75,0.05), transparent 70%), var(--bg);
+  border-bottom: 1px solid var(--stroke);
+  position: relative;
+}
+.demo-body { padding: 18px 22px 22px; }
+.demo-body h3 { font-size: 15.5px; display: flex; align-items: center; gap: 8px; }
+.demo-body p { font-size: 12.5px; color: var(--text-2); margin-top: 6px; }
+.demo-body b { color: var(--text); }
+.reco {
+  font-size: 9px; font-weight: 800; letter-spacing: 0.1em;
+  background: var(--accent); color: var(--accent-ink);
+  padding: 3px 8px; border-radius: 99px;
+}
+.replay {
+  position: absolute; top: 12px; right: 12px;
+  width: 30px; height: 30px; border-radius: 50%;
+  background: var(--surface-2); border: 1px solid var(--stroke-strong);
+  color: var(--text-2); cursor: pointer;
+  display: grid; place-items: center;
+  font-size: 13px;
+  transition: color 0.15s, transform 0.3s;
+  z-index: 5;
+}
+.replay:hover { color: var(--accent); transform: rotate(180deg); }
+
+/* tipografía base de los wordmarks demo */
+.wm {
+  font-family: var(--font-display);
+  font-weight: 800; font-size: 44px; letter-spacing: -0.045em;
+  display: flex; align-items: center; line-height: 1;
+}
+.wm .dash {
+  width: 0.52em; height: 0.16em;
+  background: var(--accent); border-radius: 99px;
+  margin: 0 0.09em;
+  box-shadow: 0 0 8px rgba(190,232,75,0.22), 0 0 24px rgba(190,232,75,0.12);
+}
+
+/* ══════ 1 · EL ENCAJE (baseline) ══════ */
+.play .a-encaje .dash { animation: enc 0.9s 0.35s var(--snap) both; }
+@keyframes enc { from { transform: scaleX(0); opacity: 0; } 60% { opacity: 1; } to { transform: scaleX(1); opacity: 1; } }
+
+/* ══════ 2 · EL ACUERDO ══════ */
+.a-deal .k, .a-deal .s { opacity: 0; }
+.a-deal .dash { opacity: 0; transform: scale(0); }
+.play .a-deal .k { animation: fromL 0.7s 0.15s var(--snap) both; }
+.play .a-deal .s { animation: fromR 0.7s 0.15s var(--snap) both; }
+.play .a-deal .dash { animation: dealDash 0.45s 0.75s var(--overshoot) both; }
+@keyframes fromL { from { opacity: 0; transform: translateX(-46px); } to { opacity: 1; transform: none; } }
+@keyframes fromR { from { opacity: 0; transform: translateX(46px); } to { opacity: 1; transform: none; } }
+@keyframes dealDash { from { opacity: 0; transform: scale(0); } to { opacity: 1; transform: scale(1); } }
+
+/* ══════ 3 · LA FIRMA ══════ */
+.a-firma { position: relative; flex-direction: column; display: flex; align-items: center; gap: 10px; }
+.a-firma .word { font-family: var(--font-display); font-weight: 800; font-size: 44px; letter-spacing: -0.045em; }
+.a-firma svg { display: block; }
+.a-firma svg path { stroke-dasharray: 230; stroke-dashoffset: 230; }
+.play .a-firma svg path { animation: sign 0.9s 0.4s var(--snap) forwards; }
+@keyframes sign { to { stroke-dashoffset: 0; } }
+
+/* ══════ 4 · EL TECLADO ══════ */
+.a-type { font-family: var(--font-display); font-weight: 800; font-size: 44px; letter-spacing: -0.045em; display: flex; align-items: center; min-height: 52px; }
+.a-type .ch { opacity: 0; }
+.a-type .cursor {
+  width: 0.52em; height: 0.16em;
+  background: var(--text-2); border-radius: 99px;
+  margin: 0 0.09em;
+  animation: blink 0.85s steps(1) infinite;
+}
+.a-type.done .cursor { background: var(--accent); animation: none; box-shadow: 0 0 18px rgba(190,232,75,0.55); }
+@keyframes blink { 50% { opacity: 0; } }
+
+/* ══════ SÍMBOLO · CHECK QUE CIERRA ══════ */
+.s-check svg .ringpath { stroke-dasharray: 264; stroke-dashoffset: 264; }
+.s-check.play svg .ringpath { animation: ringdraw 1.1s 0.25s var(--snap) forwards; }
+.s-check svg .tick { stroke-dasharray: 60; stroke-dashoffset: 60; }
+.s-check.play svg .tick { animation: tickdraw 0.45s 1.25s var(--overshoot) forwards; }
+@keyframes ringdraw { to { stroke-dashoffset: 40; } }
+@keyframes tickdraw { to { stroke-dashoffset: 0; } }
+
+/* ══════ SÍMBOLO · LA PUERTA ══════ */
+.s-door .scene { perspective: 500px; }
+.s-door .doorframe { position: relative; }
+.s-door .leaf {
+  transform-origin: left center;
+  transform: rotateY(-68deg);
+}
+.s-door.play .leaf { animation: doorclose 1s 0.4s var(--snap) forwards; }
+.s-door .knob { opacity: 0.4; }
+.s-door.play .knob { animation: knobglow 0.4s 1.35s var(--snap) forwards; }
+@keyframes doorclose { to { transform: rotateY(0); } }
+@keyframes knobglow { to { opacity: 1; filter: drop-shadow(0 0 8px rgba(190,232,75,0.9)); } }
+
+/* ══════ SÍMBOLO · EL PIN ══════ */
+.s-pin .pin { transform: translateY(-90px); opacity: 0; }
+.s-pin.play .pin { animation: pindrop 0.7s 0.35s var(--overshoot) forwards; }
+.s-pin .ground { transform: scaleX(0.2); opacity: 0; }
+.s-pin.play .ground { animation: groundpop 0.5s 0.8s var(--snap) forwards; }
+.s-pin .ring2 { opacity: 0; }
+.s-pin.play .ring2 { animation: ripple 0.9s 0.9s var(--snap) forwards; }
+@keyframes pindrop { to { transform: translateY(0); opacity: 1; } }
+@keyframes groundpop { to { transform: scaleX(1); opacity: 1; } }
+@keyframes ripple {
+  0% { opacity: 0.8; transform: scale(0.4); }
+  100% { opacity: 0; transform: scale(1.6); }
+}
+
+/* ══════ MICRO · KANBAN CIERRE ══════ */
+.m-kanban { width: 82%; }
+.mk-card {
+  background: var(--surface-2);
+  border: 1px solid var(--stroke-strong);
+  border-radius: 14px;
+  padding: 12px 14px;
+  position: relative;
+  overflow: hidden;
+}
+.mk-name { font-weight: 600; font-size: 13px; }
+.mk-sub { font-size: 11px; color: var(--text-3); margin-top: 2px; }
+.mk-stamp {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center; gap: 9px;
+  background: rgba(11, 16, 27, 0.88);
+  backdrop-filter: blur(2px);
+  font-family: var(--font-display); font-weight: 800; font-size: 15px;
+  color: var(--accent);
+  opacity: 0;
+}
+.m-kanban.play .mk-stamp { animation: stampin 0.5s 1s var(--overshoot) both; }
+.m-kanban.play .mk-card { animation: cardpulse 0.5s 1s var(--snap) both; }
+.mk-stamp svg .ringpath { stroke-dasharray: 132; stroke-dashoffset: 132; }
+.m-kanban.play .mk-stamp svg .ringpath { animation: ringdraw2 0.7s 1.15s var(--snap) forwards; }
+.mk-stamp svg .dashseg { opacity: 0; }
+.m-kanban.play .mk-stamp svg .dashseg { animation: dealDash 0.35s 1.8s var(--overshoot) both; }
+@keyframes ringdraw2 { to { stroke-dashoffset: 22; } }
+@keyframes stampin { from { opacity: 0; transform: scale(1.15); } to { opacity: 1; transform: scale(1); } }
+@keyframes cardpulse {
+  0% { border-color: var(--stroke-strong); }
+  100% { border-color: rgba(190,232,75,0.5); box-shadow: 0 0 30px -6px rgba(190,232,75,0.35); }
+}
+.m-kanban .drag-hint { font-size: 10.5px; color: var(--text-3); text-align: center; margin-bottom: 10px; }
+.m-kanban.play .drag-hint .dot { animation: dragmove 1s 0.1s var(--snap) both; display: inline-block; }
+@keyframes dragmove { from { transform: translateX(-30px); opacity: 0.4; } to { transform: none; opacity: 1; } }
+
+/* ══════ MICRO · BOTÓN QUE CIERRA ══════ */
+.m-btn .cta {
+  font-family: var(--font-body);
+  border: none; cursor: pointer;
+  border-radius: 99px;
+  padding: 13px 30px;
+  font-size: 14px; font-weight: 700;
+  background: linear-gradient(160deg, #DCF593, var(--accent) 55%, #97C534);
+  color: var(--accent-ink);
+  box-shadow: 0 10px 28px -8px rgba(190,232,75,0.6);
+  display: inline-flex; align-items: center; gap: 9px;
+  transition: transform 0.15s;
+  min-width: 210px; justify-content: center;
+}
+.m-btn .cta:hover { transform: translateY(-2px); }
+.m-btn .cta:active { transform: scale(0.97); }
+.m-btn .spin { display: none; width: 17px; height: 17px; }
+.m-btn .spin svg { width: 17px; height: 17px; animation: rot 0.9s linear infinite; }
+@keyframes rot { to { transform: rotate(360deg); } }
+.m-btn.working .cta { background: var(--surface-3); color: var(--text-2); box-shadow: none; }
+.m-btn.working .spin { display: block; }
+.m-btn.done .cta { background: linear-gradient(160deg, #DCF593, var(--accent) 55%, #97C534); color: var(--accent-ink); }
+
+/* ══════ MICRO · TOAST ══════ */
+.m-toast .toast {
+  display: flex; align-items: center; gap: 12px;
+  background: var(--surface-2);
+  border: 1px solid rgba(190,232,75,0.3);
+  border-radius: 16px;
+  padding: 13px 18px;
+  box-shadow: 0 20px 44px -16px rgba(0,0,0,0.8), 0 0 24px -8px rgba(190,232,75,0.25);
+  opacity: 0; transform: translateY(26px);
+}
+.m-toast.play .toast { animation: toastin 0.6s 0.4s var(--overshoot) both; }
+@keyframes toastin { to { opacity: 1; transform: none; } }
+.m-toast .t-title { font-size: 13px; font-weight: 700; }
+.m-toast .t-sub { font-size: 11.5px; color: var(--text-3); }
+.m-toast svg .ringpath { stroke-dasharray: 132; stroke-dashoffset: 132; }
+.m-toast.play svg .ringpath { animation: ringdraw2 0.8s 0.7s var(--snap) forwards; }
+.m-toast svg .dashseg { opacity: 0; }
+.m-toast.play svg .dashseg { animation: dealDash 0.35s 1.45s var(--overshoot) both; }
+
+/* ══════ MICRO · RACHA ══════ */
+.streak-dashes { display: flex; gap: 7px; }
+.streak-dashes span {
+  width: 26px; height: 8px; border-radius: 99px;
+  background: var(--surface-3);
+}
+.m-streak.play span.on { animation: streakon 0.35s var(--snap) both; }
+.m-streak.play span.on:nth-child(1) { animation-delay: 0.3s; }
+.m-streak.play span.on:nth-child(2) { animation-delay: 0.5s; }
+.m-streak.play span.on:nth-child(3) { animation-delay: 0.7s; }
+.m-streak.play span.on:nth-child(4) { animation-delay: 0.9s; }
+@keyframes streakon {
+  from { background: var(--surface-3); box-shadow: none; transform: scale(0.8); }
+  to { background: var(--accent); box-shadow: 0 0 14px rgba(190,232,75,0.6); transform: scale(1); }
+}
+.m-streak .streak-label { font-size: 12px; color: var(--text-2); }
+.m-streak .streak-label b { color: var(--accent); }
+
+/* ══════ LOADER DE MARCA ══════ */
+.l-ring svg { animation: rot 2.2s linear infinite; }
+.l-dots { display: flex; gap: 8px; }
+.l-dots span { width: 18px; height: 6px; border-radius: 99px; background: var(--surface-3); animation: dotpulse 1.2s var(--snap) infinite; }
+.l-dots span:nth-child(2) { animation-delay: 0.15s; }
+.l-dots span:nth-child(3) { animation-delay: 0.3s; }
+@keyframes dotpulse { 0%, 100% { background: var(--surface-3); } 40% { background: var(--accent); box-shadow: 0 0 12px rgba(190,232,75,0.55); } }
+.l-skel { width: 78%; display: flex; flex-direction: column; gap: 10px; }
+.l-skel .row { height: 14px; border-radius: 8px; background: var(--surface-2); position: relative; overflow: hidden; }
+.l-skel .row::after {
+  content: ""; position: absolute; inset: 0;
+  background: linear-gradient(100deg, transparent 30%, rgba(190,232,75,0.09) 50%, transparent 70%);
+  animation: shimmer 1.6s linear infinite;
+  transform: translateX(-100%);
+}
+@keyframes shimmer { to { transform: translateX(100%); } }
+.l-skel .row:nth-child(2) { width: 80%; }
+.l-skel .row:nth-child(3) { width: 55%; }
+
+/* ══════ PRINCIPIOS ══════ */
+.principles { margin-top: 14px; }
+.p-row {
+  display: flex; gap: 14px; align-items: baseline;
+  padding: 13px 0; border-bottom: 1px solid var(--stroke);
+  font-size: 13.5px;
+}
+.p-row:last-child { border-bottom: 0; }
+.p-row .num { font-family: var(--font-display); font-weight: 800; color: var(--accent); width: 26px; flex-shrink: 0; }
+.p-row .muted { color: var(--text-3); }
+.p-row b { color: var(--text); }
+
+@media (max-width: 900px) {
+  .grid-2, .grid-3 { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <div class="page-head">
+    <div class="kicker">Branding Klo-Ser · Exploración 2 · Marca en movimiento</div>
+    <h1>La animación <span class="lime">es</span> la marca</h1>
+    <p>Te encantó el «encaje» del guion — así que aquí está la tesis completa: Klo-Ser no tiene un logo estático que a veces se mueve, tiene un <b style="color:var(--text)">gesto</b> (algo que se cierra, encaja o completa) que aparece en cada rincón del producto.</p>
+  </div>
+
+  <!-- ══════════ WORDMARKS ANIMADOS ══════════ -->
+  <section>
+    <div class="sec-tag">01 · El wordmark, cuatro entradas</div>
+    <h2>Cómo aparece el nombre</h2>
+    <p class="sec-sub">Cuatro formas de animar el mismo wordmark. Pulsa ↻ para repetir cada una.</p>
+
+    <div class="grid-2">
+      <div class="card demo" data-anim>
+        <div class="demo-stage">
+          <button class="replay" title="Repetir">↻</button>
+          <div class="wm a-encaje"><span>klo</span><span class="dash"></span><span>ser</span></div>
+        </div>
+        <div class="demo-body">
+          <h3>El encaje <span class="reco">La original</span></h3>
+          <p>El guion crece desde la izquierda y <b>encaja</b> en su lugar. Simple, rápida (0.9 s), perfecta para el login y el splash. Es la que ya te enamoró — se queda como base.</p>
+        </div>
+      </div>
+
+      <div class="card demo" data-anim>
+        <div class="demo-stage">
+          <button class="replay" title="Repetir">↻</button>
+          <div class="wm a-deal">
+            <span class="k">klo</span><span class="dash"></span><span class="s">ser</span>
+          </div>
+        </div>
+        <div class="demo-body">
+          <h3>El acuerdo <span class="reco">Elegida</span></h3>
+          <p>«klo» y «ser» llegan de lados opuestos — comprador y vendedor — y el guion <b>nace donde se encuentran</b>. Limpia, sin destellos: solo el encuentro. Para login, splash, presentaciones y el video de onboarding.</p>
+        </div>
+      </div>
+
+      <div class="card demo" data-anim>
+        <div class="demo-stage">
+          <button class="replay" title="Repetir">↻</button>
+          <div class="a-firma">
+            <div class="word">klo-ser</div>
+            <svg width="210" height="18" viewBox="0 0 210 18">
+              <path d="M4 10 C 40 16, 90 4, 130 9 S 195 14, 206 7" fill="none" stroke="#BEE84B" stroke-width="5" stroke-linecap="round"/>
+            </svg>
+          </div>
+        </div>
+        <div class="demo-body">
+          <h3>La firma</h3>
+          <p>Un trazo lima <b>firma</b> debajo del nombre, como la rúbrica en la escritura. Conecta con el momento más importante del negocio: el día de la firma. Para reportes PDF y correo.</p>
+        </div>
+      </div>
+
+      <div class="card demo" data-anim data-type>
+        <div class="demo-stage">
+          <button class="replay" title="Repetir">↻</button>
+          <div class="a-type">
+            <span class="ch">k</span><span class="ch">l</span><span class="ch">o</span><span class="cursor"></span><span class="ch">s</span><span class="ch">e</span><span class="ch">r</span>
+          </div>
+        </div>
+        <div class="demo-body">
+          <h3>El mensaje</h3>
+          <p>El nombre se <b>escribe</b> como un WhatsApp — el cursor parpadea y al terminar se convierte en el guion lima. Habla del canal donde vive el negocio. Para la web comercial del producto.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════ SÍMBOLOS ALTERNATIVOS ══════════ -->
+  <section>
+    <div class="sec-tag">02 · Tres símbolos nuevos</div>
+    <h2>Cada uno con su gesto</h2>
+    <p class="sec-sub">Alternativas (o complementos) al círculo que cierra — cada símbolo trae su propia animación de identidad.</p>
+
+    <div class="grid-3">
+      <div class="card demo s-check" data-anim>
+        <div class="demo-stage">
+          <button class="replay" title="Repetir">↻</button>
+          <svg width="110" height="110" viewBox="0 0 120 120">
+            <circle cx="60" cy="60" r="42" fill="none" stroke="#182034" stroke-width="11"/>
+            <circle class="ringpath" cx="60" cy="60" r="42" fill="none" stroke="#9AA5BB" stroke-width="11" stroke-linecap="round" transform="rotate(-64 60 60)"/>
+            <path class="tick" d="M40 62 54 76 82 47" fill="none" stroke="#BEE84B" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div class="demo-body">
+          <h3>El check que cierra <span class="reco">Elegido</span></h3>
+          <p>El anillo se dibuja y la palomita lima <b>remata</b> adentro. Combina la marca con el gesto universal de «hecho». Fuerte para notificaciones y el ícono de «cerrado ganado».</p>
+        </div>
+      </div>
+
+      <div class="card demo s-door" data-anim>
+        <div class="demo-stage">
+          <button class="replay" title="Repetir">↻</button>
+          <div class="scene">
+            <svg width="110" height="110" viewBox="0 0 120 120" style="overflow:visible">
+              <path d="M30 100V26a6 6 0 0 1 6-6h48a6 6 0 0 1 6 6v74" fill="none" stroke="#3d475c" stroke-width="7" stroke-linecap="round"/>
+              <path d="M22 100h76" stroke="#3d475c" stroke-width="7" stroke-linecap="round"/>
+              <g class="leaf">
+                <rect x="36" y="26" width="48" height="74" rx="4" fill="#0E1420" stroke="#9AA5BB" stroke-width="6"/>
+                <rect class="knob" x="64" y="58" width="13" height="6" rx="3" fill="#BEE84B"/>
+              </g>
+            </svg>
+          </div>
+        </div>
+        <div class="demo-body">
+          <h3>La puerta</h3>
+          <p>Una puerta que <b>se cierra suave</b> y la manija-guion se enciende: trato cerrado, casa entregada. Literal y cálida — muy buena para el estado vacío de «cerrados del mes».</p>
+        </div>
+      </div>
+
+      <div class="card demo s-pin" data-anim>
+        <div class="demo-stage">
+          <button class="replay" title="Repetir">↻</button>
+          <svg width="110" height="110" viewBox="0 0 120 120" style="overflow:visible">
+            <ellipse class="ground" cx="60" cy="98" rx="20" ry="5" fill="#182034"/>
+            <circle class="ring2" cx="60" cy="98" r="16" fill="none" stroke="#BEE84B" stroke-width="3" style="transform-origin:60px 98px"/>
+            <g class="pin">
+              <path d="M60 20c-17 0-29 12-29 28 0 20 29 48 29 48s29-28 29-48c0-16-12-28-29-28z" fill="#0E1420" stroke="#EDF1F9" stroke-width="6"/>
+              <rect x="47" y="43" width="26" height="10" rx="5" fill="#BEE84B"/>
+            </g>
+          </svg>
+        </div>
+        <div class="demo-body">
+          <h3>El pin</h3>
+          <p>Un pin de mapa cuyo centro es el guion — <b>cae y clava la propiedad</b> con una onda al aterrizar. Conecta con el terreno del negocio: ubicación. Para el módulo de propiedades y mapas.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════ MICRO-INTERACCIONES ══════════ -->
+  <section>
+    <div class="sec-tag">03 · La marca dentro del producto</div>
+    <h2>Micro-momentos que celebran el cierre</h2>
+    <p class="sec-sub">Aquí es donde una marca animada paga la renta: los momentos de éxito del asesor se sienten de la marca, no del sistema operativo.</p>
+
+    <div class="grid-2">
+      <div class="card demo m-kanban" data-anim>
+        <div class="demo-stage" style="padding:0 26px">
+          <button class="replay" title="Repetir">↻</button>
+          <div style="width:100%">
+            <div class="drag-hint"><span class="dot">→</span> arrastraste a «Cerrado ganado»</div>
+            <div class="mk-card">
+              <div class="mk-name">Lucía Martínez</div>
+              <div class="mk-sub">Terreno Zibatá 400 m² · $2.75M</div>
+              <div class="mk-stamp">
+                <svg width="30" height="30" viewBox="0 0 120 120">
+                  <circle class="ringpath" cx="60" cy="60" r="42" fill="none" stroke="#BEE84B" stroke-width="13" stroke-linecap="round" transform="rotate(-64 60 60)" style="stroke-dasharray:132;"/>
+                  <rect class="dashseg" x="75" y="15" width="33" height="14" rx="7" fill="#BEE84B" transform="rotate(38 91 21)"/>
+                </svg>
+                Cerrado ganado
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="demo-body">
+          <h3>El sello de cierre</h3>
+          <p>Al soltar una tarjeta en «Cerrado ganado», el anillo se dibuja sobre ella, el guion encaja y la tarjeta <b>brilla en lima</b>. El momento más feliz del asesor tiene firma de la casa.</p>
+        </div>
+      </div>
+
+      <div class="card demo m-toast" data-anim>
+        <div class="demo-stage">
+          <button class="replay" title="Repetir">↻</button>
+          <div class="toast">
+            <svg width="34" height="34" viewBox="0 0 120 120">
+              <circle cx="60" cy="60" r="42" fill="none" stroke="#182034" stroke-width="12"/>
+              <circle class="ringpath" cx="60" cy="60" r="42" fill="none" stroke="#BEE84B" stroke-width="12" stroke-linecap="round" transform="rotate(-64 60 60)" style="stroke-dasharray:132;"/>
+              <rect class="dashseg" x="75" y="15" width="33" height="14" rx="7" fill="#BEE84B" transform="rotate(38 91 21)"/>
+            </svg>
+            <div>
+              <div class="t-title">¡Cierre registrado!</div>
+              <div class="t-sub">Lucía Martínez · llevas 3 este mes</div>
+            </div>
+          </div>
+        </div>
+        <div class="demo-body">
+          <h3>El toast que celebra</h3>
+          <p>La notificación de éxito entra con rebote y su ícono <b>es el logo cerrándose</b>. Nada de palomitas genéricas de sistema: cada cierre repite el gesto de la marca.</p>
+        </div>
+      </div>
+
+      <div class="card demo m-btn" data-anim data-btn>
+        <div class="demo-stage">
+          <button class="replay" title="Repetir">↻</button>
+          <button type="button" class="cta">
+            <span class="spin"><svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="42" fill="none" stroke="currentColor" stroke-width="14" stroke-linecap="round" stroke-dasharray="66 198"/></svg></span>
+            <span class="label">Marcar como cerrado</span>
+          </button>
+        </div>
+        <div class="demo-body">
+          <h3>El botón que trabaja <span style="font-size:10px;color:var(--text-3);font-weight:400">(haz clic)</span></h3>
+          <p>Al confirmar, el botón muta: el <b>anillo de la marca gira</b> mientras guarda y remata con «Cerrado ✓». El loading spinner y el logo son la misma cosa.</p>
+        </div>
+      </div>
+
+      <div class="card demo m-streak" data-anim>
+        <div class="demo-stage">
+          <button class="replay" title="Repetir">↻</button>
+          <div class="m-streak-inner" style="display:flex;flex-direction:column;align-items:center;gap:12px">
+            <div class="streak-dashes"><span class="on"></span><span class="on"></span><span class="on"></span><span></span></div>
+            <div class="streak-label"><b>3 cierres</b> este mes — uno más y empatas tu récord</div>
+          </div>
+        </div>
+        <div class="demo-body">
+          <h3>La racha de guiones</h3>
+          <p>Los cierres del mes se cuentan en <b>guiones que se encienden</b> uno a uno. El guion deja de ser tipografía y se vuelve unidad de medida del éxito: «¿cuántos guiones llevas?»</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════ LOADERS ══════════ -->
+  <section>
+    <div class="sec-tag">04 · Estados de carga</div>
+    <h2>Hasta esperar tiene marca</h2>
+    <p class="sec-sub">Tres niveles de espera, mismo lenguaje: el anillo para cargas de página, los guiones para acciones cortas, el shimmer lima para skeletons.</p>
+
+    <div class="grid-3">
+      <div class="card demo l-ring">
+        <div class="demo-stage">
+          <svg width="54" height="54" viewBox="0 0 120 120">
+            <circle cx="60" cy="60" r="42" fill="none" stroke="#182034" stroke-width="12"/>
+            <circle cx="60" cy="60" r="42" fill="none" stroke="#BEE84B" stroke-width="12" stroke-linecap="round" stroke-dasharray="66 198"/>
+          </svg>
+        </div>
+        <div class="demo-body"><h3>Anillo — páginas <span class="reco">Elegido</span></h3><p>El logo girando. Splash de la PWA y cambios de vista.</p></div>
+      </div>
+      <div class="card demo">
+        <div class="demo-stage"><div class="l-dots"><span></span><span></span><span></span></div></div>
+        <div class="demo-body"><h3>Guiones — acciones</h3><p>Tres guiones que pulsan en ola. Envíos, guardados, sincronización.</p></div>
+      </div>
+      <div class="card demo">
+        <div class="demo-stage">
+          <div class="l-skel"><div class="row"></div><div class="row"></div><div class="row"></div></div>
+        </div>
+        <div class="demo-body"><h3>Shimmer — skeletons</h3><p>El brillo que recorre los placeholders es lima al 9% — sutil, pero de la casa.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════ PRINCIPIOS ══════════ -->
+  <section>
+    <div class="sec-tag">05 · Reglas del movimiento</div>
+    <h2>Para que nunca canse</h2>
+    <div class="card principles" style="padding:10px 24px">
+      <div class="p-row"><span class="num">1</span><span><b>Un solo gesto.</b> Todo lo que se anima, se cierra, encaja o completa. Nada flota, rebota o gira porque sí.</span></div>
+      <div class="p-row"><span class="num">2</span><span><b>Dos curvas, siempre.</b> <span class="muted">cubic-bezier(0.22, 1, 0.36, 1)</span> para entradas suaves y <span class="muted">(0.34, 1.56, 0.64, 1)</span> para los remates con rebote. Ninguna otra.</span></div>
+      <div class="p-row"><span class="num">3</span><span><b>Celebrar es raro.</b> Las chispas solo aparecen en «cerrado ganado». Si todo celebra, nada celebra.</span></div>
+      <div class="p-row"><span class="num">4</span><span><b>Rápido en el trabajo, generoso en la marca.</b> Micro-interacciones ≤ 500 ms; splash y login pueden tomarse 1.5 s.</span></div>
+      <div class="p-row"><span class="num">5</span><span><b>Respeta el sistema.</b> Con <span class="muted">prefers-reduced-motion</span> todo aparece sin animar — el guion simplemente ya está ahí.</span></div>
+    </div>
+  </section>
+
+</div>
+
+<script>
+/* Replay + autoplay al entrar en viewport */
+function play(el) {
+  el.classList.remove('play');
+  void el.offsetWidth;
+  el.classList.add('play');
+  if (el.hasAttribute('data-type')) typewrite(el);
+}
+document.querySelectorAll('.demo[data-anim]').forEach(el => {
+  const btn = el.querySelector('.replay');
+  if (btn) btn.addEventListener('click', e => { e.stopPropagation(); play(el); });
+});
+const io = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) { play(e.target); io.unobserve(e.target); }
+  });
+}, { threshold: 0.45 });
+document.querySelectorAll('.demo[data-anim]').forEach(el => io.observe(el));
+
+/* Máquina de escribir */
+function typewrite(card) {
+  const box = card.querySelector('.a-type');
+  box.classList.remove('done');
+  const chars = box.querySelectorAll('.ch');
+  chars.forEach(c => c.style.opacity = '0');
+  const cursor = box.querySelector('.cursor');
+  const order = [0, 1, 2, 3, 4, 5]; // k l o | s e r (cursor entre índice 2 y 3)
+  let step = 0;
+  const seq = [...chars];
+  clearInterval(box._t);
+  box._t = setInterval(() => {
+    if (step < 3) { seq[step].style.opacity = '1'; }
+    else if (step < 6) {
+      seq[step].style.opacity = '1';
+      box.insertBefore(cursor, seq[step].nextSibling); // cursor avanza
+    }
+    step++;
+    if (step >= 6) {
+      clearInterval(box._t);
+      // cursor regresa a su lugar de guion (después de "o") y se vuelve lima
+      setTimeout(() => {
+        box.insertBefore(cursor, seq[3]);
+        box.classList.add('done');
+      }, 420);
+    }
+  }, 240);
+}
+
+/* Botón que trabaja */
+document.querySelectorAll('[data-btn]').forEach(card => {
+  const btn = card.querySelector('.cta');
+  const label = btn.querySelector('.label');
+  btn.addEventListener('click', () => {
+    if (card.classList.contains('working')) return;
+    card.classList.add('working');
+    label.textContent = 'Cerrando…';
+    setTimeout(() => {
+      card.classList.remove('working');
+      card.classList.add('done');
+      label.textContent = 'Cerrado ✓';
+      setTimeout(() => { card.classList.remove('done'); label.textContent = 'Marcar como cerrado'; }, 2200);
+    }, 1600);
+  });
+});
+</script>
+</body>
+</html>

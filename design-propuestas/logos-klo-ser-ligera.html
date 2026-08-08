@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Klo-Ser — La ligera, seis voces</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@200;300;400;500;600&family=Jost:wght@200;300&family=Montserrat:wght@200;300&family=Raleway:wght@200;300&family=Outfit:wght@200;300&family=Josefin+Sans:wght@200;300&family=Questrial&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   KLO-SER · «La ligera» — seis voces del mismo estilo
+   Caps ligeras + tracking amplio + guion café
+   ============================================================ */
+:root {
+  --bg: #F2EDE4;
+  --bg-2: #EAE3D6;
+  --panel: #FAF7F1;
+  --ink: #221B14;
+  --ink-2: #6B5D4E;
+  --ink-3: #A2947F;
+  --cafe: #6B4A33;
+  --ocre: #C98A3B;
+  --rule: rgba(34, 27, 20, 0.14);
+  --rule-strong: #221B14;
+  --font: "Poppins", sans-serif;
+  --snap: cubic-bezier(0.22, 1, 0.36, 1);
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--ink);
+  font-size: 15px;
+  line-height: 1.65;
+  overflow-x: hidden;
+}
+body::after {
+  content: "";
+  position: fixed; inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+  opacity: 0.03;
+  pointer-events: none;
+  z-index: 1000;
+  mix-blend-mode: multiply;
+}
+::selection { background: rgba(201, 138, 59, 0.3); }
+img { display: block; width: 100%; height: 100%; object-fit: cover; }
+
+.wrap { max-width: 1160px; margin: 0 auto; padding: 0 32px 90px; }
+
+/* ---------- Masthead ---------- */
+.masthead {
+  display: flex; align-items: center; gap: 14px;
+  padding: 24px 0;
+  border-bottom: 2px solid var(--rule-strong);
+  font-size: 10.5px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--ink-2);
+  font-weight: 500;
+}
+.masthead .right { margin-left: auto; display: flex; gap: 28px; }
+.mh-name { font-weight: 600; font-size: 16px; letter-spacing: -0.02em; text-transform: none; color: var(--ink); }
+
+/* ---------- Intro ---------- */
+.intro { padding: 64px 0 0; }
+.intro .folio {
+  font-size: 10.5px; letter-spacing: 0.24em; text-transform: uppercase; color: var(--cafe);
+  font-weight: 600;
+  display: flex; align-items: center; gap: 12px;
+}
+.intro .folio::before { content: ""; width: 36px; height: 2px; background: var(--cafe); }
+.intro h1 {
+  font-size: clamp(36px, 5.4vw, 62px);
+  font-weight: 600; letter-spacing: -0.035em; line-height: 1.04;
+  text-transform: uppercase;
+  margin-top: 24px; max-width: 860px;
+}
+.intro h1 .cafe { color: var(--cafe); }
+.intro p { color: var(--ink-2); font-size: 15px; max-width: 640px; margin-top: 20px; }
+.intro p b { color: var(--ink); font-weight: 600; }
+
+/* ---------- Voz (opción) ---------- */
+.voz { margin-top: 56px; border: 2px solid var(--rule-strong); background: var(--panel); }
+.voz-head {
+  display: flex; align-items: center; gap: 16px;
+  padding: 14px 24px;
+  border-bottom: 2px solid var(--rule-strong);
+}
+.voz-num {
+  font-size: 11px; font-weight: 700; letter-spacing: 0.14em;
+  background: var(--ink); color: var(--bg);
+  padding: 4px 12px;
+}
+.voz-head h2 { font-size: 17px; font-weight: 600; letter-spacing: -0.015em; text-transform: uppercase; }
+.voz-head .meta { margin-left: auto; font-size: 10px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-3); }
+.voz-head .pick-badge {
+  font-size: 10px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase;
+  background: var(--cafe); color: #F2EDE4;
+  padding: 5px 14px;
+}
+.voz-stage {
+  min-height: 200px;
+  display: grid; place-items: center;
+  padding: 48px 40px;
+  background: var(--bg);
+}
+.voz-note {
+  display: grid; grid-template-columns: 1.6fr 1fr;
+  border-top: 2px solid var(--rule-strong);
+}
+.voz-note p {
+  font-size: 12.5px; color: var(--ink-2); line-height: 1.7;
+  padding: 18px 26px;
+}
+.voz-note p b { color: var(--ink); font-weight: 600; }
+.voz-note .sizes {
+  border-left: 2px solid var(--rule-strong);
+  display: flex; align-items: center; justify-content: center; gap: 24px;
+  padding: 16px;
+  background: var(--bg-2);
+}
+
+/* wordmark base */
+.lm {
+  text-transform: uppercase;
+  line-height: 1;
+  display: flex; align-items: center;
+  white-space: nowrap;
+}
+.lm .d {
+  height: 2.5px;
+  background: var(--cafe);
+  flex-shrink: 0;
+}
+
+/* ---------- El guion ---------- */
+.guion-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; margin-top: 32px; border: 2px solid var(--rule-strong); background: var(--panel); }
+.gcell {
+  min-height: 190px;
+  display: flex; flex-direction: column;
+  border-right: 2px solid var(--rule-strong);
+}
+.gcell:last-child { border-right: 0; }
+.gcell .st { flex: 1; display: grid; place-items: center; padding: 30px 16px; background: var(--bg); }
+.gcell .nm {
+  font-size: 9.5px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--ink-2); text-align: center;
+  border-top: 2px solid var(--rule-strong);
+  padding: 12px 10px;
+  background: var(--panel);
+}
+
+/* ---------- Aplicación ---------- */
+.photo-apply {
+  margin-top: 64px;
+  border: 2px solid var(--rule-strong);
+  position: relative;
+  min-height: 480px;
+  overflow: hidden;
+  display: grid; place-items: center;
+}
+.photo-apply .phbg { position: absolute; inset: 0; }
+.photo-apply .phbg img { filter: saturate(0.35) contrast(0.96) brightness(1.0) sepia(0.2); }
+.photo-apply .phbg::after { content: ""; position: absolute; inset: 0; background: rgba(34, 27, 20, 0.18); }
+.photo-apply .mark { position: relative; z-index: 2; color: #F6F1E8; }
+.photo-apply .mark .lm .d { background: var(--ocre); }
+.photo-apply .cap {
+  position: absolute; z-index: 2; left: 0; bottom: 0;
+  background: var(--bg);
+  border-top: 2px solid var(--rule-strong);
+  border-right: 2px solid var(--rule-strong);
+  padding: 10px 18px;
+  font-size: 9.5px; font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--ink-2);
+}
+
+/* ---------- Reco ---------- */
+.compare { margin-top: 76px; }
+.compare .sec-head {
+  display: flex; align-items: baseline; gap: 18px;
+  border-top: 2px solid var(--rule-strong);
+  padding-top: 20px;
+}
+.compare .sec-num { font-size: 11px; font-weight: 600; letter-spacing: 0.1em; color: var(--cafe); }
+.compare h2 { font-size: clamp(24px, 3.4vw, 34px); font-weight: 600; letter-spacing: -0.025em; text-transform: uppercase; }
+.reco-note {
+  margin-top: 28px;
+  border: 2px solid var(--rule-strong);
+  background: var(--bg-2);
+  padding: 24px 28px;
+  display: flex; gap: 18px; align-items: flex-start;
+}
+.reco-note .rn-tag {
+  font-size: 10px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase;
+  background: var(--cafe); color: #F2EDE4;
+  padding: 5px 14px; flex-shrink: 0;
+}
+.reco-note p { font-size: 13.5px; color: var(--ink-2); }
+.reco-note p b { color: var(--ink); font-weight: 600; }
+
+footer {
+  margin-top: 90px;
+  border-top: 2px solid var(--rule-strong);
+  padding-top: 24px;
+  display: flex; align-items: center; gap: 16px;
+  color: var(--ink-3); font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; font-weight: 600;
+}
+footer .right { margin-left: auto; }
+
+.reveal { opacity: 0; transform: translateY(26px); transition: opacity 0.8s var(--snap), transform 0.8s var(--snap); }
+.reveal.in { opacity: 1; transform: none; }
+
+@media (max-width: 920px) {
+  .voz-note { grid-template-columns: 1fr; }
+  .voz-note .sizes { border-left: 0; border-top: 2px solid var(--rule-strong); }
+  .guion-grid { grid-template-columns: 1fr; }
+  .gcell { border-right: 0; border-bottom: 2px solid var(--rule-strong); }
+  .gcell:last-child { border-bottom: 0; }
+  .lm { letter-spacing: 0.28em !important; }
+}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <!-- ══════════ MASTHEAD ══════════ -->
+  <div class="masthead">
+    <span class="mh-name">Klo-Ser</span>
+    <div class="right">
+      <span>Identidad</span>
+      <span>La ligera · seis voces</span>
+      <span>2026</span>
+    </div>
+  </div>
+
+  <!-- ══════════ INTRO ══════════ -->
+  <div class="intro">
+    <div class="folio">Elegiste «la ligera» — aquí está su familia completa</div>
+    <h1>Mismo estilo, seis <span class="cafe">voces.</span></h1>
+    <p>Las mismas reglas en todas: <b>mayúsculas ligeras, tracking amplio, el guion café a media altura</b>. Lo que cambia es la voz de la letra — de la geometría pura al toque boutique. Al final, tres tratamientos del guion para rematar la elegida.</p>
+  </div>
+
+  <!-- ══════════ VOZ 01 · POPPINS ══════════ -->
+  <div class="voz reveal">
+    <div class="voz-head"><span class="voz-num">01</span><h2>Poppins</h2><span class="meta">200 · Tracking 0.42em · La base que elegiste</span></div>
+    <div class="voz-stage">
+      <div class="lm" style="font-family:'Poppins';font-weight:200;font-size:clamp(26px,4.6vw,50px);letter-spacing:0.42em">KLO<span class="d" style="width:0.72em;margin:0 0.42em 0 0.06em"></span>SER</div>
+    </div>
+    <div class="voz-note">
+      <p><b>La que ya te gustó.</b> Geometría amable, círculos perfectos en la O, moderna sin frialdad. Su ventaja definitiva: es la misma familia que usará todo el sistema — un solo idioma de la marca al botón.</p>
+      <div class="sizes">
+        <div class="lm" style="font-family:'Poppins';font-weight:200;font-size:17px;letter-spacing:0.42em">KLO<span class="d" style="width:0.72em;margin:0 0.42em 0 0.06em"></span>SER</div>
+        <div class="lm" style="font-family:'Poppins';font-weight:300;font-size:11px;letter-spacing:0.42em">KLO<span class="d" style="width:0.72em;margin:0 0.42em 0 0.06em"></span>SER</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ VOZ 02 · JOST ══════════ -->
+  <div class="voz reveal">
+    <div class="voz-head"><span class="voz-num">02</span><h2>Jost</h2><span class="pick-badge">La más ORLA</span><span class="meta">200 · Tracking 0.46em</span></div>
+    <div class="voz-stage">
+      <div class="lm" style="font-family:'Jost';font-weight:200;font-size:clamp(27px,4.8vw,52px);letter-spacing:0.46em">KLO<span class="d" style="width:0.72em;margin:0 0.46em 0 0.04em"></span>SER</div>
+    </div>
+    <div class="voz-note">
+      <p><b>Heredera directa de Futura</b> — la tipografía de la Bauhaus que definió el lujo geométrico. Trazos casi monoline, la K abierta, la S esbelta: es la voz más cercana a tu referencia ORLA sin dibujar nada a mano. Fría en el mejor sentido: arquitectónica.</p>
+      <div class="sizes">
+        <div class="lm" style="font-family:'Jost';font-weight:200;font-size:17px;letter-spacing:0.46em">KLO<span class="d" style="width:0.72em;margin:0 0.46em 0 0.04em"></span>SER</div>
+        <div class="lm" style="font-family:'Jost';font-weight:300;font-size:11px;letter-spacing:0.46em">KLO<span class="d" style="width:0.72em;margin:0 0.46em 0 0.04em"></span>SER</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ VOZ 03 · MONTSERRAT ══════════ -->
+  <div class="voz reveal">
+    <div class="voz-head"><span class="voz-num">03</span><h2>Montserrat</h2><span class="meta">200 · Tracking 0.4em</span></div>
+    <div class="voz-stage">
+      <div class="lm" style="font-family:'Montserrat';font-weight:200;font-size:clamp(25px,4.4vw,48px);letter-spacing:0.4em">KLO<span class="d" style="width:0.72em;margin:0 0.4em 0 0.06em"></span>SER</div>
+    </div>
+    <div class="voz-note">
+      <p><b>La clásica del lujo urbano</b> — nacida de los rótulos del barrio Montserrat de Buenos Aires. Más ancha y estable que Poppins, con una R de pierna firme. Transmite institución: un despacho que lleva años cerrando bien.</p>
+      <div class="sizes">
+        <div class="lm" style="font-family:'Montserrat';font-weight:200;font-size:16px;letter-spacing:0.4em">KLO<span class="d" style="width:0.72em;margin:0 0.4em 0 0.06em"></span>SER</div>
+        <div class="lm" style="font-family:'Montserrat';font-weight:300;font-size:11px;letter-spacing:0.4em">KLO<span class="d" style="width:0.72em;margin:0 0.4em 0 0.06em"></span>SER</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ VOZ 04 · JOSEFIN SANS ══════════ -->
+  <div class="voz reveal">
+    <div class="voz-head"><span class="voz-num">04</span><h2>Josefin Sans</h2><span class="meta">200 · Tracking 0.44em</span></div>
+    <div class="voz-stage">
+      <div class="lm" style="font-family:'Josefin Sans';font-weight:200;font-size:clamp(27px,4.8vw,52px);letter-spacing:0.44em">KLO<span class="d" style="width:0.72em;margin:0 0.44em 0 0.04em"></span>SER</div>
+    </div>
+    <div class="voz-note">
+      <p><b>El toque década del 20</b> — geometría con espíritu art déco: la E de brazos largos, la S estilizada, cintura alta. Es la más «hotel boutique» de las seis. Si Klo-Ser quisiera oler a lobby con mármol y latón, es esta.</p>
+      <div class="sizes">
+        <div class="lm" style="font-family:'Josefin Sans';font-weight:200;font-size:17px;letter-spacing:0.44em">KLO<span class="d" style="width:0.72em;margin:0 0.44em 0 0.04em"></span>SER</div>
+        <div class="lm" style="font-family:'Josefin Sans';font-weight:300;font-size:11px;letter-spacing:0.44em">KLO<span class="d" style="width:0.72em;margin:0 0.44em 0 0.04em"></span>SER</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ VOZ 05 · RALEWAY ══════════ -->
+  <div class="voz reveal">
+    <div class="voz-head"><span class="voz-num">05</span><h2>Raleway</h2><span class="meta">200 · Tracking 0.4em</span></div>
+    <div class="voz-stage">
+      <div class="lm" style="font-family:'Raleway';font-weight:200;font-size:clamp(25px,4.5vw,49px);letter-spacing:0.4em">KLO<span class="d" style="width:0.72em;margin:0 0.4em 0 0.06em"></span>SER</div>
+    </div>
+    <div class="voz-note">
+      <p><b>La elegante editorial</b> — nació como display ultrafina y se le nota: contraste sutil en los trazos, la K con patada refinada. Menos geométrica, más caligráfica en espíritu (sin serlo). La favorita si el high-ticket tira hacia moda y no hacia obra.</p>
+      <div class="sizes">
+        <div class="lm" style="font-family:'Raleway';font-weight:200;font-size:16px;letter-spacing:0.4em">KLO<span class="d" style="width:0.72em;margin:0 0.4em 0 0.06em"></span>SER</div>
+        <div class="lm" style="font-family:'Raleway';font-weight:300;font-size:11px;letter-spacing:0.4em">KLO<span class="d" style="width:0.72em;margin:0 0.4em 0 0.06em"></span>SER</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ VOZ 06 · QUESTRIAL ══════════ -->
+  <div class="voz reveal">
+    <div class="voz-head"><span class="voz-num">06</span><h2>Questrial</h2><span class="meta">Regular único · Tracking 0.44em</span></div>
+    <div class="voz-stage">
+      <div class="lm" style="font-family:'Questrial';font-size:clamp(26px,4.6vw,50px);letter-spacing:0.44em">KLO<span class="d" style="width:0.72em;margin:0 0.44em 0 0.04em"></span>SER</div>
+    </div>
+    <div class="voz-note">
+      <p><b>La minimalista radical</b> — un solo peso, círculos perfectos, cero adornos. Es la más silenciosa de las seis: no opina, solo afirma. Al no tener versión thin, pesa un poco más que las demás — mejor para tamaños chicos y bordados.</p>
+      <div class="sizes">
+        <div class="lm" style="font-family:'Questrial';font-size:16px;letter-spacing:0.44em">KLO<span class="d" style="width:0.72em;margin:0 0.44em 0 0.04em"></span>SER</div>
+        <div class="lm" style="font-family:'Questrial';font-size:11px;letter-spacing:0.44em">KLO<span class="d" style="width:0.72em;margin:0 0.44em 0 0.04em"></span>SER</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ EL GUION ══════════ -->
+  <div class="compare reveal" style="margin-top:64px">
+    <div class="sec-head"><span class="sec-num">+</span><h2>Tres remates del guion</h2></div>
+  </div>
+  <div class="guion-grid reveal">
+    <div class="gcell">
+      <div class="st"><div class="lm" style="font-family:'Jost';font-weight:200;font-size:26px;letter-spacing:0.44em">KLO<span class="d" style="width:0.72em;margin:0 0.44em 0 0.04em"></span>SER</div></div>
+      <div class="nm">A · Media altura — el actual, discreto y firme</div>
+    </div>
+    <div class="gcell">
+      <div class="st"><div class="lm" style="font-family:'Jost';font-weight:200;font-size:26px;letter-spacing:0.44em">KLO<span class="d" style="width:1.4em;height:1.5px;margin:0 0.44em 0 0.04em"></span>SER</div></div>
+      <div class="nm">B · Línea larga y fina — más aire, más lujo</div>
+    </div>
+    <div class="gcell">
+      <div class="st"><div class="lm" style="font-family:'Jost';font-weight:200;font-size:26px;letter-spacing:0.44em">KLO<span class="d" style="width:0.5em;height:0.5em;border-radius:0;background:var(--ocre);margin:0 0.44em 0 0.04em"></span>SER</div></div>
+      <div class="nm">C · Bloque ocre — el guion como piedra, más marca</div>
+    </div>
+  </div>
+
+  <!-- ══════════ APLICACIÓN ══════════ -->
+  <div class="photo-apply reveal">
+    <div class="phbg"><img src="assets/mood-00.jpg" alt="Muro de concreto" style="object-position: center 30%"></div>
+    <div class="mark">
+      <div class="lm" style="font-family:'Jost';font-weight:200;font-size:clamp(30px,5.6vw,60px);letter-spacing:0.46em;color:#F6F1E8">KLO<span class="d" style="width:0.72em;margin:0 0.46em 0 0.04em"></span>SER</div>
+    </div>
+    <div class="cap">Aplicación · Jost 200 sobre obra — el momento ORLA</div>
+  </div>
+
+  <!-- ══════════ RECOMENDACIÓN ══════════ -->
+  <div class="compare reveal">
+    <div class="sec-head"><span class="sec-num">∑</span><h2>Mi lectura</h2></div>
+    <div class="reco-note">
+      <span class="rn-tag">Propuesta</span>
+      <p><b>02 Jost 200</b> si quieres clavar la referencia ORLA — es Futura de espíritu, arquitectónica pura, y en el guion le pondría el remate <b>A (media altura)</b> para el uso diario con <b>B (línea larga)</b> reservado para papelería y gran formato. <b>01 Poppins 200</b> sigue siendo la jugada más coherente (una sola familia en todo el sistema) — la diferencia con Jost es sutil y solo se aprecia en grande. Las demás son voces válidas con otro carácter: Montserrat institución, Josefin boutique, Raleway moda, Questrial silencio.</p>
+    </div>
+  </div>
+
+  <!-- ══════════ FOOTER ══════════ -->
+  <footer>
+    <span>Klo-Ser × Montana Realty</span>
+    <span class="right">La ligera · Seis voces · 2026</span>
+  </footer>
+
+</div>
+
+<script>
+const io = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }
+  });
+}, { threshold: 0.1 });
+document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+</script>
+</body>
+</html>

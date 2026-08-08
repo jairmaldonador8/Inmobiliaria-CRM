@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Klo-Ser — Campaña «Muro»</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Jost:wght@200;300&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   KLO-SER · Campaña «Muro» · v2
+   Brutalismo elegante en claro — hueso, arena, cafés
+   Fotografía: moodboard Cosmos de @jairmaldonador8
+   ============================================================ */
+:root {
+  --bg: #F2EDE4;          /* hueso */
+  --bg-2: #EAE3D6;        /* arena clara */
+  --panel: #FAF7F1;       /* papel */
+  --ink: #221B14;         /* tinta café-negra */
+  --ink-2: #6B5D4E;       /* café medio */
+  --ink-3: #A2947F;       /* café claro */
+  --cafe: #6B4A33;        /* café profundo — acento */
+  --barro: #9C6B4A;       /* barro */
+  --ocre: #C98A3B;        /* ocre del cubo */
+  --rule: rgba(34, 27, 20, 0.14);
+  --rule-strong: #221B14;
+  --font: "Poppins", sans-serif;
+  --snap: cubic-bezier(0.22, 1, 0.36, 1);
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--ink);
+  font-size: 15px;
+  line-height: 1.65;
+  overflow-x: hidden;
+}
+/* Grano de papel, muy sutil */
+body::after {
+  content: "";
+  position: fixed; inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+  opacity: 0.03;
+  pointer-events: none;
+  z-index: 1000;
+  mix-blend-mode: multiply;
+}
+::selection { background: rgba(201, 138, 59, 0.3); }
+
+.wrap { max-width: 1160px; margin: 0 auto; padding: 0 32px 90px; }
+
+img { display: block; width: 100%; height: 100%; object-fit: cover; }
+
+/* ---------- Masthead ---------- */
+.masthead {
+  display: flex; align-items: center; gap: 14px;
+  padding: 24px 0;
+  border-bottom: 2px solid var(--rule-strong);
+  font-size: 10.5px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--ink-2);
+  font-weight: 500;
+}
+.wm { display: flex; align-items: center; gap: 10px; }
+.brand-symbol { width: 30px; height: 30px; flex-shrink: 0; }
+/* Logotipo final: Jost 200 · caps · tracking 0.42em · guion café */
+.wm-name {
+  font-family: "Jost", sans-serif;
+  font-weight: 200; font-size: 16px;
+  letter-spacing: 0.42em; text-transform: uppercase; color: var(--ink);
+  display: flex; align-items: center; line-height: 1;
+  white-space: nowrap;
+}
+.wm-name .wm-dash {
+  width: 0.72em; height: 2px;
+  background: var(--cafe);
+  margin: 0 0.42em 0 0.04em;
+  flex-shrink: 0;
+}
+.masthead .right { margin-left: auto; display: flex; gap: 28px; }
+
+/* ---------- Hero ---------- */
+.hero {
+  display: grid; grid-template-columns: 1.25fr 1fr;
+  gap: 0;
+  border-bottom: 2px solid var(--rule-strong);
+}
+.hero-copy { padding: 74px 54px 64px 0; display: flex; flex-direction: column; }
+.hero .folio {
+  font-size: 10.5px; letter-spacing: 0.24em; text-transform: uppercase; color: var(--cafe);
+  font-weight: 600;
+  display: flex; align-items: center; gap: 12px;
+  animation: rise 0.8s var(--snap) both;
+}
+.hero .folio::before { content: ""; width: 36px; height: 2px; background: var(--cafe); }
+.hero h1 {
+  font-size: clamp(44px, 6.6vw, 78px);
+  font-weight: 600;
+  letter-spacing: -0.035em;
+  line-height: 1.02;
+  text-transform: uppercase;
+  margin-top: 28px;
+  animation: rise 0.8s 0.15s var(--snap) both;
+}
+.hero h1 .cafe { color: var(--cafe); }
+.hero .manifesto {
+  margin-top: 30px;
+  max-width: 480px;
+  color: var(--ink-2);
+  font-size: 15.5px;
+  line-height: 1.75;
+  animation: rise 0.8s 0.3s var(--snap) both;
+}
+.hero .manifesto b { color: var(--ink); font-weight: 600; }
+.hero .sello {
+  margin-top: auto; padding-top: 40px;
+  font-size: 10.5px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--ink-3);
+  font-weight: 500;
+  animation: rise 0.8s 0.45s var(--snap) both;
+}
+.hero-img {
+  border-left: 2px solid var(--rule-strong);
+  min-height: 540px;
+  position: relative;
+  overflow: hidden;
+  animation: heroimg 1.1s 0.2s var(--snap) both;
+}
+@keyframes heroimg { from { opacity: 0; clip-path: inset(0 0 100% 0); } to { opacity: 1; clip-path: inset(0); } }
+@keyframes rise { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
+.hero-img .credit {
+  position: absolute; right: 14px; bottom: 12px;
+  font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+/* ---------- Secciones ---------- */
+section { margin-top: 90px; }
+.sec-head {
+  display: flex; align-items: baseline; gap: 18px;
+  border-top: 2px solid var(--rule-strong);
+  padding-top: 20px;
+}
+.sec-num { font-size: 11px; font-weight: 600; letter-spacing: 0.1em; color: var(--cafe); }
+.sec-head h2 {
+  font-size: clamp(24px, 3.4vw, 34px);
+  font-weight: 600; letter-spacing: -0.025em;
+  text-transform: uppercase;
+}
+.sec-sub { color: var(--ink-2); font-size: 14px; max-width: 620px; margin-top: 12px; }
+.sec-sub b { color: var(--ink); font-weight: 600; }
+
+/* ---------- Materiales ---------- */
+.palette { display: grid; grid-template-columns: repeat(6, 1fr); gap: 0; margin-top: 36px; border: 2px solid var(--rule-strong); }
+.pal {
+  aspect-ratio: 3 / 4.4;
+  padding: 14px;
+  display: flex; flex-direction: column; justify-content: flex-end;
+  border-right: 2px solid var(--rule-strong);
+}
+.pal:last-child { border-right: 0; }
+.pal .nm { font-size: 13.5px; font-weight: 600; letter-spacing: -0.01em; }
+.pal .hx { font-size: 10px; letter-spacing: 0.1em; opacity: 0.75; margin-top: 1px; }
+.pal .use { font-size: 9.5px; opacity: 0.7; margin-top: 8px; line-height: 1.5; }
+.pal.dark { color: #F2EDE4; }
+.pal.light { color: #221B14; }
+
+/* ---------- Tipografía ---------- */
+.type-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 0; margin-top: 36px; border: 2px solid var(--rule-strong); }
+.type-card { background: var(--panel); padding: 36px 38px; }
+.type-card + .type-card { border-left: 2px solid var(--rule-strong); }
+.type-card .lbl { font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--ink-3); margin-bottom: 20px; font-weight: 600; }
+.type-a {
+  font-size: clamp(26px, 3.3vw, 38px);
+  font-weight: 600; line-height: 1.1; letter-spacing: -0.03em;
+  text-transform: uppercase;
+}
+.type-a .cafe { color: var(--cafe); }
+.type-b-demo { font-size: 14px; color: var(--ink-2); line-height: 1.75; }
+.type-note { border-top: 1px solid var(--rule); margin-top: 24px; padding-top: 16px; font-size: 11.5px; color: var(--ink-3); }
+
+/* ---------- Pósters ---------- */
+.posters { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; margin-top: 36px; }
+.poster {
+  border: 2px solid var(--rule-strong);
+  background: var(--panel);
+  display: flex; flex-direction: column;
+  transition: transform 0.25s var(--snap), box-shadow 0.25s var(--snap);
+  box-shadow: 0 0 0 0 rgba(34, 27, 20, 0.12);
+}
+.poster:hover { transform: translate(-5px, -5px); box-shadow: 10px 10px 0 0 rgba(34, 27, 20, 0.14); }
+.poster .ph { aspect-ratio: 4 / 4.4; overflow: hidden; border-bottom: 2px solid var(--rule-strong); }
+.poster .copy { padding: 20px 20px 22px; }
+.poster .claim {
+  font-size: clamp(17px, 1.9vw, 21px);
+  font-weight: 600; line-height: 1.15; letter-spacing: -0.02em;
+  text-transform: uppercase;
+}
+.poster .claim .cafe { color: var(--cafe); }
+.poster .foot {
+  display: flex; align-items: center; gap: 8px;
+  margin-top: 14px;
+  font-size: 9px; letter-spacing: 0.22em; text-transform: uppercase;
+  color: var(--ink-3); font-weight: 600;
+}
+.poster .foot .mini-dash { width: 14px; height: 3px; border-radius: 99px; background: var(--cafe); }
+
+/* ---------- Social ---------- */
+.socials { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; margin-top: 36px; }
+.social {
+  aspect-ratio: 1;
+  border: 2px solid var(--rule-strong);
+  position: relative; overflow: hidden;
+  padding: 24px;
+  display: flex; flex-direction: column;
+}
+.social .tag { font-size: 9px; letter-spacing: 0.22em; text-transform: uppercase; font-weight: 600; opacity: 0.75; }
+.sA { background: var(--panel); }
+.sA .big {
+  font-weight: 600;
+  font-size: clamp(38px, 4.6vw, 56px); line-height: 1; letter-spacing: -0.03em;
+  margin-top: auto; text-transform: uppercase;
+}
+.sA .big .cafe { color: var(--cafe); }
+.sA .sub { color: var(--ink-2); font-size: 12px; margin-top: 12px; }
+.sB { padding: 0; }
+.sB .phbg { position: absolute; inset: 0; }
+.sB .phbg::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 30%, rgba(20, 14, 8, 0.55)); }
+.sB .inner { position: relative; z-index: 2; padding: 24px; display: flex; flex-direction: column; height: 100%; color: #F6F1E8; }
+.sB .quote {
+  font-size: clamp(15px, 1.7vw, 19px); font-weight: 500; line-height: 1.4;
+  margin-top: auto; letter-spacing: -0.01em;
+}
+.sB .who { font-size: 10px; letter-spacing: 0.14em; margin-top: 12px; text-transform: uppercase; opacity: 0.85; font-weight: 600; }
+.sC { background: var(--cafe); color: #F2EDE4; }
+.sC .num {
+  font-weight: 600;
+  font-size: clamp(48px, 6vw, 72px); line-height: 1; letter-spacing: -0.03em;
+  margin-top: auto;
+}
+.sC .lbl2 { font-size: 12px; margin-top: 10px; opacity: 0.85; }
+
+/* ---------- Billboard ---------- */
+.billboard {
+  margin-top: 36px;
+  border: 2px solid var(--rule-strong);
+  position: relative;
+  overflow: hidden;
+  min-height: 380px;
+  display: flex; align-items: flex-end;
+}
+.billboard .phbg { position: absolute; inset: 0; }
+.billboard .phbg::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(20, 14, 8, 0.55), rgba(20, 14, 8, 0.08) 60%); }
+.billboard .bb-copy { position: relative; z-index: 2; padding: 44px 48px; color: #F6F1E8; }
+.billboard .bb-claim {
+  font-weight: 600;
+  font-size: clamp(28px, 4.2vw, 52px);
+  line-height: 1.02; letter-spacing: -0.03em;
+  text-transform: uppercase;
+  max-width: 560px;
+}
+.billboard .bb-brand { display: flex; align-items: center; gap: 10px; margin-top: 22px; }
+.billboard .wm-name { color: #F6F1E8; }
+.billboard .wm-name .wm-dash { background: var(--ocre); }
+
+/* ---------- Claims ---------- */
+.claims { margin-top: 36px; border-top: 2px solid var(--rule-strong); }
+.claim-row {
+  display: grid; grid-template-columns: 90px 1.2fr 1fr;
+  gap: 24px; align-items: baseline;
+  padding: 24px 0;
+  border-bottom: 1px solid var(--rule);
+}
+.claim-row .n { font-size: 10.5px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: var(--cafe); }
+.claim-row .c {
+  font-weight: 600; font-size: clamp(18px, 2.2vw, 24px);
+  letter-spacing: -0.02em; line-height: 1.15; text-transform: uppercase;
+}
+.claim-row .c .cafe { color: var(--cafe); }
+.claim-row .u { color: var(--ink-2); font-size: 12.5px; }
+.claim-row .u b { color: var(--ink); font-weight: 600; }
+
+/* ---------- Digital ---------- */
+.digital { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; margin-top: 36px; }
+.dig-card { border: 2px solid var(--rule-strong); background: var(--panel); padding: 30px 32px; }
+.dig-card .lbl { font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--ink-3); margin-bottom: 20px; font-weight: 600; }
+.mini-login {
+  background: var(--bg); border: 1.5px solid var(--rule-strong);
+  padding: 30px 26px; text-align: center;
+}
+.mini-login .wm-name { justify-content: center; font-size: 26px; }
+.mini-login .tg { font-size: 9.5px; letter-spacing: 0.24em; text-transform: uppercase; color: var(--ink-3); margin-top: 8px; font-weight: 600; }
+.mini-login .fld { height: 38px; background: var(--panel); border: 1.5px solid var(--rule); margin-top: 12px; }
+.mini-login .go {
+  height: 42px; margin-top: 14px;
+  background: var(--cafe); color: #F2EDE4;
+  display: grid; place-items: center;
+  font-size: 13px; font-weight: 600; letter-spacing: 0.04em;
+}
+.mini-stat-row { display: flex; gap: 0; border: 1.5px solid var(--rule-strong); }
+.mini-stat { flex: 1; background: var(--bg); padding: 18px 16px; border-right: 1.5px solid var(--rule-strong); }
+.mini-stat:last-child { border-right: 0; }
+.mini-stat .n { font-weight: 600; font-size: 28px; letter-spacing: -0.03em; }
+.mini-stat .n .cafe { color: var(--cafe); font-size: 15px; font-weight: 600; }
+.mini-stat .l { font-size: 9.5px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-3); margin-top: 6px; font-weight: 600; }
+.dig-note { font-size: 12px; color: var(--ink-2); margin-top: 16px; line-height: 1.65; }
+
+/* ---------- Footer ---------- */
+footer {
+  margin-top: 100px;
+  border-top: 2px solid var(--rule-strong);
+  padding-top: 24px;
+  display: flex; align-items: center; gap: 16px;
+  color: var(--ink-3); font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; font-weight: 600;
+}
+footer .right { margin-left: auto; }
+
+/* Reveal */
+.reveal { opacity: 0; transform: translateY(26px); transition: opacity 0.8s var(--snap), transform 0.8s var(--snap); }
+.reveal.in { opacity: 1; transform: none; }
+
+@media (max-width: 920px) {
+  .hero { grid-template-columns: 1fr; }
+  .hero-copy { padding-right: 0; }
+  .hero-img { border-left: 0; border-top: 2px solid var(--rule-strong); min-height: 380px; }
+  .palette { grid-template-columns: repeat(3, 1fr); }
+  .pal:nth-child(3) { border-right: 0; }
+  .pal:nth-child(-n+3) { border-bottom: 2px solid var(--rule-strong); }
+  .posters, .socials, .type-grid, .digital { grid-template-columns: 1fr; }
+  .type-card + .type-card { border-left: 0; border-top: 2px solid var(--rule-strong); }
+  .claim-row { grid-template-columns: 70px 1fr; }
+  .claim-row .u { grid-column: 2; }
+}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <!-- ══════════ MASTHEAD ══════════ -->
+  <div class="masthead">
+    <div class="wm">
+      <div class="wm-name">klo<span class="wm-dash"></span>ser</div>
+    </div>
+    <div class="right">
+      <span>Campaña 01</span>
+      <span>Muro</span>
+      <span>2026</span>
+    </div>
+  </div>
+
+  <!-- ══════════ HERO ══════════ -->
+  <header class="hero">
+    <div class="hero-copy">
+      <div class="folio">Campaña de marca · Klo-Ser × Montana Realty</div>
+      <h1>Un buen<br>cierre se<br><span class="cafe">construye.</span></h1>
+      <p class="manifesto">
+        Nadie compra una casa por impulso. Se construye la confianza — visita a visita, mensaje a mensaje — hasta el día de la firma. <b>Klo-Ser es el sistema donde ese trabajo toma forma:</b> cada lead con su cimiento, cada seguimiento en su lugar, cada cierre bien edificado. Sin ruido. Sin adornos. Todo cargando exactamente donde debe.
+      </p>
+      <div class="sello">Brutalismo cálido · Fotografía de obra · Sin cursivas</div>
+    </div>
+    <div class="hero-img">
+      <img src="assets/mood-01.jpg" alt="Volumen ocre contra cielo turquesa">
+      <span class="credit">Moodboard Klo-Ser · Cosmos</span>
+    </div>
+  </header>
+
+  <!-- ══════════ 01 · MATERIALES ══════════ -->
+  <section>
+    <div class="reveal">
+      <div class="sec-head"><span class="sec-num">01</span><h2>Colorimetría — materiales de obra</h2></div>
+      <p class="sec-sub">Todos los tonos salen de las fotografías del moodboard: muros al sol, concreto, barro cocido. <b>Fondo hueso, tinta café, y el café profundo como único acento.</b> Nada brilla: todo es materia.</p>
+    </div>
+    <div class="palette reveal">
+      <div class="pal light" style="background:#F2EDE4">
+        <div class="nm">Hueso</div><div class="hx">#F2EDE4</div>
+        <div class="use">El fondo. Papel y muro encalado.</div>
+      </div>
+      <div class="pal light" style="background:#D8C9B0">
+        <div class="nm">Arena</div><div class="hx">#D8C9B0</div>
+        <div class="use">Superficies secundarias, bandas.</div>
+      </div>
+      <div class="pal light" style="background:#C98A3B">
+        <div class="nm">Ocre</div><div class="hx">#C98A3B</div>
+        <div class="use">El sol del moodboard. Detalles contados.</div>
+      </div>
+      <div class="pal dark" style="background:#9C6B4A">
+        <div class="nm">Barro</div><div class="hx">#9C6B4A</div>
+        <div class="use">Estados cálidos, hovers, gráficas.</div>
+      </div>
+      <div class="pal dark" style="background:#6B4A33">
+        <div class="nm">Café</div><div class="hx">#6B4A33</div>
+        <div class="use">El acento. Botones, guion, énfasis.</div>
+      </div>
+      <div class="pal dark" style="background:#221B14">
+        <div class="nm">Tinta</div><div class="hx">#221B14</div>
+        <div class="use">Texto y reglas. Nunca negro puro.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════ 02 · TIPOGRAFÍA ══════════ -->
+  <section>
+    <div class="reveal">
+      <div class="sec-head"><span class="sec-num">02</span><h2>Tipografía — un solo muro</h2></div>
+      <p class="sec-sub"><b>Poppins en toda la marca</b> — geométrica, sólida, sin una sola cursiva. Los titulares se levantan en mayúsculas con peso 600, como muros de carga. El énfasis se marca con color café, nunca con itálicas.</p>
+    </div>
+    <div class="type-grid reveal">
+      <div class="type-card">
+        <div class="lbl">Display · Poppins 600 · Mayúsculas</div>
+        <div class="type-a">La casa correcta,<br>al cliente correcto,<br>en el momento <span class="cafe">correcto.</span></div>
+        <div class="type-note">Tracking −0.03em, interlínea 1.1. El énfasis es café — el peso y el color trabajan, la inclinación no existe.</div>
+      </div>
+      <div class="type-card">
+        <div class="lbl">Cuerpo · Poppins 400</div>
+        <p class="type-b-demo">María Fernanda busca casa de 3 recámaras con jardín en Valle Real, presupuesto hasta $6.5M. Visita agendada el miércoles 11:00 — confirmar acceso con vigilancia y llevar la alternativa de Bosques.</p>
+        <div class="type-note">14–15 px, interlínea 1.65, números tabulares. Los montos importantes suben a 600.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════ 03 · PÓSTERS ══════════ -->
+  <section>
+    <div class="reveal">
+      <div class="sec-head"><span class="sec-num">03</span><h2>La serie «Muro»</h2></div>
+      <p class="sec-sub">Tres piezas con la fotografía real del moodboard: muro, sombra y un claim que carga. <b>La foto arriba, el texto como placa de obra abajo</b> — formato de lámina de arquitectura.</p>
+    </div>
+    <div class="posters">
+      <div class="poster reveal">
+        <div class="ph"><img src="assets/mood-03.jpg" alt="Celosía de estuco con sombras triangulares"></div>
+        <div class="copy">
+          <div class="claim">Cada seguimiento,<br>una <span class="cafe">columna.</span></div>
+          <div class="foot"><span class="mini-dash"></span> klo-ser · nada se enfría</div>
+        </div>
+      </div>
+      <div class="poster reveal">
+        <div class="ph"><img src="assets/mood-05.jpg" alt="Volúmenes de barro y concreto"></div>
+        <div class="copy">
+          <div class="claim">Un buen cierre<br>se <span class="cafe">construye.</span></div>
+          <div class="foot"><span class="mini-dash"></span> klo-ser · del lead al cierre</div>
+        </div>
+      </div>
+      <div class="poster reveal">
+        <div class="ph"><img src="assets/mood-11.jpg" alt="Vigas de concreto en zigzag"></div>
+        <div class="copy">
+          <div class="claim">Del lead al cierre,<br>peldaño a <span class="cafe">peldaño.</span></div>
+          <div class="foot"><span class="mini-dash"></span> klo-ser · sistema de Montana Realty</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════ 04 · SOCIAL ══════════ -->
+  <section>
+    <div class="reveal">
+      <div class="sec-head"><span class="sec-num">04</span><h2>Piezas sociales</h2></div>
+      <p class="sec-sub">Formato 1:1 para el Instagram del equipo: el número del mes, la voz del asesor sobre obra, y el hito de cierre en café sólido.</p>
+    </div>
+    <div class="socials">
+      <div class="social sA reveal">
+        <div class="tag">Montana Realty · Agosto</div>
+        <div class="big">6 <span class="cafe">cierres</span><br>este mes.</div>
+        <div class="sub">Y ningún lead con más de 24 h sin respuesta.</div>
+      </div>
+      <div class="social sB reveal">
+        <div class="phbg"><img src="assets/mood-00.jpg" alt="Muro de concreto al sol"></div>
+        <div class="inner">
+          <div class="tag">Voces del equipo</div>
+          <div class="quote">«Antes perseguía pendientes. Ahora abro Klo-Ser y el día ya está en orden de cierre.»</div>
+          <div class="who">Alejandra Peña — Asesora</div>
+        </div>
+      </div>
+      <div class="social sC reveal">
+        <div class="tag" style="opacity:0.7">Se cerró</div>
+        <div class="num">$8.5M</div>
+        <div class="lbl2">Casa Bosques 3R · Zapopan — bien cimentada desde el primer mensaje.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════ 05 · GRAN FORMATO ══════════ -->
+  <section>
+    <div class="reveal">
+      <div class="sec-head"><span class="sec-num">05</span><h2>Gran formato</h2></div>
+      <p class="sec-sub">Fachada de oficina y presentaciones con desarrolladores: la fotografía del moodboard a todo lo ancho, el claim como muro.</p>
+    </div>
+    <div class="billboard reveal">
+      <div class="phbg"><img src="assets/mood-05.jpg" alt="Volúmenes de barro y concreto" style="object-position: center 40%"></div>
+      <div class="bb-copy">
+        <div class="bb-claim">Vender casas es cosa seria.</div>
+        <div class="bb-brand">
+          <div class="wm-name" style="font-size:15px">klo<span class="wm-dash"></span>ser</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════ 06 · CLAIMS ══════════ -->
+  <section>
+    <div class="reveal">
+      <div class="sec-head"><span class="sec-num">06</span><h2>El copy de campaña</h2></div>
+      <p class="sec-sub">Una idea madre y tres variaciones — siempre en mayúsculas, siempre rectas.</p>
+    </div>
+    <div class="claims reveal">
+      <div class="claim-row">
+        <span class="n">Madre</span>
+        <div class="c">Un buen cierre se <span class="cafe">construye.</span></div>
+        <div class="u"><b>La idea central.</b> Hero de landing, póster principal, firma de presentaciones.</div>
+      </div>
+      <div class="claim-row">
+        <span class="n">Var. 01</span>
+        <div class="c">Del lead al cierre, peldaño a <span class="cafe">peldaño.</span></div>
+        <div class="u">La versión de proceso — onboarding de asesores y material interno.</div>
+      </div>
+      <div class="claim-row">
+        <span class="n">Var. 02</span>
+        <div class="c">Cada seguimiento, una <span class="cafe">columna.</span></div>
+        <div class="u">La versión de disciplina — recordatorios, empty states, cultura de equipo.</div>
+      </div>
+      <div class="claim-row">
+        <span class="n">Var. 03</span>
+        <div class="c">Vender casas es cosa <span class="cafe">seria.</span></div>
+        <div class="u">La versión de autoridad — gran formato y pitch a desarrolladores high-ticket.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════ 07 · DIGITAL ══════════ -->
+  <section>
+    <div class="reveal">
+      <div class="sec-head"><span class="sec-num">07</span><h2>Y así aterriza en el producto</h2></div>
+      <p class="sec-sub">La misma materia en pantalla: fondo hueso, tinta café, botones café sólido con esquinas rectas. <b>La landing ya está rediseñada con esta colorimetría.</b></p>
+    </div>
+    <div class="digital reveal">
+      <div class="dig-card">
+        <div class="lbl">Login</div>
+        <div class="mini-login">
+          <div class="wm-name" style="justify-content:center;font-size:19px">klo<span class="wm-dash"></span>ser</div>
+          <div class="tg">Montana Realty</div>
+          <div class="fld"></div>
+          <div class="fld"></div>
+          <div class="go">Entrar</div>
+        </div>
+      </div>
+      <div class="dig-card">
+        <div class="lbl">Los números, en peso 600</div>
+        <div class="mini-stat-row">
+          <div class="mini-stat"><div class="n">42</div><div class="l">Leads del mes</div></div>
+          <div class="mini-stat"><div class="n">6 <span class="cafe">▲2</span></div><div class="l">Cierres</div></div>
+          <div class="mini-stat"><div class="n">2.4<span class="cafe">h</span></div><div class="l">Respuesta media</div></div>
+        </div>
+        <p class="dig-note">Los KPIs en Poppins 600 con tracking cerrado — cifras que pesan como placas. La urgencia («&gt;24 h sin atender») usa barro quemado #A34E28, reservado solo para eso.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════ FOOTER ══════════ -->
+  <footer>
+    <span>Klo-Ser × Montana Realty</span>
+    <span class="right">Campaña «Muro» · 2026</span>
+  </footer>
+
+</div>
+
+<script>
+const io = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }
+  });
+}, { threshold: 0.12 });
+document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+</script>
+</body>
+</html>

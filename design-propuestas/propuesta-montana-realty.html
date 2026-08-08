@@ -1,0 +1,2350 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Klo-Ser — Propuesta de diseño · Montana Realty</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Instrument+Sans:ital,wght@0,400..700;1,400&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   MONTANA REALTY · Sistema de diseño «Obsidiana»
+   Propuesta v1 — dark premium, acento lima, datos como héroe
+   ============================================================ */
+:root {
+  --bg: #000000;
+  --bg-glow-1: rgba(101, 163, 13, 0.14);
+  --bg-glow-2: rgba(8, 145, 178, 0.12);
+  --surface: #0B101B;
+  --surface-2: #0E1420;
+  --surface-3: #182034;
+  --stroke: rgba(148, 163, 184, 0.11);
+  --stroke-strong: rgba(148, 163, 184, 0.20);
+  --text: #EDF1F9;
+  --text-2: #9AA5BB;
+  --text-3: #616D85;
+  --accent: #BEE84B;          /* lima UI — botones, foco, highlights */
+  --accent-deep: #65A30D;     /* lima datos — serie 1 (validada) */
+  --accent-ink: #0C1405;
+  --c1: #65A30D;              /* paleta categórica validada (dark) */
+  --c2: #0891B2;
+  --c3: #EA580C;
+  --c4: #6366F1;
+  --c1-soft: rgba(101, 163, 13, 0.16);
+  --c2-soft: rgba(8, 145, 178, 0.16);
+  --c3-soft: rgba(234, 88, 12, 0.16);
+  --c4-soft: rgba(99, 102, 241, 0.16);
+  --danger: #F87171;
+  --danger-soft: rgba(248, 113, 113, 0.14);
+  --warn: #FBBF24;
+  --warn-soft: rgba(251, 191, 36, 0.13);
+  --ok: #4ADE80;
+  --ok-soft: rgba(74, 222, 128, 0.13);
+  --wa: #25D366;
+  --r-lg: 26px;
+  --r-md: 18px;
+  --r-sm: 12px;
+  --font-display: "Bricolage Grotesque", sans-serif;
+  --font-body: "Instrument Sans", sans-serif;
+  --shadow-card: 0 1px 0 rgba(255,255,255,0.03) inset, 0 12px 32px -16px rgba(0,0,0,0.55);
+  --shadow-pop: 0 1px 0 rgba(255,255,255,0.05) inset, 0 24px 48px -20px rgba(0,0,0,0.7);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html { color-scheme: dark; }
+
+body {
+  font-family: var(--font-body);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 14.5px;
+  line-height: 1.5;
+  min-height: 100vh;
+  overflow-x: hidden;
+  font-feature-settings: "tnum";
+}
+
+/* Atmósfera: dos brillos radiales + grano */
+body::before {
+  content: "";
+  position: fixed; inset: 0;
+  background:
+    radial-gradient(1100px 800px at 108% -12%, var(--bg-glow-2), transparent 58%),
+    radial-gradient(1300px 900px at -12% 112%, var(--bg-glow-1), transparent 56%),
+    radial-gradient(700px 500px at 55% 108%, rgba(99, 102, 241, 0.05), transparent 60%);
+  pointer-events: none;
+  z-index: 0;
+}
+body::after {
+  content: "";
+  position: fixed; inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)' opacity='0.35'/%3E%3C/svg%3E");
+  opacity: 0.035;
+  pointer-events: none;
+  z-index: 1000;
+  mix-blend-mode: overlay;
+}
+
+::selection { background: rgba(190, 232, 75, 0.25); }
+
+h1, h2, h3, .display { font-family: var(--font-display); }
+
+/* ---------- Shell ---------- */
+.shell { display: flex; min-height: 100vh; position: relative; z-index: 1; }
+
+/* ---------- Sidebar ---------- */
+.sidebar {
+  width: 232px;
+  flex-shrink: 0;
+  padding: 22px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  border-right: 1px solid var(--stroke);
+  background: rgba(0, 0, 0, 0.6);
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+.brand {
+  display: flex; align-items: center; gap: 11px;
+  padding: 4px 8px 20px;
+}
+.brand-mark {
+  width: 38px; height: 38px; border-radius: 12px;
+  background: linear-gradient(140deg, #DFF799, var(--accent) 45%, #5d8f0c);
+  color: var(--accent-ink);
+  display: grid; place-items: center;
+  font-family: var(--font-display);
+  font-weight: 800; font-size: 15px; letter-spacing: -0.02em;
+  box-shadow: 0 8px 20px -8px rgba(190, 232, 75, 0.5);
+}
+.brand-name { font-family: var(--font-display); font-weight: 700; font-size: 15.5px; letter-spacing: -0.01em; }
+.brand-sub { font-size: 10.5px; color: var(--text-3); letter-spacing: 0.08em; text-transform: uppercase; }
+
+/* Marca Klo-Ser: símbolo «check que cierra» + wordmark con guion lima */
+.brand-symbol {
+  width: 36px; height: 36px; flex-shrink: 0;
+  filter: drop-shadow(0 0 9px rgba(190, 232, 75, 0.16));
+}
+.wm-name {
+  font-family: var(--font-display); font-weight: 800;
+  letter-spacing: -0.035em; line-height: 1;
+  display: flex; align-items: center;
+}
+.wm-name .wm-dash {
+  width: 0.5em; height: 0.15em;
+  background: var(--accent); border-radius: 99px;
+  margin: 0 0.08em;
+  box-shadow: 0 0 5px rgba(190, 232, 75, 0.2), 0 0 16px rgba(190, 232, 75, 0.12);
+}
+/* «El acuerdo»: klo y ser llegan de lados opuestos, el guion nace al centro */
+.view.active .login-wm .wm-k { animation: wmL 0.7s 0.25s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.view.active .login-wm .wm-s { animation: wmR 0.7s 0.25s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.view.active .login-wm .wm-dash { animation: wmD 0.45s 0.85s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+@keyframes wmL { from { opacity: 0; transform: translateX(-34px); } to { opacity: 1; transform: none; } }
+@keyframes wmR { from { opacity: 0; transform: translateX(34px); } to { opacity: 1; transform: none; } }
+@keyframes wmD { from { opacity: 0; transform: scale(0); } to { opacity: 1; transform: scale(1); } }
+
+.nav-label {
+  font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--text-3); padding: 16px 12px 6px; font-weight: 600;
+}
+.nav-item {
+  display: flex; align-items: center; gap: 11px;
+  padding: 9px 12px;
+  border-radius: var(--r-sm);
+  color: var(--text-2);
+  cursor: pointer;
+  font-size: 13.5px; font-weight: 500;
+  border: 1px solid transparent;
+  transition: background 0.15s, color 0.15s, transform 0.15s;
+  user-select: none;
+}
+.nav-item svg { width: 17px; height: 17px; stroke-width: 1.8; flex-shrink: 0; }
+.nav-item:hover { background: var(--surface-2); color: var(--text); }
+.nav-item { position: relative; }
+.nav-item.active {
+  background: linear-gradient(120deg, rgba(190,232,75,0.13), rgba(190,232,75,0.04));
+  border-color: rgba(190, 232, 75, 0.2);
+  color: var(--accent);
+}
+.nav-item.active::before {
+  content: ""; position: absolute; left: -14px; top: 50%;
+  transform: translateY(-50%);
+  width: 3px; height: 60%;
+  border-radius: 0 4px 4px 0;
+  background: var(--accent);
+  box-shadow: 0 0 8px rgba(190, 232, 75, 0.3);
+}
+.nav-badge {
+  margin-left: auto;
+  background: var(--danger-soft); color: var(--danger);
+  font-size: 11px; font-weight: 700;
+  border-radius: 99px; padding: 1px 8px;
+}
+.nav-badge.lima { background: var(--c1-soft); color: var(--accent); }
+.sidebar-foot {
+  margin-top: auto; padding: 14px 8px 2px;
+  display: flex; align-items: center; gap: 10px;
+  border-top: 1px solid var(--stroke);
+}
+.avatar {
+  width: 34px; height: 34px; border-radius: 50%;
+  display: grid; place-items: center;
+  font-size: 12px; font-weight: 700;
+  background: linear-gradient(140deg, var(--c4), #4338CA);
+  color: #fff; flex-shrink: 0;
+}
+.avatar.a2 { background: linear-gradient(140deg, var(--c2), #155E75); }
+.avatar.a3 { background: linear-gradient(140deg, var(--c3), #9A3412); }
+.avatar.a4 { background: linear-gradient(140deg, #DB2777, #831843); }
+.sf-name { font-size: 12.5px; font-weight: 600; }
+.sf-role { font-size: 10.5px; color: var(--text-3); }
+
+/* ---------- Main ---------- */
+.main { flex: 1; min-width: 0; padding: 26px 34px 60px; max-width: 1240px; }
+
+.topbar {
+  display: flex; align-items: center; gap: 14px;
+  margin-bottom: 26px;
+}
+.search {
+  flex: 1; max-width: 380px;
+  display: flex; align-items: center; gap: 9px;
+  background: var(--surface);
+  border: 1px solid var(--stroke);
+  border-radius: 99px;
+  padding: 8px 16px;
+  color: var(--text-3);
+  font-size: 13px;
+}
+.search svg { width: 15px; height: 15px; }
+.search kbd {
+  margin-left: auto; font-family: var(--font-body);
+  font-size: 10.5px; color: var(--text-3);
+  border: 1px solid var(--stroke-strong);
+  border-radius: 6px; padding: 1px 6px;
+}
+.top-actions { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+.icon-btn {
+  width: 38px; height: 38px; border-radius: 50%;
+  display: grid; place-items: center;
+  background: var(--surface); border: 1px solid var(--stroke);
+  color: var(--text-2); cursor: pointer; position: relative;
+  transition: transform 0.15s, border-color 0.15s;
+}
+.icon-btn:hover { transform: translateY(-2px); border-color: var(--stroke-strong); color: var(--text); }
+.icon-btn svg { width: 17px; height: 17px; stroke-width: 1.8; }
+.icon-btn .dot {
+  position: absolute; top: 8px; right: 9px;
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--accent); border: 2px solid var(--bg);
+}
+
+/* ---------- Views ---------- */
+.view { display: none; }
+.view.active { display: block; }
+.view.active > * { animation: rise 0.5s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.view.active > *:nth-child(1) { animation-delay: 0.02s; }
+.view.active > *:nth-child(2) { animation-delay: 0.08s; }
+.view.active > *:nth-child(3) { animation-delay: 0.14s; }
+.view.active > *:nth-child(4) { animation-delay: 0.20s; }
+.view.active > *:nth-child(5) { animation-delay: 0.26s; }
+@keyframes rise {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* ---------- Cabecera de vista ---------- */
+.view-head { display: flex; align-items: flex-end; gap: 16px; margin-bottom: 24px; flex-wrap: wrap; }
+.view-head h1 {
+  font-size: 30px; font-weight: 700; letter-spacing: -0.025em; line-height: 1.1;
+}
+.view-head .hint { color: var(--text-2); font-size: 13px; margin-top: 6px; display: flex; align-items: center; gap: 7px; }
+.hint svg { width: 13px; height: 13px; }
+.head-cta { margin-left: auto; display: flex; gap: 10px; }
+
+.btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  border-radius: 99px; padding: 9px 18px;
+  font-family: var(--font-body); font-size: 13px; font-weight: 600;
+  cursor: pointer; border: 1px solid transparent;
+  transition: transform 0.15s, box-shadow 0.15s, background 0.15s;
+}
+.btn svg { width: 15px; height: 15px; stroke-width: 2; }
+.btn:hover { transform: translateY(-2px); }
+.btn-primary {
+  background: linear-gradient(160deg, #DCF593, var(--accent) 55%, #97C534);
+  color: var(--accent-ink);
+  box-shadow: 0 10px 28px -8px rgba(190, 232, 75, 0.6), 0 1px 0 rgba(255,255,255,0.35) inset;
+}
+.btn-primary:hover { box-shadow: 0 16px 36px -8px rgba(190, 232, 75, 0.75), 0 1px 0 rgba(255,255,255,0.35) inset; }
+.btn-ghost {
+  background: var(--surface); color: var(--text-2);
+  border-color: var(--stroke-strong);
+}
+.btn-ghost:hover { color: var(--text); }
+.btn-wa { background: rgba(37, 211, 102, 0.15); color: var(--wa); border-color: rgba(37, 211, 102, 0.3); }
+
+/* ---------- Cards ---------- */
+.card {
+  background:
+    linear-gradient(165deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.006) 42%),
+    var(--surface);
+  border: 1px solid var(--stroke);
+  border-radius: var(--r-lg);
+  padding: 20px 22px;
+  box-shadow: 0 1px 0 rgba(255,255,255,0.05) inset, 0 24px 60px -28px rgba(0,0,0,0.9);
+  position: relative;
+}
+.card-title {
+  font-size: 13px; font-weight: 600; color: var(--text-2);
+  display: flex; align-items: center; gap: 8px;
+  letter-spacing: 0.01em;
+}
+.card-title svg { width: 15px; height: 15px; stroke-width: 1.8; }
+.card-menu { margin-left: auto; color: var(--text-3); cursor: pointer; letter-spacing: 2px; font-weight: 700; }
+
+/* ---------- KPI tiles ---------- */
+.kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 14px; }
+.kpi-ico {
+  width: 32px; height: 32px; border-radius: 11px; flex-shrink: 0;
+  display: grid; place-items: center;
+}
+.kpi-ico svg { width: 16px; height: 16px; stroke-width: 1.9; }
+.kpi-ico.i-lima { background: var(--c1-soft); color: var(--accent); box-shadow: 0 0 18px -2px rgba(190, 232, 75, 0.35); }
+.kpi-ico.i-cian { background: var(--c2-soft); color: #4ED3EF; box-shadow: 0 0 18px -2px rgba(8, 145, 178, 0.45); }
+.kpi-ico.i-indigo { background: var(--c4-soft); color: #9BA2FA; box-shadow: 0 0 18px -2px rgba(99, 102, 241, 0.45); }
+.kpi-ico.i-ok { background: var(--ok-soft); color: var(--ok); box-shadow: 0 0 18px -2px rgba(74, 222, 128, 0.4); }
+.kpi {
+  cursor: pointer;
+  transition: transform 0.18s, box-shadow 0.18s, border-color 0.18s;
+  overflow: hidden;
+}
+.kpi:hover { transform: translateY(-4px); box-shadow: var(--shadow-pop); border-color: var(--stroke-strong); }
+.kpi-value {
+  font-family: var(--font-display);
+  font-size: 38px; font-weight: 700; letter-spacing: -0.03em;
+  margin: 10px 0 2px; line-height: 1;
+  display: flex; align-items: baseline; gap: 10px;
+}
+.delta {
+  font-family: var(--font-body);
+  font-size: 11.5px; font-weight: 700;
+  border-radius: 99px; padding: 3px 9px;
+  display: inline-flex; align-items: center; gap: 4px;
+}
+.delta.up { background: var(--c1-soft); color: var(--accent); }
+.delta.down { background: var(--danger-soft); color: var(--danger); }
+.delta.flat { background: var(--surface-3); color: var(--text-2); }
+.kpi-sub { font-size: 11.5px; color: var(--text-3); margin-bottom: 12px; }
+.spark { width: 100%; height: 44px; display: block; }
+
+/* ---------- Grid dashboard ---------- */
+.dash-grid { display: grid; grid-template-columns: 1.65fr 1fr; gap: 14px; margin-bottom: 14px; }
+.dash-grid-2 { display: grid; grid-template-columns: 1fr 1.65fr; gap: 14px; }
+
+/* ---------- Chart bits ---------- */
+.chart-head { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 4px; }
+.chart-big {
+  font-family: var(--font-display);
+  font-size: 30px; font-weight: 700; letter-spacing: -0.03em; margin: 6px 0 0;
+}
+.legend { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 14px; }
+.legend-item { display: flex; align-items: center; gap: 7px; font-size: 11.5px; color: var(--text-2); }
+.legend-swatch { width: 9px; height: 9px; border-radius: 3px; }
+
+.tooltip {
+  position: fixed;
+  background: var(--surface-3);
+  border: 1px solid var(--stroke-strong);
+  border-radius: 10px;
+  padding: 7px 12px;
+  font-size: 12px;
+  pointer-events: none;
+  z-index: 999;
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity 0.12s, transform 0.12s;
+  box-shadow: 0 12px 30px -10px rgba(0,0,0,0.6);
+  white-space: nowrap;
+}
+.tooltip.on { opacity: 1; transform: none; }
+.tooltip b { color: var(--accent); font-feature-settings: "tnum"; }
+
+/* Funnel horizontal */
+.funnel-row { display: grid; grid-template-columns: 118px 1fr 44px; align-items: center; gap: 12px; margin-top: 13px; }
+.funnel-label { font-size: 12px; color: var(--text-2); text-align: right; }
+.funnel-track { height: 26px; border-radius: 8px; background: var(--surface-3); overflow: hidden; position: relative; }
+.funnel-fill {
+  height: 100%; border-radius: 8px;
+  background: linear-gradient(90deg, #52830a, var(--c1));
+  width: 0;
+  transition: width 1s cubic-bezier(0.22, 1, 0.36, 1);
+  position: relative;
+}
+.funnel-fill::after {
+  content: ""; position: absolute; inset: 0;
+  background: linear-gradient(180deg, rgba(255,255,255,0.14), transparent 45%);
+  border-radius: inherit;
+}
+.funnel-fill:not(.lost) { box-shadow: 0 0 16px -2px rgba(101, 163, 13, 0.45); }
+.hbar-fill { box-shadow: 0 0 14px -2px rgba(101, 163, 13, 0.4); }
+.funnel-fill.lost { background: linear-gradient(90deg, #3d4657, #5a6478); }
+.funnel-count { font-size: 13px; font-weight: 700; font-feature-settings: "tnum"; }
+
+/* Donut */
+.donut-wrap { display: flex; align-items: center; gap: 22px; margin-top: 10px; }
+.donut { position: relative; width: 148px; height: 148px; flex-shrink: 0; }
+.donut-center {
+  position: absolute; inset: 0; display: grid; place-items: center; text-align: center;
+}
+.donut-center .n { font-family: var(--font-display); font-size: 27px; font-weight: 700; letter-spacing: -0.02em; line-height: 1; }
+.donut-center .l { font-size: 10px; color: var(--text-3); letter-spacing: 0.1em; text-transform: uppercase; margin-top: 3px; }
+.donut-legend { display: flex; flex-direction: column; gap: 9px; flex: 1; }
+.dl-row { display: flex; align-items: center; gap: 9px; font-size: 12.5px; }
+.dl-row .legend-swatch { width: 10px; height: 10px; }
+.dl-row .v { margin-left: auto; font-weight: 700; font-feature-settings: "tnum"; }
+.dl-row .pct { color: var(--text-3); font-size: 11px; width: 34px; text-align: right; }
+
+/* Área/líneas */
+.areachart { width: 100%; height: 190px; display: block; margin-top: 8px; }
+
+/* Barras por asesor */
+.hbar-row { display: grid; grid-template-columns: 30px 1fr 40px; align-items: center; gap: 10px; margin-top: 12px; }
+.hbar-track { height: 20px; border-radius: 7px; background: var(--surface-3); overflow: hidden; }
+.hbar-fill { height: 100%; border-radius: 7px; width: 0; transition: width 0.9s cubic-bezier(0.22,1,0.36,1); }
+
+/* ---------- Listas de leads ---------- */
+.lead-list { display: flex; flex-direction: column; gap: 9px; }
+.lead-row {
+  display: flex; align-items: center; gap: 14px;
+  background: linear-gradient(165deg, var(--surface-2), var(--surface) 60%);
+  border: 1px solid var(--stroke);
+  border-radius: var(--r-md);
+  padding: 13px 16px;
+  cursor: pointer;
+  transition: transform 0.16s, border-color 0.16s, box-shadow 0.16s;
+}
+.lead-row:hover { transform: translateY(-2px); border-color: var(--stroke-strong); box-shadow: var(--shadow-card); }
+.lead-row.urgent { border-color: rgba(248, 113, 113, 0.35); }
+.lead-row.urgent:hover { border-color: rgba(248, 113, 113, 0.55); }
+.lead-name { font-weight: 600; font-size: 13.5px; }
+.lead-meta { font-size: 11.5px; color: var(--text-3); margin-top: 2px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.lead-meta svg { width: 11px; height: 11px; }
+.chip {
+  font-size: 10.5px; font-weight: 700;
+  border-radius: 99px; padding: 3px 9px;
+  display: inline-flex; align-items: center; gap: 5px;
+  letter-spacing: 0.02em;
+}
+.chip svg { width: 10px; height: 10px; }
+.chip.nuevo      { background: var(--c2-soft); color: #4ED3EF; }
+.chip.contactado { background: var(--c4-soft); color: #9BA2FA; }
+.chip.cita       { background: var(--warn-soft); color: var(--warn); }
+.chip.visita     { background: var(--c3-soft); color: #FB9860; }
+.chip.nego       { background: rgba(219, 39, 119, 0.14); color: #F286BC; }
+.chip.apartado   { background: var(--c1-soft); color: var(--accent); }
+.chip.ganado     { background: var(--ok-soft); color: var(--ok); }
+.chip.perdido    { background: var(--surface-3); color: var(--text-3); }
+.chip.fuente     { background: var(--surface-3); color: var(--text-2); }
+.chip.overdue    { background: var(--danger-soft); color: var(--danger); }
+.lead-right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+.time-ago { font-size: 11px; color: var(--text-3); white-space: nowrap; }
+.time-ago.hot { color: var(--danger); font-weight: 600; }
+.assign-btn {
+  font-size: 12px; font-weight: 600;
+  border-radius: 99px; padding: 6px 14px;
+  background: var(--surface-3); border: 1px solid var(--stroke-strong);
+  color: var(--text); cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.assign-btn:hover { background: var(--accent); color: var(--accent-ink); border-color: transparent; }
+
+/* Filtros pill */
+.filters { display: flex; gap: 8px; margin-bottom: 18px; flex-wrap: wrap; }
+.filter-pill {
+  font-size: 12px; font-weight: 600;
+  border-radius: 99px; padding: 7px 15px;
+  background: var(--surface); border: 1px solid var(--stroke);
+  color: var(--text-2); cursor: pointer;
+  transition: all 0.15s;
+}
+.filter-pill:hover { color: var(--text); border-color: var(--stroke-strong); }
+.filter-pill.on {
+  background: linear-gradient(160deg, #DCF593, var(--accent) 60%);
+  color: var(--accent-ink); border-color: transparent;
+  box-shadow: 0 6px 18px -6px rgba(190, 232, 75, 0.55);
+}
+.filter-pill .n { opacity: 0.65; margin-left: 4px; }
+
+/* ---------- Kanban ---------- */
+.kanban {
+  display: flex; gap: 13px;
+  overflow-x: auto;
+  padding-bottom: 14px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--surface-3) transparent;
+}
+.kcol { min-width: 246px; width: 246px; flex-shrink: 0; }
+.kcol-head {
+  display: flex; align-items: center; gap: 8px;
+  padding: 4px 6px 12px;
+  font-size: 12.5px; font-weight: 700;
+}
+.kcol-dot { width: 8px; height: 8px; border-radius: 50%; }
+.kcol-count { margin-left: auto; color: var(--text-3); font-size: 11.5px; font-weight: 600; background: var(--surface-2); padding: 2px 9px; border-radius: 99px; }
+.kcard {
+  background: linear-gradient(165deg, var(--surface-2), var(--surface) 60%);
+  border: 1px solid var(--stroke);
+  border-radius: var(--r-md);
+  padding: 13px 14px;
+  margin-bottom: 10px;
+  cursor: grab;
+  transition: transform 0.16s, border-color 0.16s, box-shadow 0.16s;
+}
+.kcard:hover { transform: translateY(-3px) rotate(-0.4deg); border-color: var(--stroke-strong); box-shadow: var(--shadow-card); }
+.kcard-name { font-weight: 600; font-size: 13px; }
+.kcard-prop { font-size: 11.5px; color: var(--text-2); margin-top: 3px; display: flex; gap: 5px; align-items: center; }
+.kcard-prop svg { width: 11px; height: 11px; flex-shrink: 0; }
+.kcard-foot { display: flex; align-items: center; margin-top: 11px; gap: 6px; }
+.kcard-foot .time-ago { margin-left: auto; }
+.mini-ava {
+  width: 22px; height: 22px; border-radius: 50%;
+  display: grid; place-items: center;
+  font-size: 8.5px; font-weight: 700; color: #fff;
+}
+.kghost {
+  border: 1.5px dashed var(--stroke-strong);
+  border-radius: var(--r-md);
+  padding: 11px;
+  text-align: center;
+  color: var(--text-3);
+  font-size: 12px;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+.kghost:hover { color: var(--accent); border-color: rgba(190,232,75,0.4); }
+
+/* ---------- Detalle de lead ---------- */
+.lead-detail { display: grid; grid-template-columns: 1.5fr 1fr; gap: 14px; }
+.timeline { position: relative; margin-top: 18px; padding-left: 26px; }
+.timeline::before {
+  content: ""; position: absolute; left: 8px; top: 6px; bottom: 6px;
+  width: 1.5px;
+  background: linear-gradient(180deg, var(--accent), rgba(148, 163, 184, 0.3) 45%, rgba(148, 163, 184, 0.18));
+}
+.tl-item { position: relative; padding-bottom: 22px; }
+.tl-item:last-child { padding-bottom: 4px; }
+.tl-dot {
+  position: absolute; left: -24px; top: 4px;
+  width: 13px; height: 13px; border-radius: 50%;
+  background: var(--surface);
+  border: 2.5px solid var(--text-2);
+  box-shadow: 0 0 0 3px var(--surface);
+}
+.tl-item.wa .tl-dot { border-color: var(--wa); }
+.tl-item.call .tl-dot { border-color: var(--c2); }
+.tl-item.visit .tl-dot { border-color: var(--c3); }
+.tl-item.sys .tl-dot { border-color: var(--c4); }
+.tl-item.now .tl-dot { border-color: var(--accent); background: var(--accent); box-shadow: 0 0 0 5px rgba(190,232,75,0.15); }
+.tl-head { display: flex; align-items: center; gap: 8px; font-size: 12.5px; font-weight: 600; }
+.tl-head .t { margin-left: auto; font-size: 11px; color: var(--text-3); font-weight: 400; }
+.tl-body { font-size: 12.5px; color: var(--text-2); margin-top: 4px; line-height: 1.55; }
+.tl-body.quote {
+  background: var(--surface-2); border: 1px solid var(--stroke);
+  border-radius: 4px 14px 14px 14px; padding: 10px 13px; margin-top: 7px;
+}
+
+.info-rows { display: flex; flex-direction: column; margin-top: 8px; }
+.info-row {
+  display: flex; justify-content: space-between; gap: 12px;
+  padding: 10px 0; border-bottom: 1px solid var(--stroke);
+  font-size: 12.5px;
+}
+.info-row:last-child { border-bottom: 0; }
+.info-row .k { color: var(--text-3); }
+.info-row .v { font-weight: 600; text-align: right; }
+.info-row .v.lima { color: var(--accent); }
+
+/* Stepper etapa */
+.stepper { display: flex; gap: 5px; margin-top: 14px; }
+.step { flex: 1; height: 6px; border-radius: 99px; background: var(--surface-3); position: relative; cursor: pointer; }
+.step.done { background: linear-gradient(90deg, #52830a, var(--c1)); }
+.step.current { background: var(--accent); box-shadow: 0 0 12px rgba(190,232,75,0.5); }
+.stepper-labels { display: flex; justify-content: space-between; font-size: 10px; color: var(--text-3); margin-top: 7px; }
+.stepper-labels .cur { color: var(--accent); font-weight: 700; }
+
+/* Plantillas rápidas */
+.tpl-quick { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+.tpl-chip {
+  text-align: left;
+  background: var(--surface-2); border: 1px solid var(--stroke);
+  border-radius: var(--r-sm); padding: 10px 13px;
+  font-size: 12px; color: var(--text-2); cursor: pointer;
+  font-family: var(--font-body);
+  transition: border-color 0.15s, transform 0.15s;
+}
+.tpl-chip:hover { border-color: rgba(37, 211, 102, 0.4); transform: translateX(3px); }
+.tpl-chip b { color: var(--text); display: block; font-size: 12px; margin-bottom: 2px; }
+
+/* ---------- Propiedades ---------- */
+.prop-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+.prop-card {
+  border-radius: var(--r-lg); overflow: hidden;
+  background: linear-gradient(165deg, var(--surface-2), var(--surface) 60%);
+  border: 1px solid var(--stroke);
+  cursor: pointer;
+  transition: transform 0.18s, box-shadow 0.18s, border-color 0.18s;
+}
+.prop-card:hover { transform: translateY(-5px); box-shadow: var(--shadow-pop); border-color: var(--stroke-strong); }
+.prop-img { height: 148px; position: relative; display: grid; place-items: center; overflow: hidden; }
+.prop-img svg.house { width: 44px; height: 44px; opacity: 0.5; stroke-width: 1.4; }
+.prop-img .ptag {
+  position: absolute; top: 12px; left: 12px;
+}
+.prop-img .psync {
+  position: absolute; top: 12px; right: 12px;
+  background: rgba(0, 0, 0, 0.55); backdrop-filter: blur(4px);
+  color: var(--text-2);
+  font-size: 10px; font-weight: 600;
+  border-radius: 99px; padding: 3px 9px;
+  display: flex; align-items: center; gap: 5px;
+}
+.psync svg { width: 10px; height: 10px; }
+.g1 { background: linear-gradient(150deg, #1e2b47, #10233b 55%, #0b1830); color: #5d7bb8; }
+.g2 { background: linear-gradient(150deg, #17323a, #0f2a30 55%, #0a1e26); color: #4d9aa8; }
+.g3 { background: linear-gradient(150deg, #2e2340, #22193a 55%, #170f2b); color: #8b74c9; }
+.g4 { background: linear-gradient(150deg, #3a2a1d, #2b2016 55%, #1c150d); color: #c99e64; }
+.g5 { background: linear-gradient(150deg, #243320, #1a2818 55%, #111c10); color: #7dab6b; }
+.g6 { background: linear-gradient(150deg, #33202a, #281721 55%, #1a0e15); color: #bb6a8f; }
+.prop-body { padding: 15px 17px 17px; }
+.prop-price { font-family: var(--font-display); font-size: 21px; font-weight: 700; letter-spacing: -0.02em; }
+.prop-price .cur { font-size: 12px; color: var(--text-3); font-weight: 600; margin-left: 3px; }
+.prop-title { font-size: 12.5px; color: var(--text-2); margin-top: 3px; }
+.prop-specs {
+  display: flex; gap: 14px; margin-top: 12px;
+  font-size: 11.5px; color: var(--text-3);
+  border-top: 1px solid var(--stroke); padding-top: 12px;
+}
+.prop-specs span { display: flex; align-items: center; gap: 5px; }
+.prop-specs svg { width: 12px; height: 12px; }
+
+/* ---------- Cola del día ---------- */
+.queue-hero {
+  border-radius: var(--r-lg);
+  padding: 26px 28px;
+  background:
+    radial-gradient(400px 200px at 90% 0%, rgba(190,232,75,0.13), transparent 65%),
+    linear-gradient(165deg, var(--surface-2), var(--surface) 60%);
+  border: 1px solid var(--stroke);
+  margin-bottom: 14px;
+  display: flex; align-items: center; gap: 20px; flex-wrap: wrap;
+}
+.queue-hero h1 { font-size: 26px; font-weight: 700; letter-spacing: -0.02em; }
+.queue-hero .date { color: var(--text-2); font-size: 13px; margin-top: 3px; }
+.ring-wrap { margin-left: auto; display: flex; align-items: center; gap: 14px; }
+.ring { position: relative; width: 84px; height: 84px; }
+.ring svg { transform: rotate(-90deg); }
+.ring .n { position: absolute; inset: 0; display: grid; place-items: center; font-family: var(--font-display); font-size: 22px; font-weight: 700; }
+.ring-label { font-size: 11.5px; color: var(--text-2); max-width: 110px; line-height: 1.4; }
+.mini-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 14px; }
+.mini-stat { text-align: center; padding: 18px 10px 16px; }
+.mini-stat .n { font-family: var(--font-display); font-size: 30px; font-weight: 700; letter-spacing: -0.03em; }
+.mini-stat .l { font-size: 11px; color: var(--text-3); margin-top: 3px; }
+.mini-stat .d { margin-top: 8px; }
+
+.sec-label {
+  display: flex; align-items: center; gap: 9px;
+  font-size: 13px; font-weight: 700;
+  margin: 22px 0 12px;
+}
+.sec-label svg { width: 15px; height: 15px; }
+.sec-label.fire { color: var(--danger); }
+.sec-label.warn { color: var(--warn); }
+.sec-label .count {
+  font-size: 11px; border-radius: 99px; padding: 2px 9px;
+}
+.sec-label.fire .count { background: var(--danger-soft); }
+.sec-label.warn .count { background: var(--warn-soft); }
+
+/* ---------- Asesores (vista admin) ---------- */
+.team-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+.asesor-card { padding: 20px; display: flex; flex-direction: column; gap: 14px; }
+.ac-head { display: flex; align-items: center; gap: 11px; }
+.ac-head .avatar { width: 40px; height: 40px; font-size: 13px; }
+.ac-name { font-size: 14px; font-weight: 700; line-height: 1.2; }
+.ac-status { font-size: 10.5px; color: var(--text-3); display: flex; align-items: center; gap: 5px; margin-top: 2px; }
+.ac-status .st-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--text-3); }
+.ac-status.on { color: var(--ok); }
+.ac-status.on .st-dot { background: var(--ok); box-shadow: 0 0 6px rgba(74, 222, 128, 0.35); }
+.ac-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.ac-stat { background: var(--bg); border: 1px solid var(--stroke); border-radius: 12px; padding: 9px 6px; text-align: center; }
+.ac-stat .n { font-family: var(--font-display); font-size: 18px; font-weight: 700; letter-spacing: -0.02em; }
+.ac-stat .n.warn { color: var(--warn); }
+.ac-stat .n.hot { color: var(--danger); }
+.ac-stat .l { font-size: 9px; color: var(--text-3); line-height: 1.25; margin-top: 2px; }
+.ac-bar-label { display: flex; justify-content: space-between; font-size: 10.5px; color: var(--text-3); margin-bottom: 6px; }
+.ac-bar-label b { color: var(--text-2); }
+.ac-bar { height: 7px; border-radius: 99px; background: var(--surface-3); overflow: hidden; }
+.ac-bar > div {
+  height: 100%; border-radius: 99px; width: 0;
+  background: linear-gradient(90deg, #52830a, var(--c1));
+  transition: width 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.ac-btn {
+  margin-top: auto;
+  text-align: center; font-size: 12px; font-weight: 600;
+  border-radius: 99px; padding: 8px 12px;
+  background: var(--surface-3); border: 1px solid var(--stroke-strong);
+  color: var(--text); cursor: pointer; font-family: var(--font-body);
+  transition: background 0.15s, color 0.15s;
+}
+.ac-btn:hover { background: var(--accent); color: var(--accent-ink); border-color: transparent; }
+
+/* Modo supervisor */
+.sup-panel {
+  margin-top: 22px;
+  border: 1px solid rgba(190, 232, 75, 0.28);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  box-shadow: 0 0 30px -14px rgba(190, 232, 75, 0.18), 0 24px 60px -28px rgba(0,0,0,0.9);
+}
+.sup-banner {
+  display: flex; align-items: center; gap: 10px;
+  background: linear-gradient(120deg, rgba(190,232,75,0.14), rgba(190,232,75,0.04));
+  border-bottom: 1px solid rgba(190, 232, 75, 0.22);
+  padding: 11px 20px;
+  font-size: 12.5px; font-weight: 600; color: var(--accent);
+}
+.sup-banner svg { width: 15px; height: 15px; stroke-width: 2; }
+.sup-banner .ro {
+  margin-left: auto;
+  font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+  background: rgba(190, 232, 75, 0.14);
+  border-radius: 99px; padding: 3px 10px;
+}
+.sup-body { padding: 20px 22px 24px; background: var(--surface); }
+
+/* ---------- Mi perfil (asesor) ---------- */
+.profile-grid { display: grid; grid-template-columns: 1fr 1.6fr; gap: 14px; align-items: start; }
+.photo-zone { display: flex; flex-direction: column; align-items: center; gap: 14px; padding: 30px 20px 24px; text-align: center; }
+.photo-ring {
+  position: relative;
+  width: 116px; height: 116px; border-radius: 50%;
+  padding: 4px;
+  background: conic-gradient(from 210deg, var(--accent), rgba(190,232,75,0.15) 40%, var(--surface-3) 60%, var(--accent));
+}
+.photo-ring .avatar {
+  width: 100%; height: 100%;
+  font-size: 34px; font-family: var(--font-display); font-weight: 800;
+  border: 4px solid var(--surface);
+}
+.photo-edit {
+  position: absolute; right: 2px; bottom: 2px;
+  width: 34px; height: 34px; border-radius: 50%;
+  background: var(--accent); color: var(--accent-ink);
+  border: 3px solid var(--surface);
+  display: grid; place-items: center;
+  cursor: pointer;
+  transition: transform 0.15s;
+}
+.photo-edit:hover { transform: scale(1.1); }
+.photo-edit svg { width: 14px; height: 14px; stroke-width: 2.2; }
+.photo-hint { font-size: 11px; color: var(--text-3); max-width: 200px; }
+.form-rows { display: flex; flex-direction: column; gap: 14px; }
+.form-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.field-note { font-size: 10.5px; color: var(--text-3); margin-top: 5px; display: flex; align-items: center; gap: 5px; }
+.field-note svg { width: 11px; height: 11px; }
+.toggle-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 11px 0; border-bottom: 1px solid var(--stroke);
+  font-size: 13px;
+}
+.toggle-row:last-child { border-bottom: 0; }
+.toggle-row .tr-sub { font-size: 11px; color: var(--text-3); margin-top: 1px; }
+.toggle {
+  margin-left: auto; flex-shrink: 0;
+  width: 40px; height: 22px; border-radius: 99px;
+  background: var(--surface-3); border: 1px solid var(--stroke-strong);
+  position: relative; cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+}
+.toggle::after {
+  content: ""; position: absolute; top: 2px; left: 2px;
+  width: 16px; height: 16px; border-radius: 50%;
+  background: var(--text-2);
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.2s;
+}
+.toggle.on { background: rgba(190, 232, 75, 0.22); border-color: rgba(190, 232, 75, 0.4); }
+.toggle.on::after { transform: translateX(18px); background: var(--accent); }
+
+/* ---------- Plantillas ---------- */
+.tpl-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+.tpl-card { display: flex; flex-direction: column; gap: 12px; }
+.tpl-head { display: flex; align-items: center; gap: 10px; }
+.tpl-icon {
+  width: 36px; height: 36px; border-radius: 11px;
+  background: rgba(37, 211, 102, 0.13);
+  display: grid; place-items: center; color: var(--wa);
+}
+.tpl-icon svg { width: 18px; height: 18px; }
+.tpl-name { font-weight: 700; font-size: 14px; }
+.tpl-uses { font-size: 11px; color: var(--text-3); }
+.tpl-body {
+  background: var(--bg);
+  border: 1px solid var(--stroke);
+  border-radius: 4px 16px 16px 16px;
+  padding: 13px 15px;
+  font-size: 12.5px; color: var(--text-2); line-height: 1.6;
+}
+.tpl-var {
+  color: var(--accent); font-weight: 600;
+  background: var(--c1-soft);
+  border-radius: 5px; padding: 0 5px;
+}
+.tpl-foot { display: flex; gap: 8px; margin-top: auto; }
+.tpl-foot .btn { padding: 7px 14px; font-size: 12px; }
+
+/* ---------- Login ---------- */
+.login-stage {
+  min-height: calc(100vh - 120px);
+  display: grid; place-items: center;
+}
+.login-card {
+  width: 400px; max-width: 92vw;
+  padding: 40px 36px 32px;
+  border-radius: 28px;
+  background:
+    radial-gradient(340px 180px at 50% -30%, rgba(190,232,75,0.14), transparent 70%),
+    linear-gradient(165deg, var(--surface-2), var(--surface) 55%);
+  border: 1px solid var(--stroke-strong);
+  box-shadow: var(--shadow-pop);
+  text-align: center;
+}
+.login-card .brand-mark { width: 52px; height: 52px; border-radius: 16px; font-size: 20px; margin: 0 auto 16px; }
+.login-card h1 { font-size: 24px; font-weight: 700; letter-spacing: -0.02em; }
+.login-card .sub { color: var(--text-3); font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; margin-top: 4px; }
+.field { text-align: left; margin-top: 18px; }
+.field label { font-size: 12px; font-weight: 600; color: var(--text-2); display: block; margin-bottom: 7px; }
+.field input {
+  width: 100%; padding: 12px 16px;
+  background: var(--bg);
+  border: 1px solid var(--stroke-strong);
+  border-radius: 13px;
+  color: var(--text); font-size: 14px; font-family: var(--font-body);
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.field input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(190,232,75,0.15); }
+.field input::placeholder { color: var(--text-3); }
+.login-btn { width: 100%; justify-content: center; margin-top: 24px; padding: 13px; font-size: 14px; border-radius: 13px; }
+.login-foot { margin-top: 22px; font-size: 11px; color: var(--text-3); }
+
+/* ---------- Design system view ---------- */
+.ds-swatches { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
+.ds-sw { width: 92px; }
+.ds-sw .box { height: 56px; border-radius: 12px; border: 1px solid var(--stroke-strong); }
+.ds-sw .nm { font-size: 10.5px; color: var(--text-2); margin-top: 6px; font-weight: 600; }
+.ds-sw .hex { font-size: 10px; color: var(--text-3); }
+.type-specimen { margin-top: 8px; }
+.type-specimen > div { padding: 12px 0; border-bottom: 1px solid var(--stroke); }
+.type-specimen > div:last-child { border-bottom: 0; }
+.ts-label { font-size: 10px; color: var(--text-3); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 4px; }
+
+.note-banner {
+  display: flex; gap: 12px; align-items: flex-start;
+  background: var(--c2-soft);
+  border: 1px solid rgba(8, 145, 178, 0.3);
+  border-radius: var(--r-md);
+  padding: 14px 18px;
+  font-size: 12.5px; color: var(--text-2);
+  margin-bottom: 20px;
+}
+.note-banner svg { width: 16px; height: 16px; color: #4ED3EF; flex-shrink: 0; margin-top: 1px; }
+.note-banner b { color: var(--text); }
+
+@media (max-width: 1080px) {
+  .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+  .dash-grid, .dash-grid-2, .lead-detail, .tpl-grid { grid-template-columns: 1fr; }
+  .prop-grid { grid-template-columns: repeat(2, 1fr); }
+  .sidebar { display: none; }
+}
+</style>
+</head>
+<body data-palette="#65A30D,#0891B2,#EA580C,#6366F1">
+
+<div class="tooltip" id="tooltip"></div>
+
+<div class="shell">
+
+  <!-- ══════════ SIDEBAR ══════════ -->
+  <aside class="sidebar">
+    <div class="brand">
+      <svg class="brand-symbol" viewBox="0 0 120 120">
+        <circle cx="60" cy="60" r="42" fill="none" stroke="#9AA5BB" stroke-width="12" stroke-linecap="round" stroke-dasharray="224 40" transform="rotate(-64 60 60)"/>
+        <path d="M40 62 54 76 82 47" fill="none" stroke="#BEE84B" stroke-width="13" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <div>
+        <div class="wm-name" style="font-size:17px">klo<span class="wm-dash"></span>ser</div>
+        <div class="brand-sub" style="margin-top:3px">Montana Realty</div>
+      </div>
+    </div>
+
+    <div class="nav-label">Administración</div>
+    <div class="nav-item active" data-view="dashboard">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
+      Dashboard
+    </div>
+    <div class="nav-item" data-view="bandeja">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.5 5h13l3.5 7v5a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-5z"/></svg>
+      Bandeja
+      <span class="nav-badge">7</span>
+    </div>
+    <div class="nav-item" data-view="asesores">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      Asesores
+    </div>
+    <div class="nav-item" data-view="propiedades">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 21h18"/><path d="M5 21V7l7-4 7 4v14"/><path d="M9 21v-6h6v6"/></svg>
+      Propiedades
+    </div>
+    <div class="nav-item" data-view="plantillas">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 11.5a8.38 8.38 0 0 1-8.5 8.5 8.5 8.5 0 0 1-4-1L3 20l1-5.5a8.38 8.38 0 0 1-1-4A8.5 8.5 0 0 1 11.5 2a8.38 8.38 0 0 1 8.5 8.5z"/></svg>
+      Plantillas
+    </div>
+
+    <div class="nav-label">Asesor</div>
+    <div class="nav-item" data-view="cola">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+      Cola del día
+      <span class="nav-badge">3</span>
+    </div>
+    <div class="nav-item" data-view="kanban">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="5" height="18" rx="1.5"/><rect x="10" y="3" width="5" height="12" rx="1.5"/><rect x="17" y="3" width="5" height="8" rx="1.5"/></svg>
+      Mis leads
+    </div>
+    <div class="nav-item" data-view="detalle">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.5-6.5 8-6.5s8 2.5 8 6.5"/></svg>
+      Detalle de lead
+    </div>
+    <div class="nav-item" data-view="perfil">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      Mi perfil
+    </div>
+
+    <div class="nav-label">Propuesta</div>
+    <div class="nav-item" data-view="login">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="M10 17l5-5-5-5"/><path d="M15 12H3"/></svg>
+      Login
+    </div>
+    <div class="nav-item" data-view="sistema">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="13.5" cy="6.5" r="2.5"/><circle cx="19" cy="13" r="2"/><circle cx="6" cy="12" r="3"/><circle cx="11" cy="18.5" r="2"/></svg>
+      Sistema de diseño
+    </div>
+
+    <div class="sidebar-foot">
+      <div class="avatar">AM</div>
+      <div>
+        <div class="sf-name">Admin Montana</div>
+        <div class="sf-role">Administrador</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ══════════ MAIN ══════════ -->
+  <main class="main">
+
+    <div class="topbar">
+      <div class="search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+        Buscar leads, propiedades…
+        <kbd>Ctrl K</kbd>
+      </div>
+      <div class="top-actions">
+        <div class="icon-btn" title="Notificaciones">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+          <span class="dot"></span>
+        </div>
+        <div class="icon-btn" title="Sincronizar EasyBroker">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 3v6h-6"/></svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════════ VISTA: DASHBOARD ADMIN ════════ -->
+    <section class="view active" id="view-dashboard">
+      <div class="view-head">
+        <div>
+          <h1>Hola, Admin 👋</h1>
+          <div class="hint">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 3v6h-6"/></svg>
+            EasyBroker sincronizado · Propiedades hace 12 min · Leads hace 12 min
+          </div>
+        </div>
+        <div class="head-cta">
+          <button class="btn btn-ghost">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 5v14M5 12h14"/></svg>
+            Capturar lead
+          </button>
+          <button class="btn btn-primary">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.5 5h13l3.5 7v5a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-5z"/></svg>
+            Ir a bandeja
+          </button>
+        </div>
+      </div>
+
+      <!-- KPIs -->
+      <div class="kpi-grid">
+        <div class="card kpi">
+          <div class="card-title"><span class="kpi-ico i-lima"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.5 5h13l3.5 7v5a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-5z"/></svg></span> Leads en bandeja <span class="card-menu">···</span></div>
+          <div class="kpi-value"><span data-count="7">0</span> <span class="delta down">▲ 3 hoy</span></div>
+          <div class="kpi-sub">Sin asesor asignado</div>
+          <svg class="spark" data-spark="4,2,5,3,6,4,7,5,3,6,8,7" data-color="#65A30D" data-labels="sem"></svg>
+        </div>
+        <div class="card kpi">
+          <div class="card-title"><span class="kpi-ico i-cian"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span> Leads del mes <span class="card-menu">···</span></div>
+          <div class="kpi-value"><span data-count="42">0</span> <span class="delta up">▲ 18%</span></div>
+          <div class="kpi-sub">vs. julio (36)</div>
+          <svg class="spark" data-spark="2,3,2,4,5,3,6,5,7,6,8,9" data-color="#65A30D" data-labels="sem"></svg>
+        </div>
+        <div class="card kpi">
+          <div class="card-title"><span class="kpi-ico i-ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M20 6 9 17l-5-5"/></svg></span> Cierres ganados <span class="card-menu">···</span></div>
+          <div class="kpi-value"><span data-count="6">0</span> <span class="delta up">▲ 2</span></div>
+          <div class="kpi-sub">Agosto · tasa de cierre 14%</div>
+          <svg class="spark" data-spark="1,0,2,1,1,3,2,1,2,3,2,4" data-color="#0891B2" data-labels="sem"></svg>
+        </div>
+        <div class="card kpi">
+          <div class="card-title"><span class="kpi-ico i-indigo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 21h18"/><path d="M5 21V7l7-4 7 4v14"/><path d="M9 21v-6h6v6"/></svg></span> Propiedades activas <span class="card-menu">···</span></div>
+          <div class="kpi-value"><span data-count="128">0</span> <span class="delta flat">= estable</span></div>
+          <div class="kpi-sub">92 venta · 36 renta</div>
+          <svg class="spark" data-spark="120,122,121,124,125,124,126,127,126,128,128,128" data-color="#6366F1" data-labels="sem"></svg>
+        </div>
+      </div>
+
+      <!-- Fila: leads por semana + fuentes -->
+      <div class="dash-grid">
+        <div class="card">
+          <div class="chart-head">
+            <div>
+              <div class="card-title">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 17l6-6 4 4 8-8"/><path d="M14 7h7v7"/></svg>
+                Leads nuevos por semana
+              </div>
+              <div class="chart-big">42 <span style="font-size:13px;color:var(--text-3);font-family:var(--font-body);font-weight:500">este mes</span></div>
+            </div>
+            <span class="card-menu">···</span>
+          </div>
+          <svg class="areachart" id="areachart"></svg>
+          <div class="legend">
+            <span class="legend-item"><span class="legend-swatch" style="background:#65A30D"></span> Portal</span>
+            <span class="legend-item"><span class="legend-swatch" style="background:#0891B2"></span> WhatsApp</span>
+            <span class="legend-item"><span class="legend-swatch" style="background:#EA580C"></span> Referidos</span>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="9"/><path d="M12 3v9l6.4 4"/></svg>
+            Leads por fuente
+            <span class="card-menu">···</span>
+          </div>
+          <div class="donut-wrap">
+            <div class="donut">
+              <svg width="148" height="148" id="donut"></svg>
+              <div class="donut-center"><div><div class="n">42</div><div class="l">leads</div></div></div>
+            </div>
+            <div class="donut-legend">
+              <div class="dl-row"><span class="legend-swatch" style="background:#65A30D"></span> Portal <span class="v">18</span><span class="pct">43%</span></div>
+              <div class="dl-row"><span class="legend-swatch" style="background:#0891B2"></span> WhatsApp <span class="v">12</span><span class="pct">29%</span></div>
+              <div class="dl-row"><span class="legend-swatch" style="background:#EA580C"></span> Referidos <span class="v">8</span><span class="pct">19%</span></div>
+              <div class="dl-row"><span class="legend-swatch" style="background:#6366F1"></span> Redes <span class="v">4</span><span class="pct">9%</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Fila: pipeline + sin atender -->
+      <div class="dash-grid-2">
+        <div class="card">
+          <div class="card-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 4h16l-6 8v6l-4 2v-8z"/></svg>
+            Pipeline por etapa
+            <span class="card-menu">···</span>
+          </div>
+          <div class="funnel-row"><span class="funnel-label">Nuevo</span><div class="funnel-track"><div class="funnel-fill" data-w="100%" data-tip="Nuevo · 14 leads"></div></div><span class="funnel-count">14</span></div>
+          <div class="funnel-row"><span class="funnel-label">Contactado</span><div class="funnel-track"><div class="funnel-fill" data-w="79%" data-tip="Contactado · 11 leads"></div></div><span class="funnel-count">11</span></div>
+          <div class="funnel-row"><span class="funnel-label">Cita agendada</span><div class="funnel-track"><div class="funnel-fill" data-w="50%" data-tip="Cita agendada · 7 leads"></div></div><span class="funnel-count">7</span></div>
+          <div class="funnel-row"><span class="funnel-label">Visita realizada</span><div class="funnel-track"><div class="funnel-fill" data-w="36%" data-tip="Visita realizada · 5 leads"></div></div><span class="funnel-count">5</span></div>
+          <div class="funnel-row"><span class="funnel-label">Negociación</span><div class="funnel-track"><div class="funnel-fill" data-w="21%" data-tip="Negociación · 3 leads"></div></div><span class="funnel-count">3</span></div>
+          <div class="funnel-row"><span class="funnel-label">Apartado</span><div class="funnel-track"><div class="funnel-fill" data-w="14%" data-tip="Apartado · 2 leads"></div></div><span class="funnel-count">2</span></div>
+          <div class="funnel-row"><span class="funnel-label" style="color:var(--text-3)">Cerrado perdido</span><div class="funnel-track"><div class="funnel-fill lost" data-w="29%" data-tip="Cerrado perdido · 4 leads"></div></div><span class="funnel-count" style="color:var(--text-3)">4</span></div>
+        </div>
+
+        <div class="card">
+          <div class="card-title" style="color:var(--warn)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+            Leads sin atender &gt;24 h
+            <span class="chip overdue" style="margin-left:2px">5</span>
+            <span class="card-menu">···</span>
+          </div>
+          <div class="lead-list" style="margin-top:14px">
+            <div class="lead-row urgent">
+              <div class="avatar a3">MF</div>
+              <div><div class="lead-name">María Fernanda López</div><div class="lead-meta">Alejandra Peña · Casa Valle Real</div></div>
+              <div class="lead-right"><span class="chip cita">Cita agendada</span><span class="time-ago hot">hace 3 días</span></div>
+            </div>
+            <div class="lead-row urgent">
+              <div class="avatar a2">JC</div>
+              <div><div class="lead-name">Jorge Castillo</div><div class="lead-meta">Marco Ruiz · Depto Providencia 2R</div></div>
+              <div class="lead-right"><span class="chip contactado">Contactado</span><span class="time-ago hot">hace 2 días</span></div>
+            </div>
+            <div class="lead-row urgent">
+              <div class="avatar a4">LM</div>
+              <div><div class="lead-name">Lucía Martínez</div><div class="lead-meta">Alejandra Peña · Terreno Zibatá 400 m²</div></div>
+              <div class="lead-right"><span class="chip nego">Negociación</span><span class="time-ago hot">hace 41 h</span></div>
+            </div>
+            <div class="lead-row urgent">
+              <div class="avatar">RD</div>
+              <div><div class="lead-name">Roberto Díaz</div><div class="lead-meta">Marco Ruiz · Casa Bosques 3R</div></div>
+              <div class="lead-right"><span class="chip visita">Visita realizada</span><span class="time-ago hot">hace 32 h</span></div>
+            </div>
+            <div class="lead-row urgent">
+              <div class="avatar a2">PG</div>
+              <div><div class="lead-name">Paola Gutiérrez</div><div class="lead-meta">Sofía Cantú · Depto Andares Sky</div></div>
+              <div class="lead-right"><span class="chip nuevo">Nuevo</span><span class="time-ago hot">hace 27 h</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Fila: cierres por asesor -->
+      <div class="dash-grid" style="margin-top:14px">
+        <div class="card">
+          <div class="card-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            Cierres ganados por asesor · agosto
+            <span class="card-menu">···</span>
+          </div>
+          <div class="hbar-row"><div class="avatar" style="width:26px;height:26px;font-size:10px">AP</div><div class="hbar-track"><div class="hbar-fill" data-w="100%" style="background:linear-gradient(90deg,#52830a,#65A30D)" data-tip="Alejandra Peña · 3 cierres · $8.4M"></div></div><b style="font-size:13px">3</b></div>
+          <div class="hbar-row"><div class="avatar a2" style="width:26px;height:26px;font-size:10px">MR</div><div class="hbar-track"><div class="hbar-fill" data-w="67%" style="background:linear-gradient(90deg,#52830a,#65A30D)" data-tip="Marco Ruiz · 2 cierres · $5.1M"></div></div><b style="font-size:13px">2</b></div>
+          <div class="hbar-row"><div class="avatar a4" style="width:26px;height:26px;font-size:10px">SC</div><div class="hbar-track"><div class="hbar-fill" data-w="33%" style="background:linear-gradient(90deg,#52830a,#65A30D)" data-tip="Sofía Cantú · 1 cierre · $2.3M"></div></div><b style="font-size:13px">1</b></div>
+          <div class="hbar-row"><div class="avatar a3" style="width:26px;height:26px;font-size:10px">DT</div><div class="hbar-track"><div class="hbar-fill" data-w="0%" data-tip="Diego Torres · 0 cierres"></div></div><b style="font-size:13px;color:var(--text-3)">0</b></div>
+          <div class="legend" style="margin-top:16px"><span class="legend-item">Tiempo medio de primera respuesta del equipo: <b style="color:var(--accent)">&nbsp;2.4 h</b></span></div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 3v6h-6"/></svg>
+            Salud del sistema
+            <span class="card-menu">···</span>
+          </div>
+          <div class="info-rows">
+            <div class="info-row"><span class="k">Sync propiedades (pg_cron)</span><span class="v lima">✓ hace 12 min</span></div>
+            <div class="info-row"><span class="k">Sync leads EasyBroker</span><span class="v lima">✓ hace 12 min</span></div>
+            <div class="info-row"><span class="k">Próxima corrida</span><span class="v">en 3 min</span></div>
+            <div class="info-row"><span class="k">Notificaciones push</span><span class="v lima">✓ activas</span></div>
+            <div class="info-row"><span class="k">Asesores conectados hoy</span><span class="v">4 de 5</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════ VISTA: BANDEJA ════════ -->
+    <section class="view" id="view-bandeja">
+      <div class="view-head">
+        <div>
+          <h1>Bandeja de leads</h1>
+          <div class="hint">7 leads esperando asignación · el más antiguo lleva 4 h</div>
+        </div>
+        <div class="head-cta">
+          <button class="btn btn-primary">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 5v14M5 12h14"/></svg>
+            Capturar manual
+          </button>
+        </div>
+      </div>
+
+      <div class="filters">
+        <span class="filter-pill on">Todos <span class="n">7</span></span>
+        <span class="filter-pill">Portal <span class="n">3</span></span>
+        <span class="filter-pill">WhatsApp <span class="n">2</span></span>
+        <span class="filter-pill">Referidos <span class="n">1</span></span>
+        <span class="filter-pill">Redes <span class="n">1</span></span>
+      </div>
+
+      <div class="lead-list">
+        <div class="lead-row">
+          <div class="avatar a3">AS</div>
+          <div>
+            <div class="lead-name">Ana Sofía Ramírez</div>
+            <div class="lead-meta"><span class="chip fuente">Portal · EasyBroker</span> Interés: Casa Valle Real · $6.2M</div>
+          </div>
+          <div class="lead-right"><span class="time-ago hot">hace 4 h</span><button class="assign-btn">Asignar a…</button></div>
+        </div>
+        <div class="lead-row">
+          <div class="avatar a2">CH</div>
+          <div>
+            <div class="lead-name">Carlos Hernández</div>
+            <div class="lead-meta"><span class="chip fuente">WhatsApp</span> «Vi el depto de Providencia, ¿sigue disponible?»</div>
+          </div>
+          <div class="lead-right"><span class="time-ago">hace 2 h</span><button class="assign-btn">Asignar a…</button></div>
+        </div>
+        <div class="lead-row">
+          <div class="avatar a4">VN</div>
+          <div>
+            <div class="lead-name">Valeria Nuño</div>
+            <div class="lead-meta"><span class="chip fuente">Referido</span> Referida por cliente Roberto Díaz · busca renta</div>
+          </div>
+          <div class="lead-right"><span class="time-ago">hace 1 h</span><button class="assign-btn">Asignar a…</button></div>
+        </div>
+        <div class="lead-row">
+          <div class="avatar">FT</div>
+          <div>
+            <div class="lead-name">Fernando Treviño</div>
+            <div class="lead-meta"><span class="chip fuente">Portal · EasyBroker</span> Interés: Terreno Zibatá 400 m²</div>
+          </div>
+          <div class="lead-right"><span class="time-ago">hace 55 min</span><button class="assign-btn">Asignar a…</button></div>
+        </div>
+        <div class="lead-row">
+          <div class="avatar a2">GA</div>
+          <div>
+            <div class="lead-name">Gabriela Arce</div>
+            <div class="lead-meta"><span class="chip fuente">Redes · Instagram</span> Preguntó por Andares Sky en DM</div>
+          </div>
+          <div class="lead-right"><span class="time-ago">hace 40 min</span><button class="assign-btn">Asignar a…</button></div>
+        </div>
+        <div class="lead-row">
+          <div class="avatar a3">HM</div>
+          <div>
+            <div class="lead-name">Héctor Morales</div>
+            <div class="lead-meta"><span class="chip fuente">WhatsApp</span> «Busco casa 3 recámaras zona sur, presupuesto 4M»</div>
+          </div>
+          <div class="lead-right"><span class="time-ago">hace 22 min</span><button class="assign-btn">Asignar a…</button></div>
+        </div>
+        <div class="lead-row">
+          <div class="avatar a4">IR</div>
+          <div>
+            <div class="lead-name">Isabel Rentería</div>
+            <div class="lead-meta"><span class="chip fuente">Portal · EasyBroker</span> Interés: Casa Bosques 3R · $8.5M</div>
+          </div>
+          <div class="lead-right"><span class="time-ago">hace 8 min</span><button class="assign-btn">Asignar a…</button></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════ VISTA: KANBAN ════════ -->
+    <section class="view" id="view-kanban">
+      <div class="view-head">
+        <div>
+          <h1>Mis leads</h1>
+          <div class="hint">14 activos · arrastra para cambiar de etapa</div>
+        </div>
+        <div class="head-cta">
+          <button class="btn btn-ghost">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 6h18M7 12h10M10 18h4"/></svg>
+            Filtrar
+          </button>
+          <button class="btn btn-primary">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 5v14M5 12h14"/></svg>
+            Captura rápida
+          </button>
+        </div>
+      </div>
+
+      <div class="kanban">
+        <div class="kcol">
+          <div class="kcol-head"><span class="kcol-dot" style="background:#4ED3EF"></span> Nuevo <span class="kcol-count">3</span></div>
+          <div class="kcard">
+            <div class="kcard-name">Isabel Rentería</div>
+            <div class="kcard-prop"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 21h18"/><path d="M5 21V7l7-4 7 4v14"/></svg> Casa Bosques 3R · $8.5M</div>
+            <div class="kcard-foot"><span class="chip fuente">Portal</span><span class="time-ago hot">sin contactar · 2 h</span></div>
+          </div>
+          <div class="kcard">
+            <div class="kcard-name">Héctor Morales</div>
+            <div class="kcard-prop"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 11.5a8.38 8.38 0 0 1-8.5 8.5 8.5 8.5 0 0 1-4-1L3 20l1-5.5a8.38 8.38 0 0 1-1-4A8.5 8.5 0 0 1 11.5 2a8.38 8.38 0 0 1 8.5 8.5z"/></svg> Casa 3R zona sur · ~$4M</div>
+            <div class="kcard-foot"><span class="chip fuente">WhatsApp</span><span class="time-ago">hace 1 h</span></div>
+          </div>
+          <div class="kghost">+ Captura rápida</div>
+        </div>
+
+        <div class="kcol">
+          <div class="kcol-head"><span class="kcol-dot" style="background:#9BA2FA"></span> Contactado <span class="kcol-count">4</span></div>
+          <div class="kcard">
+            <div class="kcard-name">Jorge Castillo</div>
+            <div class="kcard-prop"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 21h18"/><path d="M5 21V7l7-4 7 4v14"/></svg> Depto Providencia 2R</div>
+            <div class="kcard-foot"><span class="chip overdue">&gt;24 h</span><span class="time-ago hot">hace 2 días</span></div>
+          </div>
+          <div class="kcard">
+            <div class="kcard-name">Gabriela Arce</div>
+            <div class="kcard-prop"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 21h18"/><path d="M5 21V7l7-4 7 4v14"/></svg> Depto Andares Sky</div>
+            <div class="kcard-foot"><span class="chip fuente">Redes</span><span class="time-ago">hace 5 h</span></div>
+          </div>
+          <div class="kcard">
+            <div class="kcard-name">Valeria Nuño</div>
+            <div class="kcard-prop"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 21h18"/><path d="M5 21V7l7-4 7 4v14"/></svg> Renta · Chapalita</div>
+            <div class="kcard-foot"><span class="chip fuente">Referido</span><span class="time-ago">hace 3 h</span></div>
+          </div>
+        </div>
+
+        <div class="kcol">
+          <div class="kcol-head"><span class="kcol-dot" style="background:#FBBF24"></span> Cita agendada <span class="kcol-count">3</span></div>
+          <div class="kcard">
+            <div class="kcard-name">María Fernanda López</div>
+            <div class="kcard-prop"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M8 2v4M16 2v4M3 9h18"/></svg> Mañana 11:00 · Casa Valle Real</div>
+            <div class="kcard-foot"><span class="chip cita">Mañana</span><span class="time-ago">confirmada</span></div>
+          </div>
+          <div class="kcard">
+            <div class="kcard-name">Fernando Treviño</div>
+            <div class="kcard-prop"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M8 2v4M16 2v4M3 9h18"/></svg> Jue 16:30 · Terreno Zibatá</div>
+            <div class="kcard-foot"><span class="chip cita">Jueves</span><span class="time-ago">por confirmar</span></div>
+          </div>
+        </div>
+
+        <div class="kcol">
+          <div class="kcol-head"><span class="kcol-dot" style="background:#FB9860"></span> Visita realizada <span class="kcol-count">2</span></div>
+          <div class="kcard">
+            <div class="kcard-name">Roberto Díaz</div>
+            <div class="kcard-prop"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 21h18"/><path d="M5 21V7l7-4 7 4v14"/></svg> Casa Bosques 3R · le gustó</div>
+            <div class="kcard-foot"><span class="chip overdue">&gt;24 h</span><span class="time-ago hot">hace 32 h</span></div>
+          </div>
+        </div>
+
+        <div class="kcol">
+          <div class="kcol-head"><span class="kcol-dot" style="background:#F286BC"></span> Negociación <span class="kcol-count">1</span></div>
+          <div class="kcard">
+            <div class="kcard-name">Lucía Martínez</div>
+            <div class="kcard-prop"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg> Oferta $2.75M · contraoferta enviada</div>
+            <div class="kcard-foot"><span class="chip nego">Negociación</span><span class="time-ago">hace 6 h</span></div>
+          </div>
+        </div>
+
+        <div class="kcol">
+          <div class="kcol-head"><span class="kcol-dot" style="background:var(--accent)"></span> Apartado <span class="kcol-count">1</span></div>
+          <div class="kcard" style="border-color:rgba(190,232,75,0.3)">
+            <div class="kcard-name">Familia Garza</div>
+            <div class="kcard-prop"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M20 6 9 17l-5-5"/></svg> Depto Puerta de Hierro · apartado firmado</div>
+            <div class="kcard-foot"><span class="chip apartado">Apartado</span><span class="time-ago">hace 1 día</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════ VISTA: DETALLE DE LEAD ════════ -->
+    <section class="view" id="view-detalle">
+      <div class="view-head">
+        <div>
+          <div class="hint" style="margin-bottom:6px">Mis leads / María Fernanda López</div>
+          <h1 style="display:flex;align-items:center;gap:12px">María Fernanda López <span class="chip cita" style="font-size:11px">Cita agendada</span></h1>
+        </div>
+        <div class="head-cta">
+          <button class="btn btn-ghost">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+            Llamar
+          </button>
+          <button class="btn btn-wa">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 11.5a8.38 8.38 0 0 1-8.5 8.5 8.5 8.5 0 0 1-4-1L3 20l1-5.5a8.38 8.38 0 0 1-1-4A8.5 8.5 0 0 1 11.5 2a8.38 8.38 0 0 1 8.5 8.5z"/></svg>
+            WhatsApp
+          </button>
+        </div>
+      </div>
+
+      <div class="lead-detail">
+        <div style="display:flex;flex-direction:column;gap:14px">
+          <div class="card">
+            <div class="card-title">Etapa del lead</div>
+            <div class="stepper">
+              <div class="step done" title="Nuevo"></div>
+              <div class="step done" title="Contactado"></div>
+              <div class="step current" title="Cita agendada"></div>
+              <div class="step" title="Visita realizada"></div>
+              <div class="step" title="Negociación"></div>
+              <div class="step" title="Apartado"></div>
+              <div class="step" title="Cerrado"></div>
+            </div>
+            <div class="stepper-labels"><span>Nuevo</span><span class="cur">Cita agendada</span><span>Cerrado</span></div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+              Seguimientos
+              <button class="assign-btn" style="margin-left:auto">+ Registrar</button>
+            </div>
+            <div class="timeline">
+              <div class="tl-item now">
+                <div class="tl-head">Cita confirmada para mañana 11:00 <span class="t">hoy · 9:14</span></div>
+                <div class="tl-body">Visita a Casa Valle Real. Va con su esposo. Confirmar acceso con vigilancia.</div>
+              </div>
+              <div class="tl-item wa">
+                <div class="tl-head">WhatsApp · plantilla «Confirmar cita» <span class="t">ayer · 18:02</span></div>
+                <div class="tl-body quote">Hola María Fernanda, te confirmo la visita a <b>Casa Valle Real</b> este miércoles a las 11:00. ¿Te queda bien la hora? — Alejandra, Montana Realty</div>
+              </div>
+              <div class="tl-item call">
+                <div class="tl-head">Llamada · 12 min <span class="t">lun · 13:40</span></div>
+                <div class="tl-body">Busca casa de 3 recámaras con jardín, presupuesto hasta $6.5M. Le interesa la zona por el colegio de los niños. Enviarle también la de Bosques como alternativa.</div>
+              </div>
+              <div class="tl-item sys">
+                <div class="tl-head">Sistema · lead asignado a Alejandra Peña <span class="t">lun · 9:05</span></div>
+              </div>
+              <div class="tl-item">
+                <div class="tl-head">Lead recibido desde EasyBroker · Portal <span class="t">lun · 8:47</span></div>
+                <div class="tl-body">«Me interesa la propiedad Casa Valle Real, ¿puedo agendar una visita?»</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:14px">
+          <div class="card">
+            <div class="card-title">Datos del lead</div>
+            <div class="info-rows">
+              <div class="info-row"><span class="k">Teléfono</span><span class="v">33 1234 5678</span></div>
+              <div class="info-row"><span class="k">Correo</span><span class="v">mfer.lopez@gmail.com</span></div>
+              <div class="info-row"><span class="k">Fuente</span><span class="v">Portal · EasyBroker</span></div>
+              <div class="info-row"><span class="k">Presupuesto</span><span class="v lima">$6.5M MXN</span></div>
+              <div class="info-row"><span class="k">Asignado</span><span class="v">hace 3 días</span></div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">Propiedad de interés</div>
+            <div class="prop-card" style="margin-top:12px;box-shadow:none">
+              <div class="prop-img g1" style="height:110px">
+                <svg class="house" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 21h18"/><path d="M5 21V7l7-4 7 4v14"/><path d="M9 21v-6h6v6"/></svg>
+                <span class="ptag chip apartado">Venta</span>
+              </div>
+              <div class="prop-body" style="padding:13px 15px">
+                <div class="prop-price" style="font-size:18px">$6,200,000 <span class="cur">MXN</span></div>
+                <div class="prop-title">Casa Valle Real · 3 rec · 320 m²</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-title" style="color:var(--wa)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 11.5a8.38 8.38 0 0 1-8.5 8.5 8.5 8.5 0 0 1-4-1L3 20l1-5.5a8.38 8.38 0 0 1-1-4A8.5 8.5 0 0 1 11.5 2a8.38 8.38 0 0 1 8.5 8.5z"/></svg>
+              Enviar plantilla
+            </div>
+            <div class="tpl-quick">
+              <button class="tpl-chip"><b>Recordatorio de cita</b>Hola {{nombre}}, te recuerdo nuestra visita a {{propiedad}} mañana…</button>
+              <button class="tpl-chip"><b>Después de la visita</b>{{nombre}}, ¡gracias por visitarnos hoy! ¿Qué te pareció…</button>
+              <button class="tpl-chip"><b>Enviar alternativas</b>{{nombre}}, encontré otras 2 opciones dentro de tu presupuesto…</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════ VISTA: PROPIEDADES ════════ -->
+    <section class="view" id="view-propiedades">
+      <div class="view-head">
+        <div>
+          <h1>Propiedades</h1>
+          <div class="hint">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 3v6h-6"/></svg>
+            128 activas · sincronizado con EasyBroker hace 12 min
+          </div>
+        </div>
+        <div class="head-cta">
+          <button class="btn btn-ghost">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 6h18M7 12h10M10 18h4"/></svg>
+            Filtrar
+          </button>
+        </div>
+      </div>
+
+      <div class="filters">
+        <span class="filter-pill on">Todas <span class="n">128</span></span>
+        <span class="filter-pill">Venta <span class="n">92</span></span>
+        <span class="filter-pill">Renta <span class="n">36</span></span>
+        <span class="filter-pill">Con leads activos <span class="n">21</span></span>
+      </div>
+
+      <div class="prop-grid">
+        <div class="prop-card">
+          <div class="prop-img g1">
+            <svg class="house" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 21h18"/><path d="M5 21V7l7-4 7 4v14"/><path d="M9 21v-6h6v6"/></svg>
+            <span class="ptag chip apartado">Venta</span>
+            <span class="psync"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 3v6h-6"/></svg> EB-4021</span>
+          </div>
+          <div class="prop-body">
+            <div class="prop-price">$6,200,000 <span class="cur">MXN</span></div>
+            <div class="prop-title">Casa Valle Real · Zapopan</div>
+            <div class="prop-specs">
+              <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M2 4v16M2 8h18a2 2 0 0 1 2 2v10"/><path d="M2 17h20M6 8v9"/></svg> 3 rec</span>
+              <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 6 6.5 3.5a1.5 1.5 0 0 0-1-.5C4.7 3 4 3.7 4 4.5V17a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-5"/><path d="M10 5 8 7M17 4v7a5 5 0 0 1-10 0"/></svg> 3.5 baños</span>
+              <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 3 3 21M21 3h-8M21 3v8"/></svg> 320 m²</span>
+              <span style="margin-left:auto;color:var(--accent);font-weight:700">4 leads</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="prop-card">
+          <div class="prop-img g2">
+            <svg class="house" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01M16 6h.01M12 6h.01M8 10h.01M16 10h.01M12 10h.01M8 14h.01M16 14h.01M12 14h.01"/></svg>
+            <span class="ptag chip apartado">Venta</span>
+            <span class="psync"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 3v6h-6"/></svg> EB-3987</span>
+          </div>
+          <div class="prop-body">
+            <div class="prop-price">$4,850,000 <span class="cur">MXN</span></div>
+            <div class="prop-title">Depto Providencia 2R · Guadalajara</div>
+            <div class="prop-specs">
+              <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M2 4v16M2 8h18a2 2 0 0 1 2 2v10"/><path d="M2 17h20M6 8v9"/></svg> 2 rec</span>
+              <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 6 6.5 3.5a1.5 1.5 0 0 0-1-.5C4.7 3 4 3.7 4 4.5V17a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-5"/><path d="M10 5 8 7M17 4v7a5 5 0 0 1-10 0"/></svg> 2 baños</span>
+              <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 3 3 21M21 3h-8M21 3v8"/></svg> 145 m²</span>
+              <span style="margin-left:auto;color:var(--accent);font-weight:700">3 leads</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="prop-card">
+          <div class="prop-img g3">
+            <svg class="house" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01M16 6h.01M12 6h.01M8 10h.01M16 10h.01M12 10h.01M8 14h.01M16 14h.01M12 14h.01"/></svg>
+            <span class="ptag chip contactado">Renta</span>
+            <span class="psync"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 3v6h-6"/></svg> EB-4102</span>
+          </div>
+          <div class="prop-body">
+            <div class="prop-price">$32,000 <span class="cur">MXN/mes</span></div>
+            <div class="prop-title">Depto Andares Sky · Zapopan</div>
+            <div class="prop-specs">
+              <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M2 4v16M2 8h18a2 2 0 0 1 2 2v10"/><path d="M2 17h20M6 8v9"/></svg> 2 rec</span>
+              <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 6 6.5 3.5a1.5 1.5 0 0 0-1-.5C4.7 3 4 3.7 4 4.5V17a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-5"/><path d="M10 5 8 7M17 4v7a5 5 0 0 1-10 0"/></svg> 2 baños</span>
+              <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 3 3 21M21 3h-8M21 3v8"/></svg> 98 m²</span>
+              <span style="margin-left:auto;color:var(--accent);font-weight:700">2 leads</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="prop-card">
+          <div class="prop-img g4">
+            <svg class="house" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 21h18"/><path d="M5 21V7l7-4 7 4v14"/><path d="M9 21v-6h6v6"/></svg>
+            <span class="ptag chip apartado">Venta</span>
+            <span class="psync"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 3v6h-6"/></svg> EB-3720</span>
+          </div>
+          <div class="prop-body">
+            <div class="prop-price">$8,500,000 <span class="cur">MXN</span></div>
+            <div class="prop-title">Casa Bosques 3R · Zapopan</div>
+            <div class="prop-specs">
+              <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M2 4v16M2 8h18a2 2 0 0 1 2 2v10"/><path d="M2 17h20M6 8v9"/></svg> 3 rec</span>
+              <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 6 6.5 3.5a1.5 1.5 0 0 0-1-.5C4.7 3 4 3.7 4 4.5V17a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-5"/><path d="M10 5 8 7M17 4v7a5 5 0 0 1-10 0"/></svg> 4 baños</span>
+              <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 3 3 21M21 3h-8M21 3v8"/></svg> 410 m²</span>
+              <span style="margin-left:auto;color:var(--accent);font-weight:700">5 leads</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="prop-card">
+          <div class="prop-img g5">
+            <svg class="house" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 3 3 21M21 3h-8M21 3v8M3 21h8M3 21v-8"/></svg>
+            <span class="ptag chip apartado">Venta</span>
+            <span class="psync"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 3v6h-6"/></svg> EB-4088</span>
+          </div>
+          <div class="prop-body">
+            <div class="prop-price">$2,900,000 <span class="cur">MXN</span></div>
+            <div class="prop-title">Terreno Zibatá 400 m² · Querétaro</div>
+            <div class="prop-specs">
+              <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 3 3 21M21 3h-8M21 3v8"/></svg> 400 m²</span>
+              <span>Uso habitacional</span>
+              <span style="margin-left:auto;color:var(--accent);font-weight:700">2 leads</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="prop-card">
+          <div class="prop-img g6">
+            <svg class="house" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01M16 6h.01M12 6h.01M8 10h.01M16 10h.01M12 10h.01M8 14h.01M16 14h.01M12 14h.01"/></svg>
+            <span class="ptag chip apartado">Venta</span>
+            <span class="psync"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 3v6h-6"/></svg> EB-4110</span>
+          </div>
+          <div class="prop-body">
+            <div class="prop-price">$5,400,000 <span class="cur">MXN</span></div>
+            <div class="prop-title">Depto Puerta de Hierro · Zapopan</div>
+            <div class="prop-specs">
+              <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M2 4v16M2 8h18a2 2 0 0 1 2 2v10"/><path d="M2 17h20M6 8v9"/></svg> 2 rec</span>
+              <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 6 6.5 3.5a1.5 1.5 0 0 0-1-.5C4.7 3 4 3.7 4 4.5V17a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-5"/><path d="M10 5 8 7M17 4v7a5 5 0 0 1-10 0"/></svg> 2.5 baños</span>
+              <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 3 3 21M21 3h-8M21 3v8"/></svg> 160 m²</span>
+              <span style="margin-left:auto;color:var(--warn);font-weight:700">Apartada</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════ VISTA: ASESORES (ADMIN) ════════ -->
+    <section class="view" id="view-asesores">
+      <div class="view-head">
+        <div>
+          <h1>Equipo de asesores</h1>
+          <div class="hint">4 asesores · 3 conectados hoy · 2.4 h de respuesta media</div>
+        </div>
+        <div class="head-cta">
+          <button class="btn btn-primary">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg>
+            Nuevo asesor
+          </button>
+        </div>
+      </div>
+
+      <!-- Tarjetas del equipo -->
+      <div class="team-grid">
+        <div class="card asesor-card">
+          <div class="ac-head">
+            <div class="avatar">AP</div>
+            <div>
+              <div class="ac-name">Alejandra Peña</div>
+              <div class="ac-status on"><span class="st-dot"></span> Conectada · hace 5 min</div>
+            </div>
+          </div>
+          <div class="ac-stats">
+            <div class="ac-stat"><div class="n">14</div><div class="l">Leads activos</div></div>
+            <div class="ac-stat"><div class="n hot">2</div><div class="l">Sin atender &gt;24h</div></div>
+            <div class="ac-stat"><div class="n" style="color:var(--accent)">3</div><div class="l">Cierres del mes</div></div>
+          </div>
+          <div>
+            <div class="ac-bar-label"><span>Cola de hoy</span><b>60% atendida</b></div>
+            <div class="ac-bar"><div data-w="60%"></div></div>
+          </div>
+          <button class="ac-btn">Ver su día →</button>
+        </div>
+
+        <div class="card asesor-card">
+          <div class="ac-head">
+            <div class="avatar a2">MR</div>
+            <div>
+              <div class="ac-name">Marco Ruiz</div>
+              <div class="ac-status on"><span class="st-dot"></span> Conectado · ahora</div>
+            </div>
+          </div>
+          <div class="ac-stats">
+            <div class="ac-stat"><div class="n">11</div><div class="l">Leads activos</div></div>
+            <div class="ac-stat"><div class="n hot">2</div><div class="l">Sin atender &gt;24h</div></div>
+            <div class="ac-stat"><div class="n" style="color:var(--accent)">2</div><div class="l">Cierres del mes</div></div>
+          </div>
+          <div>
+            <div class="ac-bar-label"><span>Cola de hoy</span><b>45% atendida</b></div>
+            <div class="ac-bar"><div data-w="45%"></div></div>
+          </div>
+          <button class="ac-btn">Ver su día →</button>
+        </div>
+
+        <div class="card asesor-card">
+          <div class="ac-head">
+            <div class="avatar a4">SC</div>
+            <div>
+              <div class="ac-name">Sofía Cantú</div>
+              <div class="ac-status on"><span class="st-dot"></span> Conectada · hace 20 min</div>
+            </div>
+          </div>
+          <div class="ac-stats">
+            <div class="ac-stat"><div class="n">8</div><div class="l">Leads activos</div></div>
+            <div class="ac-stat"><div class="n warn">1</div><div class="l">Sin atender &gt;24h</div></div>
+            <div class="ac-stat"><div class="n" style="color:var(--accent)">1</div><div class="l">Cierres del mes</div></div>
+          </div>
+          <div>
+            <div class="ac-bar-label"><span>Cola de hoy</span><b>80% atendida</b></div>
+            <div class="ac-bar"><div data-w="80%"></div></div>
+          </div>
+          <button class="ac-btn">Ver su día →</button>
+        </div>
+
+        <div class="card asesor-card">
+          <div class="ac-head">
+            <div class="avatar a3">DT</div>
+            <div>
+              <div class="ac-name">Diego Torres</div>
+              <div class="ac-status"><span class="st-dot"></span> Desconectado · ayer</div>
+            </div>
+          </div>
+          <div class="ac-stats">
+            <div class="ac-stat"><div class="n">5</div><div class="l">Leads activos</div></div>
+            <div class="ac-stat"><div class="n">0</div><div class="l">Sin atender &gt;24h</div></div>
+            <div class="ac-stat"><div class="n" style="color:var(--text-3)">0</div><div class="l">Cierres del mes</div></div>
+          </div>
+          <div>
+            <div class="ac-bar-label"><span>Cola de hoy</span><b>Sin actividad</b></div>
+            <div class="ac-bar"><div data-w="0%"></div></div>
+          </div>
+          <button class="ac-btn">Ver su día →</button>
+        </div>
+      </div>
+
+      <!-- Crear perfil + invitación -->
+      <div class="dash-grid" style="margin-top:14px">
+        <div class="card">
+          <div class="card-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg>
+            Crear perfil de asesor
+          </div>
+          <div class="form-rows" style="margin-top:16px">
+            <div class="form-2col">
+              <div class="field" style="margin-top:0">
+                <label>Nombre completo</label>
+                <input type="text" value="Valentina Ochoa">
+              </div>
+              <div class="field" style="margin-top:0">
+                <label>Teléfono</label>
+                <input type="tel" value="33 8765 4321">
+              </div>
+            </div>
+            <div class="field" style="margin-top:0">
+              <label>Correo de acceso</label>
+              <input type="email" value="valentina@montanarealty.mx">
+              <div class="field-note">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                Será su usuario para entrar al sistema — solo el admin puede cambiarlo
+              </div>
+            </div>
+            <div class="field" style="margin-top:0">
+              <label>Rol</label>
+              <div style="display:flex;gap:8px">
+                <span class="filter-pill on">Asesor</span>
+                <span class="filter-pill">Administrador</span>
+              </div>
+            </div>
+            <button class="btn btn-primary" style="justify-content:center;margin-top:6px">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4z"/></svg>
+              Crear acceso y enviar invitación
+            </button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title" style="color:var(--wa)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 11.5a8.38 8.38 0 0 1-8.5 8.5 8.5 8.5 0 0 1-4-1L3 20l1-5.5a8.38 8.38 0 0 1-1-4A8.5 8.5 0 0 1 11.5 2a8.38 8.38 0 0 1 8.5 8.5z"/></svg>
+            Así recibe su invitación
+          </div>
+          <div class="tl-body quote" style="margin-top:14px">
+            ¡Hola Valentina! 👋 Ya tienes tu acceso a <b>Klo-Ser</b>, el sistema de Montana Realty.<br><br>
+            Usuario: <b>valentina@montanarealty.mx</b><br>
+            Contraseña temporal: <b>KS-4821-mx</b><br><br>
+            Entra en kloser.mx, cámbiala y arma tu perfil con tu foto 📸
+          </div>
+          <div class="info-rows" style="margin-top:8px">
+            <div class="info-row"><span class="k">Al primer inicio de sesión</span><span class="v">Debe cambiar la contraseña</span></div>
+            <div class="info-row"><span class="k">Su perfil</span><span class="v">Foto, teléfono y firma los personaliza él</span></div>
+            <div class="info-row"><span class="k">Si deja el equipo</span><span class="v lima">El admin desactiva el acceso en 1 clic</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modo supervisor -->
+      <div class="sup-panel">
+        <div class="sup-banner">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
+          Modo supervisor — estás viendo la cola de Alejandra tal como ella la ve
+          <span class="ro">Solo lectura</span>
+        </div>
+        <div class="sup-body">
+          <div class="sec-label fire" style="margin-top:0">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>
+            Atiende ahora <span class="count">2</span>
+          </div>
+          <div class="lead-list">
+            <div class="lead-row urgent">
+              <div class="avatar a3">IR</div>
+              <div><div class="lead-name">Isabel Rentería</div><div class="lead-meta">Asignada hace 2 h · sin primer contacto · Casa Bosques 3R</div></div>
+              <div class="lead-right"><span class="chip nuevo">Nuevo</span><span class="time-ago hot">2 h</span></div>
+            </div>
+            <div class="lead-row urgent">
+              <div class="avatar a2">HM</div>
+              <div><div class="lead-name">Héctor Morales</div><div class="lead-meta">Asignado hace 1 h · sin primer contacto · WhatsApp</div></div>
+              <div class="lead-right"><span class="chip nuevo">Nuevo</span><span class="time-ago hot">1 h</span></div>
+            </div>
+          </div>
+          <div class="sec-label warn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+            Necesitan seguimiento <span class="count">3</span>
+          </div>
+          <div class="lead-list">
+            <div class="lead-row">
+              <div class="avatar a3">MF</div>
+              <div><div class="lead-name">María Fernanda López</div><div class="lead-meta">Último contacto hace 3 días · cita mañana 11:00</div></div>
+              <div class="lead-right"><span class="chip cita">Cita agendada</span><span class="time-ago hot">3 días</span></div>
+            </div>
+            <div class="lead-row">
+              <div class="avatar a4">LM</div>
+              <div><div class="lead-name">Lucía Martínez</div><div class="lead-meta">Último contacto hace 41 h · esperando respuesta a contraoferta</div></div>
+              <div class="lead-right"><span class="chip nego">Negociación</span><span class="time-ago hot">41 h</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════ VISTA: COLA DEL DÍA ════════ -->
+    <section class="view" id="view-cola">
+      <div class="queue-hero">
+        <div>
+          <h1>Buenos días, Alejandra ☀️</h1>
+          <div class="date">Martes, 4 de agosto de 2026 · 3 leads urgentes primero</div>
+        </div>
+        <div class="ring-wrap">
+          <div class="ring">
+            <svg width="84" height="84">
+              <circle cx="42" cy="42" r="36" fill="none" stroke="var(--surface-3)" stroke-width="7"/>
+              <circle cx="42" cy="42" r="36" fill="none" stroke="var(--accent)" stroke-width="7"
+                stroke-linecap="round" stroke-dasharray="226" stroke-dashoffset="90"
+                style="transition: stroke-dashoffset 1.2s cubic-bezier(0.22,1,0.36,1)"/>
+            </svg>
+            <div class="n">60%</div>
+          </div>
+          <div class="ring-label">de tu cola de hoy ya está atendida</div>
+        </div>
+      </div>
+
+      <div class="sec-label fire">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>
+        Atiende ahora <span class="count">2</span>
+      </div>
+      <div class="lead-list">
+        <div class="lead-row urgent">
+          <div class="avatar a3">IR</div>
+          <div><div class="lead-name">Isabel Rentería</div><div class="lead-meta">Asignada hace 2 h · sin primer contacto · Casa Bosques 3R</div></div>
+          <div class="lead-right"><span class="chip nuevo">Nuevo</span><button class="assign-btn">Contactar →</button></div>
+        </div>
+        <div class="lead-row urgent">
+          <div class="avatar a2">HM</div>
+          <div><div class="lead-name">Héctor Morales</div><div class="lead-meta">Asignado hace 1 h · sin primer contacto · WhatsApp</div></div>
+          <div class="lead-right"><span class="chip nuevo">Nuevo</span><button class="assign-btn">Contactar →</button></div>
+        </div>
+      </div>
+
+      <div class="sec-label warn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+        Necesitan seguimiento <span class="count">3</span>
+      </div>
+      <div class="lead-list">
+        <div class="lead-row">
+          <div class="avatar a3">MF</div>
+          <div><div class="lead-name">María Fernanda López</div><div class="lead-meta">Último contacto hace 3 días · cita mañana 11:00</div></div>
+          <div class="lead-right"><span class="chip cita">Cita agendada</span><span class="time-ago hot">3 días</span></div>
+        </div>
+        <div class="lead-row">
+          <div class="avatar a4">LM</div>
+          <div><div class="lead-name">Lucía Martínez</div><div class="lead-meta">Último contacto hace 41 h · esperando respuesta a contraoferta</div></div>
+          <div class="lead-right"><span class="chip nego">Negociación</span><span class="time-ago hot">41 h</span></div>
+        </div>
+        <div class="lead-row">
+          <div class="avatar">RD</div>
+          <div><div class="lead-name">Roberto Díaz</div><div class="lead-meta">Último contacto hace 32 h · visitó Casa Bosques, dar seguimiento</div></div>
+          <div class="lead-right"><span class="chip visita">Visita realizada</span><span class="time-ago hot">32 h</span></div>
+        </div>
+      </div>
+
+      <div class="sec-label">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 17l6-6 4 4 8-8"/><path d="M14 7h7v7"/></svg>
+        Mis números del mes
+      </div>
+      <div class="mini-stats">
+        <div class="card mini-stat"><div class="n" data-count="14">0</div><div class="l">Leads activos</div><div class="d"><span class="delta up">▲ 4</span></div></div>
+        <div class="card mini-stat"><div class="n" data-count="9">0</div><div class="l">Nuevos del mes</div><div class="d"><span class="delta up">▲ 29%</span></div></div>
+        <div class="card mini-stat"><div class="n" data-count="3">0</div><div class="l">Cerrados ganados</div><div class="d"><span class="delta up">▲ 1</span></div></div>
+      </div>
+    </section>
+
+    <!-- ════════ VISTA: MI PERFIL (ASESOR) ════════ -->
+    <section class="view" id="view-perfil">
+      <div class="view-head">
+        <div>
+          <h1>Mi perfil</h1>
+          <div class="hint">Así te ven el equipo y tus leads en los mensajes de WhatsApp</div>
+        </div>
+        <div class="head-cta">
+          <button class="btn btn-primary">Guardar cambios</button>
+        </div>
+      </div>
+
+      <div class="profile-grid">
+        <div style="display:flex;flex-direction:column;gap:14px">
+          <div class="card photo-zone">
+            <div class="photo-ring">
+              <div class="avatar">AP</div>
+              <div class="photo-edit" title="Cambiar foto">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+              </div>
+            </div>
+            <div>
+              <div style="font-family:var(--font-display);font-weight:700;font-size:17px">Alejandra Peña</div>
+              <div style="font-size:11.5px;color:var(--text-3);margin-top:2px">Asesora · en Montana Realty desde 2024</div>
+            </div>
+            <div class="photo-hint">Tu foto aparece en el equipo y en las tarjetas de tus leads. JPG o PNG, máx. 2 MB.</div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              Acceso
+            </div>
+            <div class="info-rows">
+              <div class="info-row"><span class="k">Usuario</span><span class="v">alejandra@montanarealty.mx</span></div>
+              <div class="info-row"><span class="k">Contraseña</span><span class="v lima" style="cursor:pointer">Cambiar →</span></div>
+              <div class="info-row"><span class="k">Asignado por</span><span class="v">Admin Montana</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:14px">
+          <div class="card">
+            <div class="card-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.5-6.5 8-6.5s8 2.5 8 6.5"/></svg>
+              Mis datos
+            </div>
+            <div class="form-rows" style="margin-top:16px">
+              <div class="form-2col">
+                <div class="field" style="margin-top:0">
+                  <label>Nombre para mostrar</label>
+                  <input type="text" value="Alejandra Peña">
+                </div>
+                <div class="field" style="margin-top:0">
+                  <label>Teléfono</label>
+                  <input type="tel" value="33 1122 3344">
+                </div>
+              </div>
+              <div class="field" style="margin-top:0">
+                <label>Firma en WhatsApp</label>
+                <input type="text" value="— Alejandra, Montana Realty 🏡">
+                <div class="field-note">Se agrega al final de cada plantilla que envías</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+              Notificaciones
+            </div>
+            <div style="margin-top:8px">
+              <div class="toggle-row">
+                <div><div>Lead nuevo asignado</div><div class="tr-sub">Push inmediato al teléfono</div></div>
+                <div class="toggle on"></div>
+              </div>
+              <div class="toggle-row">
+                <div><div>Lead por enfriarse</div><div class="tr-sub">Aviso a las 20 h sin contacto, antes de la alerta roja</div></div>
+                <div class="toggle on"></div>
+              </div>
+              <div class="toggle-row">
+                <div><div>Resumen del día</div><div class="tr-sub">Tu cola de mañana, cada noche a las 8 pm</div></div>
+                <div class="toggle on"></div>
+              </div>
+              <div class="toggle-row">
+                <div><div>Cierres del equipo</div><div class="tr-sub">Cuando un compañero cierra ganado</div></div>
+                <div class="toggle"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════ VISTA: PLANTILLAS ════════ -->
+    <section class="view" id="view-plantillas">
+      <div class="view-head">
+        <div>
+          <h1>Plantillas de WhatsApp</h1>
+          <div class="hint">6 plantillas · las variables se rellenan solas al enviar</div>
+        </div>
+        <div class="head-cta">
+          <button class="btn btn-primary">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 5v14M5 12h14"/></svg>
+            Nueva plantilla
+          </button>
+        </div>
+      </div>
+
+      <div class="tpl-grid">
+        <div class="card tpl-card">
+          <div class="tpl-head">
+            <div class="tpl-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M8 12h8M12 8v8"/><circle cx="12" cy="12" r="9"/></svg></div>
+            <div><div class="tpl-name">Primer contacto</div><div class="tpl-uses">Usada 148 veces · la más popular</div></div>
+            <span class="card-menu" style="margin-left:auto">···</span>
+          </div>
+          <div class="tpl-body">Hola <span class="tpl-var">{{nombre}}</span> 👋 Soy <span class="tpl-var">{{asesor}}</span> de Montana Realty. Vi que te interesa <span class="tpl-var">{{propiedad}}</span>. ¿Te gustaría agendar una visita esta semana?</div>
+          <div class="tpl-foot">
+            <button class="btn btn-ghost">Editar</button>
+            <button class="btn btn-ghost" style="color:var(--danger);border-color:rgba(248,113,113,0.25)">Eliminar</button>
+          </div>
+        </div>
+
+        <div class="card tpl-card">
+          <div class="tpl-head">
+            <div class="tpl-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M8 2v4M16 2v4M3 9h18"/></svg></div>
+            <div><div class="tpl-name">Confirmar cita</div><div class="tpl-uses">Usada 96 veces</div></div>
+            <span class="card-menu" style="margin-left:auto">···</span>
+          </div>
+          <div class="tpl-body">Hola <span class="tpl-var">{{nombre}}</span>, te confirmo la visita a <span class="tpl-var">{{propiedad}}</span> el <span class="tpl-var">{{fecha}}</span> a las <span class="tpl-var">{{hora}}</span>. ¿Te queda bien la hora?</div>
+          <div class="tpl-foot">
+            <button class="btn btn-ghost">Editar</button>
+            <button class="btn btn-ghost" style="color:var(--danger);border-color:rgba(248,113,113,0.25)">Eliminar</button>
+          </div>
+        </div>
+
+        <div class="card tpl-card">
+          <div class="tpl-head">
+            <div class="tpl-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg></div>
+            <div><div class="tpl-name">Después de la visita</div><div class="tpl-uses">Usada 71 veces</div></div>
+            <span class="card-menu" style="margin-left:auto">···</span>
+          </div>
+          <div class="tpl-body"><span class="tpl-var">{{nombre}}</span>, ¡gracias por visitarnos hoy! ¿Qué te pareció <span class="tpl-var">{{propiedad}}</span>? Si tienes cualquier duda aquí estoy 🙌</div>
+          <div class="tpl-foot">
+            <button class="btn btn-ghost">Editar</button>
+            <button class="btn btn-ghost" style="color:var(--danger);border-color:rgba(248,113,113,0.25)">Eliminar</button>
+          </div>
+        </div>
+
+        <div class="card tpl-card">
+          <div class="tpl-head">
+            <div class="tpl-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div>
+            <div><div class="tpl-name">Reactivar lead frío</div><div class="tpl-uses">Usada 38 veces</div></div>
+            <span class="card-menu" style="margin-left:auto">···</span>
+          </div>
+          <div class="tpl-body">Hola <span class="tpl-var">{{nombre}}</span>, hace unos días platicamos sobre <span class="tpl-var">{{propiedad}}</span>. Tengo novedades que te pueden interesar, ¿seguimos en contacto?</div>
+          <div class="tpl-foot">
+            <button class="btn btn-ghost">Editar</button>
+            <button class="btn btn-ghost" style="color:var(--danger);border-color:rgba(248,113,113,0.25)">Eliminar</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════ VISTA: LOGIN ════════ -->
+    <section class="view" id="view-login">
+      <div class="login-stage">
+        <div class="login-card">
+          <svg class="brand-symbol" viewBox="0 0 120 120" style="width:54px;height:54px;margin:0 auto">
+            <circle cx="60" cy="60" r="42" fill="none" stroke="#9AA5BB" stroke-width="11" stroke-linecap="round" stroke-dasharray="224 40" transform="rotate(-64 60 60)"/>
+            <path d="M40 62 54 76 82 47" fill="none" stroke="#BEE84B" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <div class="wm-name login-wm" style="font-size:32px;justify-content:center;margin-top:14px">
+            <span class="wm-k">klo</span><span class="wm-dash"></span><span class="wm-s">ser</span>
+          </div>
+          <div class="sub">Montana Realty</div>
+          <div class="field">
+            <label>Correo electrónico</label>
+            <input type="email" placeholder="nombre@correo.com">
+          </div>
+          <div class="field">
+            <label>Contraseña</label>
+            <input type="password" placeholder="••••••••">
+          </div>
+          <button class="btn btn-primary login-btn">Entrar</button>
+          <div class="login-foot">Acceso exclusivo para el equipo de Montana Realty</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════ VISTA: SISTEMA DE DISEÑO ════════ -->
+    <section class="view" id="view-sistema">
+      <div class="view-head">
+        <div>
+          <h1>Sistema «Obsidiana»</h1>
+          <div class="hint">Tokens de la propuesta — listos para portar a Tailwind v4 (@theme)</div>
+        </div>
+      </div>
+
+      <div class="note-banner">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 16v-4M12 8h.01"/></svg>
+        <div>La paleta de gráficas fue <b>validada para daltonismo y contraste</b> sobre superficie oscura (protan/deutan/tritan ΔE, banda de luminosidad OKLCH y contraste ≥ 3:1). Los colores de estado (rojo/ámbar) están reservados para urgencia y nunca se usan como serie de datos.</div>
+      </div>
+
+      <div class="dash-grid">
+        <div class="card">
+          <div class="card-title">Color</div>
+          <div class="ds-swatches">
+            <div class="ds-sw"><div class="box" style="background:var(--bg)"></div><div class="nm">Fondo</div><div class="hex">#000000</div></div>
+            <div class="ds-sw"><div class="box" style="background:var(--surface)"></div><div class="nm">Superficie</div><div class="hex">#101624</div></div>
+            <div class="ds-sw"><div class="box" style="background:var(--surface-3)"></div><div class="nm">Elevada</div><div class="hex">#1B2336</div></div>
+            <div class="ds-sw"><div class="box" style="background:var(--accent)"></div><div class="nm">Acento UI</div><div class="hex">#BEE84B</div></div>
+          </div>
+          <div class="ds-swatches">
+            <div class="ds-sw"><div class="box" style="background:var(--c1)"></div><div class="nm">Serie 1</div><div class="hex">#65A30D</div></div>
+            <div class="ds-sw"><div class="box" style="background:var(--c2)"></div><div class="nm">Serie 2</div><div class="hex">#0891B2</div></div>
+            <div class="ds-sw"><div class="box" style="background:var(--c3)"></div><div class="nm">Serie 3</div><div class="hex">#EA580C</div></div>
+            <div class="ds-sw"><div class="box" style="background:var(--c4)"></div><div class="nm">Serie 4</div><div class="hex">#6366F1</div></div>
+          </div>
+          <div class="ds-swatches">
+            <div class="ds-sw"><div class="box" style="background:var(--danger)"></div><div class="nm">Urgente</div><div class="hex">#F87171</div></div>
+            <div class="ds-sw"><div class="box" style="background:var(--warn)"></div><div class="nm">Atención</div><div class="hex">#FBBF24</div></div>
+            <div class="ds-sw"><div class="box" style="background:var(--ok)"></div><div class="nm">Éxito</div><div class="hex">#4ADE80</div></div>
+            <div class="ds-sw"><div class="box" style="background:var(--wa)"></div><div class="nm">WhatsApp</div><div class="hex">#25D366</div></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Tipografía</div>
+          <div class="type-specimen">
+            <div>
+              <div class="ts-label">Display · Bricolage Grotesque 700</div>
+              <div style="font-family:var(--font-display);font-size:28px;font-weight:700;letter-spacing:-0.025em">Cierres del mes: $15.8M</div>
+            </div>
+            <div>
+              <div class="ts-label">Título · Bricolage Grotesque 700 · 15px</div>
+              <div style="font-family:var(--font-display);font-size:15px;font-weight:700">Leads sin atender &gt;24 h</div>
+            </div>
+            <div>
+              <div class="ts-label">Cuerpo · Instrument Sans 400 · 14.5px</div>
+              <div>Busca casa de 3 recámaras con jardín, presupuesto hasta $6.5M.</div>
+            </div>
+            <div>
+              <div class="ts-label">Dato · tabular-nums</div>
+              <div style="font-feature-settings:'tnum';font-weight:700">$6,200,000 · 320 m² · 14 leads · 2.4 h</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:14px">
+        <div class="card-title">Principios de la propuesta</div>
+        <div class="info-rows">
+          <div class="info-row"><span class="k">Marca</span><span class="v">Klo-Ser — símbolo «check que cierra» · wordmark «El acuerdo» (sin destellos) · loader anillo</span></div>
+          <div class="info-row"><span class="k">Dirección</span><span class="v">Dark premium «control room» — el dato es el héroe, urgencia visible al instante</span></div>
+          <div class="info-row"><span class="k">Radios</span><span class="v">22 px tarjetas · 16 px filas · 99 px pills</span></div>
+          <div class="info-row"><span class="k">Atmósfera</span><span class="v">2 brillos radiales (lima/cian) + grano al 3.5% — nunca planos</span></div>
+          <div class="info-row"><span class="k">Movimiento</span><span class="v">Entrada escalonada 50–80 ms · hover lift −4 px · barras animadas con ease-out</span></div>
+          <div class="info-row"><span class="k">Urgencia</span><span class="v">Rojo solo para «&gt;24 h sin atención» — el resto del sistema nunca lo usa</span></div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script>
+/* ---------- Navegación ---------- */
+const navItems = document.querySelectorAll('.nav-item');
+navItems.forEach(item => {
+  item.addEventListener('click', () => {
+    navItems.forEach(n => n.classList.remove('active'));
+    item.classList.add('active');
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    const view = document.getElementById('view-' + item.dataset.view);
+    view.classList.add('active');
+    window.scrollTo({ top: 0 });
+    requestAnimationFrame(() => requestAnimationFrame(animateView));
+  });
+});
+
+/* ---------- Sparklines (barras redondeadas) ---------- */
+function drawSparks() {
+  document.querySelectorAll('.spark').forEach(svg => {
+    const data = svg.dataset.spark.split(',').map(Number);
+    const color = svg.dataset.color;
+    const W = svg.clientWidth || 240, H = 44;
+    svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+    svg.innerHTML = '';
+    const max = Math.max(...data);
+    const min = Math.min(...data);
+    const range = max - min || 1;
+    const gap = 5;
+    const bw = Math.max(3, (W - gap * (data.length - 1)) / data.length);
+    data.forEach((v, i) => {
+      const h = 6 + ((v - min) / range) * (H - 8);
+      const x = i * (bw + gap);
+      const r = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+      r.setAttribute('x', x); r.setAttribute('y', H - h);
+      r.setAttribute('width', bw); r.setAttribute('height', h);
+      r.setAttribute('rx', 2.5);
+      const last = i >= data.length - 1;
+      r.setAttribute('fill', last ? color : color + '55');
+      if (last) r.style.filter = `drop-shadow(0 0 5px ${color})`;
+      r.dataset.tip = `Semana ${i + 1} · ${v}`;
+      r.style.cursor = 'default';
+      svg.appendChild(r);
+    });
+  });
+}
+
+/* ---------- Área apilada ---------- */
+function drawArea() {
+  const svg = document.getElementById('areachart');
+  if (!svg) return;
+  const W = svg.clientWidth || 560, H = 190, P = 24, PR = 78;
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  svg.innerHTML = '';
+  const semanas = ['S1', 'S2', 'S3', 'S4', 'S5'];
+  const portal = [3, 4, 5, 3, 3];
+  const wa = [2, 3, 2, 3, 2];
+  const ref = [1, 2, 2, 2, 1];
+  const maxY = 6;
+  const x = i => P + i * ((W - P - PR) / (semanas.length - 1));
+  const y = v => H - 26 - (v / maxY) * (H - 50);
+  const ns = 'http://www.w3.org/2000/svg';
+  // grid horizontal recesivo
+  [0, 2, 4, 6].forEach(v => {
+    const l = document.createElementNS(ns, 'line');
+    l.setAttribute('x1', P); l.setAttribute('x2', W - PR + 12);
+    l.setAttribute('y1', y(v)); l.setAttribute('y2', y(v));
+    l.setAttribute('stroke', 'rgba(148,163,184,0.08)');
+    svg.appendChild(l);
+    const t = document.createElementNS(ns, 'text');
+    t.setAttribute('x', P - 8); t.setAttribute('y', y(v) + 3);
+    t.setAttribute('text-anchor', 'end');
+    t.setAttribute('font-size', '9'); t.setAttribute('fill', '#616D85');
+    t.textContent = v;
+    svg.appendChild(t);
+  });
+  // series como líneas suaves con relleno degradado
+  const defs = document.createElementNS(ns, 'defs');
+  defs.innerHTML = `
+    <linearGradient id="gA" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#65A30D" stop-opacity="0.28"/><stop offset="1" stop-color="#65A30D" stop-opacity="0"/>
+    </linearGradient>`;
+  svg.appendChild(defs);
+  function path(data, color, fill) {
+    let d = `M ${x(0)} ${y(data[0])}`;
+    for (let i = 1; i < data.length; i++) {
+      const xc = (x(i - 1) + x(i)) / 2;
+      d += ` C ${xc} ${y(data[i - 1])}, ${xc} ${y(data[i])}, ${x(i)} ${y(data[i])}`;
+    }
+    if (fill) {
+      const a = document.createElementNS(ns, 'path');
+      a.setAttribute('d', d + ` L ${x(data.length - 1)} ${H - 26} L ${x(0)} ${H - 26} Z`);
+      a.setAttribute('fill', fill);
+      svg.appendChild(a);
+    }
+    const p = document.createElementNS(ns, 'path');
+    p.setAttribute('d', d);
+    p.setAttribute('fill', 'none');
+    p.setAttribute('stroke', color);
+    p.setAttribute('stroke-width', '2.2');
+    p.setAttribute('stroke-linecap', 'round');
+    p.style.filter = `drop-shadow(0 0 6px ${color}AA)`;
+    svg.appendChild(p);
+    // puntos con anillo de superficie
+    data.forEach((v, i) => {
+      const c = document.createElementNS(ns, 'circle');
+      c.setAttribute('cx', x(i)); c.setAttribute('cy', y(v)); c.setAttribute('r', 4);
+      c.setAttribute('fill', color);
+      c.setAttribute('stroke', '#0E1420');
+      c.setAttribute('stroke-width', '2');
+      c.dataset.tip = `${semanas[i]} · ${v} leads`;
+      svg.appendChild(c);
+    });
+  }
+  path(portal, '#65A30D', 'url(#gA)');
+  path(wa, '#0891B2', null);
+  path(ref, '#EA580C', null);
+  // etiquetas x
+  semanas.forEach((s, i) => {
+    const t = document.createElementNS(ns, 'text');
+    t.setAttribute('x', x(i)); t.setAttribute('y', H - 8);
+    t.setAttribute('text-anchor', 'middle');
+    t.setAttribute('font-size', '9.5'); t.setAttribute('fill', '#616D85');
+    t.textContent = s;
+    svg.appendChild(t);
+  });
+  // etiquetas directas al final de línea
+  const ends = [[portal, '#8FC13D', 'Portal'], [wa, '#3FB6D3', 'WhatsApp'], [ref, '#F0854B', 'Referidos']];
+  ends.forEach(([d, c, n]) => {
+    const t = document.createElementNS(ns, 'text');
+    t.setAttribute('x', x(d.length - 1) + 7); t.setAttribute('y', y(d[d.length - 1]) + 3);
+    t.setAttribute('font-size', '9'); t.setAttribute('font-weight', '700'); t.setAttribute('fill', c);
+    t.textContent = n;
+    svg.appendChild(t);
+  });
+}
+
+/* ---------- Donut ---------- */
+function drawDonut() {
+  const svg = document.getElementById('donut');
+  if (!svg) return;
+  svg.innerHTML = '';
+  const data = [
+    { v: 18, c: '#65A30D', n: 'Portal' },
+    { v: 12, c: '#0891B2', n: 'WhatsApp' },
+    { v: 8, c: '#EA580C', n: 'Referidos' },
+    { v: 4, c: '#6366F1', n: 'Redes' },
+  ];
+  const total = data.reduce((a, b) => a + b.v, 0);
+  const cx = 74, cy = 74, r = 58, sw = 16;
+  const circ = 2 * Math.PI * r;
+  const gapPx = 4; // separación entre segmentos (spacer de 2px+)
+  let offset = 0;
+  const ns = 'http://www.w3.org/2000/svg';
+  data.forEach(seg => {
+    const frac = seg.v / total;
+    const len = Math.max(0, frac * circ - gapPx);
+    const c = document.createElementNS(ns, 'circle');
+    c.setAttribute('cx', cx); c.setAttribute('cy', cy); c.setAttribute('r', r);
+    c.setAttribute('fill', 'none');
+    c.setAttribute('stroke', seg.c);
+    c.setAttribute('stroke-width', sw);
+    c.setAttribute('stroke-linecap', 'round');
+    c.setAttribute('stroke-dasharray', `${len} ${circ - len}`);
+    c.setAttribute('stroke-dashoffset', -offset - gapPx / 2);
+    c.setAttribute('transform', `rotate(-90 ${cx} ${cy})`);
+    c.dataset.tip = `${seg.n} · ${seg.v} leads · ${Math.round(frac * 100)}%`;
+    c.style.filter = `drop-shadow(0 0 5px ${seg.c}77)`;
+    svg.appendChild(c);
+    offset += frac * circ;
+  });
+}
+
+/* ---------- Contadores ---------- */
+function countUp() {
+  document.querySelectorAll('[data-count]').forEach(el => {
+    if (el.dataset.done) return;
+    el.dataset.done = '1';
+    const target = parseInt(el.dataset.count, 10);
+    const t0 = performance.now(), dur = 900;
+    function tick(t) {
+      const p = Math.min(1, (t - t0) / dur);
+      const ease = 1 - Math.pow(1 - p, 3);
+      el.textContent = Math.round(target * ease);
+      if (p < 1) requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  });
+}
+
+/* ---------- Barras animadas ---------- */
+function fillBars() {
+  document.querySelectorAll('[data-w]').forEach(el => {
+    requestAnimationFrame(() => { el.style.width = el.dataset.w; });
+  });
+}
+
+/* ---------- Tooltip ---------- */
+const tip = document.getElementById('tooltip');
+document.addEventListener('mousemove', e => {
+  const t = e.target.closest('[data-tip]');
+  if (t) {
+    tip.innerHTML = t.dataset.tip.replace(/·/g, '<b>·</b>').replace(/(\d[\d,.]*[%hM]?)/g, '<b>$1</b>');
+    tip.style.left = Math.min(e.clientX + 14, window.innerWidth - tip.offsetWidth - 12) + 'px';
+    tip.style.top = (e.clientY - 34) + 'px';
+    tip.classList.add('on');
+  } else {
+    tip.classList.remove('on');
+  }
+});
+
+function animateView() {
+  drawSparks(); drawArea(); drawDonut(); countUp(); fillBars();
+}
+/* Toggles del perfil */
+document.querySelectorAll('.toggle').forEach(t => {
+  t.addEventListener('click', () => t.classList.toggle('on'));
+});
+
+/* «Ver su día» → panel supervisor */
+document.querySelectorAll('.ac-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelector('.sup-panel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+});
+
+/* Deep-link: la landing enlaza a #login */
+if (location.hash) {
+  const target = document.querySelector(`.nav-item[data-view="${location.hash.slice(1)}"]`);
+  if (target) target.click();
+}
+animateView();
+window.addEventListener('resize', () => { drawSparks(); drawArea(); });
+</script>
+</body>
+</html>
