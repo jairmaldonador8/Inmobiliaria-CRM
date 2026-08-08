@@ -16,6 +16,8 @@ import { revalidatePath } from 'next/cache'
 import { usuarioActual } from '@/lib/auth/usuario-actual'
 import { createClient } from '@/lib/supabase/server'
 import { avanzarEtapaPorEvento } from '@/lib/leads/avance-automatico'
+import { cambiarEtapa } from '@/lib/leads/acciones-asesor'
+import { DESENLACES_ELEGIBLES, type DesenlaceElegible } from '@/lib/contactos/formato'
 
 export type ResultadoContactoAccion = { ok: true } | { error: string }
 
@@ -118,6 +120,55 @@ export async function registrarSalidaWhatsapp(
       motivo: 'whatsapp_enviado',
     })
   }
+
+  revalidarAsesor(leadId)
+  return { ok: true }
+}
+
+export async function resolverContacto(
+  leadId: string,
+  desenlace: string
+): Promise<ResultadoContactoAccion> {
+  const usuario = await usuarioActual()
+  if (!usuario) return { error: 'Tu sesión no es válida' }
+
+  if (!(DESENLACES_ELEGIBLES as readonly string[]).includes(desenlace)) {
+    return { error: 'El desenlace no es válido' }
+  }
+  const valor = desenlace as DesenlaceElegible
+
+  // Guard simétrico al de registrarSalidaWhatsapp: sin él, un admin que
+  // llegara aquí actualizaría el contacto y DESPUÉS `cambiarEtapa` lo
+  // mandaría a /login por requireAsesor(), dejando el dato a medias.
+  if (usuario.rol !== 'asesor') {
+    return { error: 'Solo el asesor del lead puede reportar cómo le fue' }
+  }
+
+  const supabase = await createClient()
+
+  // POR LEAD, no por contacto: el dedupe acepta una carrera que puede dejar
+  // dos filas pendientes. Si se resolviera solo una, la hoja reaparecería
+  // con la otra.
+  const { error } = await supabase
+    .from('contactos_whatsapp')
+    .update({ resultado: valor, resuelto_en: new Date().toISOString() })
+    .eq('lead_id', leadId)
+    .eq('resultado', 'pendiente')
+
+  if (error) return { error: 'No se pudo registrar cómo te fue' }
+
+  // «No le interesa» NO puede ir por el avance automático: 'cerrado_perdido'
+  // no es columna del kanban, así que etapaTrasEvento devolvería null y el
+  // lead nunca se cerraría. cambiarEtapa además escribe NOTA_CIERRE, del que
+  // dependen la vista de cerrados y el conteo del mes.
+  if (valor === 'no_interesa') {
+    const resultado = await cambiarEtapa(leadId, 'cerrado_perdido')
+    if ('error' in resultado) return resultado
+  }
+
+  // 'cita' NO mueve la etapa aquí: lo hace `agendarVisita` al guardar la
+  // visita. 'contesto' y 'no_contesto' dejan el lead en «Contactado», donde
+  // ya está.
 
   revalidarAsesor(leadId)
   return { ok: true }
