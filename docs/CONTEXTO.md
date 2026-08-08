@@ -7,7 +7,7 @@ CRM inmobiliario para Montana Realty. El producto se llama **Klo-Ser** (pronunci
 
 ## Stack
 - Next.js 16.2 (App Router) + TypeScript, Tailwind, shadcn/base-ui, dnd-kit, sonner.
-- Supabase (proyecto `sdyyczntaydzodyjtpgc`, dev = prod del piloto): Postgres + RLS por rol, Auth con custom auth hook, 6 migraciones en `supabase/migrations/`.
+- Supabase: Postgres + RLS por rol, Auth con custom auth hook, migraciones en `supabase/migrations/`. **Dos proyectos desde el 2026-08-06** — producción `sdyyczntaydzodyjtpgc` (valores solo en Vercel) y desarrollo `fewbcrcacqrwxrxpwnxv`, que es a donde apunta `.env.local` y por tanto `npm run dev`, `npm test` y `npm run test:rls`. Antes de esa fecha no había separación y los comandos locales escribían en producción; no vuelvas a asumir que son el mismo proyecto.
 - Tests: Vitest (unit + integración RLS contra Supabase real). Desarrollo con TDD.
 - Deploy: Vercel Hobby, proyecto `inmobiliaria-crm` (team Creacify). URL: https://inmobiliaria-crm-inky.vercel.app (¡el alias sin sufijo es de un tercero!). Deploy = push a `main`.
 
