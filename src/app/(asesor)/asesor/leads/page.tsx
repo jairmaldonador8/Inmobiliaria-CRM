@@ -38,12 +38,13 @@ type FilaLeadCerrado = {
  * `?vista=cerrados`, es esa ruta de vuelta. Cliente de sesión: RLS ya acota
  * a los leads propios.
  */
-async function ListaLeadsCerrados() {
+async function ListaLeadsCerrados({ asesorId }: { asesorId: string }) {
   const supabase = await createClient()
 
   const { data, error } = await supabase
     .from('leads')
     .select('id, nombre, telefono, etapa, creado_en, propiedad:propiedades(titulo)')
+    .eq('asesor_id', asesorId)
     .eq('archivado', false)
     .in('etapa', ETAPAS_CERRADAS)
     .order('creado_en', { ascending: false })
@@ -123,18 +124,22 @@ async function ListaLeadsCerrados() {
 
 /**
  * Kanban de leads del asesor. Todas las consultas van con el cliente de
- * SESIÓN: RLS limita automáticamente a los leads propios (y a los
- * seguimientos de esos leads) — sin filtrar por asesor_id a mano.
+ * SESIÓN: RLS limita a los leads propios (y a los seguimientos de esos leads).
+ *
+ * El `.eq('asesor_id', ...)` explícito NO es redundante: un admin en la vista
+ * de asesor pasa `private.is_admin()` y RLS no lo filtra — sin el acotado
+ * vería el pipeline completo de la agencia en una pantalla que dice ser suya
+ * (ver `requireAsesor()`).
  */
 export default async function PaginaLeadsAsesor({
   searchParams,
 }: {
   searchParams: Promise<{ vista?: string }>
 }) {
-  await requireAsesor()
+  const usuario = await requireAsesor()
   const { vista } = await searchParams
   if (vista === 'cerrados') {
-    return <ListaLeadsCerrados />
+    return <ListaLeadsCerrados asesorId={usuario.user_id} />
   }
 
   const supabase = await createClient()
@@ -145,6 +150,7 @@ export default async function PaginaLeadsAsesor({
       .select(
         'id, nombre, fuente, fuente_detalle, etapa, creado_en, clasificacion_eb, propiedad:propiedades(titulo)'
       )
+      .eq('asesor_id', usuario.user_id)
       .eq('archivado', false)
       // Los cerrados ya no tienen columna en el kanban (ver
       // ListaLeadsCerrados más arriba para consultarlos) — se excluyen aquí

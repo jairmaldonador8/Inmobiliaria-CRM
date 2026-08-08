@@ -41,7 +41,11 @@ type FilaSeguimiento = {
 /**
  * Detalle de lead del asesor (móvil primero). Cliente de SESIÓN en TODO:
  * RLS solo devuelve leads propios — un lead ajeno (o inexistente) no trae
- * fila y cae en notFound(), sin verificar ownership a mano.
+ * fila y cae en notFound().
+ *
+ * El `.eq('asesor_id', ...)` explícito cubre el caso del admin en la vista de
+ * asesor: él sí pasa RLS para cualquier lead, y esta pantalla debe comportarse
+ * como la ve un asesor. Para ver un lead ajeno está la vista de admin.
  */
 export default async function PaginaDetalleLeadAsesor({
   params,
@@ -58,6 +62,7 @@ export default async function PaginaDetalleLeadAsesor({
       '*, propiedad:propiedades(id, titulo, precio, moneda, colonia, ciudad, fotos)'
     )
     .eq('id', id)
+    .eq('asesor_id', usuario.user_id)
     .eq('archivado', false)
     .maybeSingle()
   if (!lead) notFound()

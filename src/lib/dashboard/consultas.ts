@@ -142,10 +142,14 @@ type FilaProximaVisita = {
 /**
  * Próximas visitas agendadas (futuras, `estado = 'agendada'`), ordenadas por
  * `fecha` ascendente (la más próxima primero) y limitadas a `limite` filas
- * (por defecto 5). Sin filtro de `asesor_id`: se usa con el cliente de
- * SESIÓN (mismo patrón que el resto de la cola del día en
- * `src/app/(asesor)/asesor/page.tsx`), y RLS de `visitas` ya acota a las
- * propias del asesor (o a todas si es admin) — igual que `citasHoy`.
+ * (por defecto 5). Se usa con el cliente de SESIÓN (mismo patrón que el resto
+ * de la cola del día en `src/app/(asesor)/asesor/page.tsx`), y RLS de
+ * `visitas` ya acota a las propias del asesor.
+ *
+ * `asesorId` acota explícitamente cuando quien mira NO es un asesor: un admin
+ * pasa `private.is_admin()` y RLS no lo filtra, así que en la vista de asesor
+ * vería las visitas de toda la agencia. Sin el parámetro, el comportamiento es
+ * idéntico al anterior.
  *
  * `lead:leads!inner(...)` (en vez del embed normal) para que una visita
  * cuyo lead ya no sea legible por RLS (p. ej. quedó huérfana de un cambio de
@@ -158,13 +162,20 @@ type FilaProximaVisita = {
 export async function proximasVisitas(
   supabase: SupabaseClient,
   limite: number = LIMITE_PROXIMAS_VISITAS,
-  ahora: Date = new Date()
+  ahora: Date = new Date(),
+  asesorId?: string
 ): Promise<ProximaVisita[]> {
-  const { data, error } = await supabase
+  let consulta = supabase
     .from('visitas')
     .select('id, fecha, duracion_min, lead:leads!inner(id, nombre), propiedad:propiedades(titulo)')
     .eq('estado', 'agendada')
     .gte('fecha', ahora.toISOString())
+
+  if (asesorId) {
+    consulta = consulta.eq('asesor_id', asesorId)
+  }
+
+  const { data, error } = await consulta
     .order('fecha', { ascending: true })
     .limit(limite)
 
