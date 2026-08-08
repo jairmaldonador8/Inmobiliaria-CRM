@@ -57,6 +57,16 @@ type Props = {
    * el admin llene todo el formulario para enterarse hasta el submit.
    */
   deshabilitadoMotivo?: string | null
+  /**
+   * Modo controlado. Si se omite, la hoja administra su propio estado y
+   * muestra su trigger; si se pasa, `open` es la única fuente de verdad y el
+   * padre es quien monta el disparador (p. ej. la respuesta «Agendé una
+   * cita» al volver de WhatsApp).
+   */
+  open?: boolean
+  onOpenChange?: (abierto: boolean) => void
+  /** Se dispara SOLO cuando la visita se guardó con éxito. */
+  onAgendada?: () => void
 }
 
 /**
@@ -87,6 +97,9 @@ export function HojaAgendarVisita({
   propiedadLeadTitulo,
   propiedades,
   deshabilitadoMotivo,
+  open,
+  onOpenChange,
+  onAgendada,
 }: Props) {
   const router = useRouter()
   const [abierto, setAbierto] = useState(false)
@@ -114,6 +127,11 @@ export function HojaAgendarVisita({
   // dispositivo), calculado una sola vez por apertura de la hoja.
   const minFecha = useMemo(() => fechaHoyMonterrey(), [])
 
+  // Controlado vs. no controlado: con `open` definido manda el padre y el
+  // estado interno se ignora (además, sin trigger propio — lo pone él).
+  const controlado = open !== undefined
+  const abiertoEfectivo = controlado ? open : abierto
+
   function alCambiarAbierto(abrir: boolean) {
     setAbierto(abrir)
     if (!abrir) {
@@ -124,6 +142,9 @@ export function HojaAgendarVisita({
       setBusquedaPropiedad('')
       setPropiedadSeleccionada(null)
     }
+    // Después del reset: en modo controlado el padre decide si cierra, pero
+    // los campos ya quedaron limpios para la próxima apertura.
+    onOpenChange?.(abrir)
   }
 
   function alEnviar() {
@@ -172,6 +193,9 @@ export function HojaAgendarVisita({
       }
 
       alCambiarAbierto(false)
+      // Solo aquí: la visita se guardó de verdad (cerrar la hoja sin agendar
+      // NO cuenta como cita para el registro de la salida a WhatsApp).
+      onAgendada?.()
 
       const mensaje = armarMensajeConfirmacionVisita({
         leadNombre,
@@ -201,6 +225,10 @@ export function HojaAgendarVisita({
     })
   }
 
+  // ⚠️ `deshabilitadoMotivo` es INCOMPATIBLE con el modo controlado: este
+  // return sale ANTES de montar el `Sheet`, así que un `open` en true se
+  // ignoraría en silencio. No los combines (hoy solo el admin manda motivo y
+  // solo el asesor usa modo controlado, así que nunca coinciden).
   if (deshabilitadoMotivo) {
     return (
       <span
@@ -215,18 +243,20 @@ export function HojaAgendarVisita({
   }
 
   return (
-    <Sheet open={abierto} onOpenChange={alCambiarAbierto}>
-      <SheetTrigger
-        render={
-          <Button
-            variant="outline"
-            className="h-14 flex-col gap-1 rounded-xl bg-white text-xs font-medium"
-          />
-        }
-      >
-        <CalendarClock aria-hidden className="size-5" />
-        Agendar visita
-      </SheetTrigger>
+    <Sheet open={abiertoEfectivo} onOpenChange={alCambiarAbierto}>
+      {controlado ? null : (
+        <SheetTrigger
+          render={
+            <Button
+              variant="outline"
+              className="h-14 flex-col gap-1 rounded-xl bg-white text-xs font-medium"
+            />
+          }
+        >
+          <CalendarClock aria-hidden className="size-5" />
+          Agendar visita
+        </SheetTrigger>
+      )}
 
       <SheetContent
         side="bottom"
