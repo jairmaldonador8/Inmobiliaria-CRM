@@ -99,6 +99,25 @@ function TarjetaLead({ lead, onMover }: { lead: LeadKanban; onMover: MoverLead }
         isDragging && 'z-50 cursor-grabbing opacity-90 shadow-lg ring-slate-400'
       )}
     >
+      {/*
+        Enlace que cubre la tarjeta entera: tocarla abre el detalle del lead.
+        Antes la ÚNICA ruta al detalle era el menú ⋮ → «Ver detalle», y en el
+        teléfono el asesor tocaba la tarjeta y no pasaba nada.
+
+        Va como capa (`absolute inset-0`) y no envolviendo el contenido para
+        no meter un <a> alrededor del botón del menú, que sería HTML inválido
+        (enlace con botón dentro) y dejaría el menú inservible. El menú sube a
+        `z-20` para quedar por encima.
+
+        `pointer-events-none` mientras se arrastra: sin eso, soltar la tarjeta
+        al terminar un drag dispara el click del enlace y navega sin querer.
+      */}
+      <Link
+        href={`/asesor/leads/${lead.id}`}
+        aria-label={`Ver ${lead.nombre}`}
+        className={cn('absolute inset-0 z-10 rounded-lg', isDragging && 'pointer-events-none')}
+      />
+
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
           <div className="flex items-center gap-1.5">
@@ -141,7 +160,8 @@ function TarjetaLead({ lead, onMover }: { lead: LeadKanban; onMover: MoverLead }
                 variant="ghost"
                 size="icon-sm"
                 aria-label={`Acciones para ${lead.nombre}`}
-                className="-mt-1 -mr-1 shrink-0 text-slate-500"
+                // relative z-20: por encima del enlace que cubre la tarjeta.
+                className="relative z-20 -mt-1 -mr-1 shrink-0 text-slate-500"
               />
             }
           >

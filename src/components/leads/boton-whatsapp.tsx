@@ -31,11 +31,14 @@ type Props = {
  * Botón «WhatsApp» del detalle de lead: sheet con las plantillas activas
  * (vista previa YA rellenada con los datos del lead) + opción sin plantilla.
  *
- * Al tocar una opción: abre wa.me DE INMEDIATO (window.open síncrono — los
- * navegadores móviles bloquean popups diferidos) y, en segundo plano
- * (fire-and-forget), llama a `registrarSalidaWhatsapp`, que escribe el
- * seguimiento del timeline, abre un «contacto» con desenlace pendiente y
- * avanza la etapa del lead a «Contactado».
+ * Al tocar una opción abre WhatsApp DE INMEDIATO, de forma síncrona dentro
+ * del gesto del usuario (los navegadores móviles bloquean los popups
+ * diferidos), y en segundo plano llama a `registrarSalidaWhatsapp`, que
+ * escribe el seguimiento del timeline, abre un «contacto» con desenlace
+ * pendiente y avanza la etapa del lead a «Contactado».
+ *
+ * En móvil se usa el esquema nativo `whatsapp://` y en escritorio wa.me —
+ * ver `esMovil()` abajo.
  *
  * Sin toast de éxito a propósito: la confirmación ya se ve en la ficha (la
  * etapa cambia y aparece el aviso de pendiente). El toast de error dice que
@@ -43,6 +46,17 @@ type Props = {
  *
  * No consulta nada: plantillas y contexto llegan por props del servidor.
  */
+/**
+ * ¿Estamos en un teléfono o tableta? Decide entre el esquema nativo
+ * `whatsapp://` (móvil) y wa.me (escritorio). Se lee el user agent en vez de
+ * `matchMedia` a propósito: lo que importa no es el ancho de la ventana sino
+ * si el sistema puede resolver el esquema de la app.
+ */
+function esMovil(): boolean {
+  if (typeof navigator === 'undefined') return false
+  return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
+}
+
 export function BotonWhatsApp({ leadId, telefono, plantillas, contexto }: Props) {
   const router = useRouter()
   const [abierto, setAbierto] = useState(false)
@@ -51,13 +65,12 @@ export function BotonWhatsApp({ leadId, telefono, plantillas, contexto }: Props)
     if (!telefono) return
 
     const texto = plantilla ? rellenarPlantilla(plantilla.texto, contexto) : ''
-    const url = texto
-      ? `https://wa.me/${telefono}?text=${encodeURIComponent(texto)}`
-      : `https://wa.me/${telefono}`
-    window.open(url, '_blank', 'noopener,noreferrer')
-    setAbierto(false)
 
-    // Fire-and-forget: WhatsApp ya se abrió; el registro corre detrás.
+    // El registro se dispara ANTES de navegar. En móvil, saltar al esquema
+    // `whatsapp://` manda la página a segundo plano de inmediato y puede
+    // abortar una petición recién iniciada; arrancarla antes le da margen.
+    // NO se hace await: seguimos dentro del gesto del usuario, así que el
+    // popup de escritorio no se bloquea.
     void registrarSalidaWhatsapp(leadId, {
       nombrePlantilla: plantilla?.nombre ?? null,
     }).then((resultado) => {
@@ -67,6 +80,32 @@ export function BotonWhatsApp({ leadId, telefono, plantillas, contexto }: Props)
       }
       router.refresh()
     })
+
+    if (esMovil()) {
+      // Esquema nativo: entra DIRECTO a la app. Con wa.me el teléfono abre
+      // primero una pestaña del navegador que luego redirige a WhatsApp, y
+      // ese salto se ve — era la queja del asesor.
+      // `encodeURIComponent` y NO `URLSearchParams`: este último codifica los
+      // espacios como `+` (convención de formularios), y un cliente que reciba
+      // el esquema custom puede tomarlos literales — el asesor vería
+      // «Hola+Marisol+...» en la caja del mensaje. `%20` es inequívoco, y es
+      // además lo que ya usa la rama de escritorio.
+      const consulta = texto
+        ? `phone=${telefono}&text=${encodeURIComponent(texto)}`
+        : `phone=${telefono}`
+      // `assign()` y no `location.href = …`: hace lo mismo, pero la regla
+      // react-hooks/immutability prohíbe asignar a un valor externo.
+      window.location.assign(`whatsapp://send?${consulta}`)
+    } else {
+      // Escritorio: `whatsapp://` solo funciona con WhatsApp Desktop
+      // instalado; wa.me cae con gracia en WhatsApp Web.
+      const url = texto
+        ? `https://wa.me/${telefono}?text=${encodeURIComponent(texto)}`
+        : `https://wa.me/${telefono}`
+      window.open(url, '_blank', 'noopener,noreferrer')
+    }
+
+    setAbierto(false)
   }
 
   return (
