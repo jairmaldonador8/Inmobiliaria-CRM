@@ -1,5 +1,6 @@
 import { requireAsesor } from '@/lib/auth/usuario-actual'
 import { Wordmark } from '@/components/marca/wordmark'
+import { CambiarVista } from '@/components/nav/cambiar-vista'
 import { NavAsesor, NavAsesorSidebar, PieSesionAsesor } from '@/components/nav/nav-asesor'
 import { Campana } from '@/components/notificaciones/campana'
 import BannerInstalacion from '@/components/push/banner-instalacion'
@@ -68,7 +69,10 @@ export default async function AsesorLayout({
           derecha del sidebar da margen a los dos lados sin renunciar al
           ancho ya ganado en monitores normales (a 1440px cabe de sobra).
         */}
-        <div className="mx-auto w-full max-w-7xl">{children}</div>
+        <div className="mx-auto w-full max-w-7xl">
+          <CambiarVista vista="asesor" rol={usuario.rol} />
+          {children}
+        </div>
       </main>
 
       <BotonSugerencia className="lg:bottom-6" />

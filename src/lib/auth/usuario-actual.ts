@@ -59,10 +59,25 @@ export async function requireAdmin(): Promise<UsuarioActual> {
   return usuario
 }
 
-/** Exige sesión de asesor; si no, redirige al login. */
+/**
+ * Exige acceso a las superficies del asesor; si no, redirige al login.
+ *
+ * Un admin TAMBIÉN pasa, a propósito: la dirección necesita poder pararse en
+ * la vista del asesor para verificar el producto tal como lo ve el equipo (el
+ * switcher vive en el shell, ver `components/nav/cambiar-vista.tsx`). Esto NO
+ * es impersonación: el usuario devuelto es él mismo, así que todo lo que
+ * escriba queda registrado con su propio `user_id` y el histórico sigue
+ * diciendo la verdad sobre quién hizo qué.
+ *
+ * CUIDADO al escribir consultas para estas pantallas: NO basta con confiar en
+ * RLS para el ownership. Un admin pasa `private.is_admin()` (0002_rls.sql:17),
+ * así que RLS no lo filtra — hay que acotar explícitamente con
+ * `.eq('asesor_id', usuario.user_id)`. Sin eso, una pantalla que dice «tus
+ * leads» le mostraría los de toda la agencia.
+ */
 export async function requireAsesor(): Promise<UsuarioActual> {
   const usuario = await usuarioActual()
-  if (!usuario || usuario.rol !== 'asesor') {
+  if (!usuario || (usuario.rol !== 'asesor' && usuario.rol !== 'admin')) {
     redirect('/login')
   }
   return usuario

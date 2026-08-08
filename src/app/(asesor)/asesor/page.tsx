@@ -80,9 +80,13 @@ export default async function PaginaInicioAsesor({
   ] = await Promise.all([
       // Leads activos (no cerrados, no archivados): base de ambas listas y
       // del chip «leads activos».
+      // El acotado por asesor_id es explícito y NO redundante: un admin en la
+      // vista de asesor pasa private.is_admin(), así que RLS no lo filtra y
+      // vería los leads de toda la agencia (ver requireAsesor()).
       supabase
         .from('leads')
         .select('id, nombre, etapa, creado_en, asignado_en, clasificacion_eb')
+        .eq('asesor_id', usuario.user_id)
         .eq('archivado', false)
         .not('etapa', 'in', `(${ETAPAS_CERRADAS.join(',')})`)
         .order('creado_en', { ascending: false }),
@@ -90,6 +94,7 @@ export default async function PaginaInicioAsesor({
       supabase
         .from('leads')
         .select('id', { count: 'exact', head: true })
+        .eq('asesor_id', usuario.user_id)
         .eq('archivado', false)
         .gte('creado_en', inicioMes.toISOString()),
       // Cierres «ganado» del mes: `leads` no tiene columna de fecha de
@@ -98,11 +103,12 @@ export default async function PaginaInicioAsesor({
       supabase
         .from('seguimientos')
         .select('lead_id')
+        .eq('autor_id', usuario.user_id)
         .eq('tipo', 'sistema')
         .eq('nota', NOTA_CIERRE.cerrado_ganado)
         .gte('creado_en', inicioMes.toISOString()),
       // Próximas visitas agendadas (futuras), para la sección homónima.
-      proximasVisitas(supabase, 5, ahora),
+      proximasVisitas(supabase, 5, ahora, usuario.user_id),
       // Conexión de Google Calendar (Task 7): columnas explícitas, NUNCA
       // select('*') — la 0008 revocó el SELECT de tabla completo de
       // `authenticated` y solo regranteó estas columnas (refresh_token_cifrado

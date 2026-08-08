@@ -1,5 +1,6 @@
 import { requireAdmin } from '@/lib/auth/usuario-actual'
 import { Wordmark } from '@/components/marca/wordmark'
+import { CambiarVista } from '@/components/nav/cambiar-vista'
 import { BarraMovilAdmin, NavAdmin, PieSesion } from '@/components/nav/nav-admin'
 import { TabBarAdmin } from '@/components/nav/tab-bar-admin'
 import { Campana } from '@/components/notificaciones/campana'
@@ -48,6 +49,7 @@ export default async function AdminLayout({
       />
 
       <main className="flex-1 px-4 pt-6 pb-28 lg:ml-60 lg:px-10 lg:py-8">
+        <CambiarVista vista="admin" rol={usuario.rol} />
         {children}
       </main>
 

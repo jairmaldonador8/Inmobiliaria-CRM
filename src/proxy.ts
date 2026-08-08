@@ -17,8 +17,15 @@ function rolDesdeClaims(claims: Record<string, unknown> | undefined): Rol | null
   return rol === 'admin' || rol === 'asesor' ? rol : null
 }
 
-/** Cada rol solo puede acceder a su propia área. */
+/**
+ * Un asesor solo accede a su propia área. Un admin accede a las dos: puede
+ * cambiar a la vista de asesor desde el shell para verificar el producto como
+ * lo ve el equipo (ver `requireAsesor()` y `components/nav/cambiar-vista.tsx`).
+ * La puerta abre en una sola dirección — un asesor nunca entra a /admin.
+ */
 function rolPuedeAcceder(rol: Rol, path: string): boolean {
+  if (rol === 'admin') return true
+
   const propia = AREA_POR_ROL[rol]
   const ajenas = Object.values(AREA_POR_ROL).filter((area) => area !== propia)
   return !ajenas.some((area) => path === area || path.startsWith(`${area}/`))
