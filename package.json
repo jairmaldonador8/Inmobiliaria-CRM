@@ -10,6 +10,7 @@
     "test": "vitest run",
     "test:rls": "vitest run --config vitest.integration.config.ts",
     "seed": "tsx scripts/seed.ts",
+    "perfil:jair": "tsx scripts/perfil-jair.ts",
     "backfill:clasificacion-eb": "tsx scripts/backfill-clasificacion-eb.ts"
   },
   "dependencies": {
