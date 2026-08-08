@@ -42,6 +42,22 @@ export function SelectorEtapa({ leadId, etapa }: Props) {
   const [pendiente, iniciarTransicion] = useTransition()
   const [etapaVisible, setEtapaVisible] = useState(etapa)
 
+  // Re-sincroniza con el servidor cuando la etapa cambia por una vía que NO
+  // es este selector. Sin esto, `useState(etapa)` copia el valor una sola vez
+  // al montar y el badge se queda rancio: al enviar un WhatsApp la etapa
+  // avanza a «Contactado» en la base y en el timeline, pero el badge seguía
+  // diciendo «Nuevo» hasta recargar la página.
+  //
+  // Ajuste en render (no useEffect) comparando contra el valor previo: es el
+  // patrón que React recomienda para estado derivado de props, y el mismo que
+  // usa `hoja-desenlace.tsx`. No pisa la actualización optimista de
+  // `alCambiar`, porque ahí el que cambia es `etapaVisible`, no la prop.
+  const [etapaPrevia, setEtapaPrevia] = useState(etapa)
+  if (etapaPrevia !== etapa) {
+    setEtapaPrevia(etapa)
+    setEtapaVisible(etapa)
+  }
+
   const items = ETAPAS_SELECCIONABLES.map((e) => ({ value: e, label: etiquetaEtapa(e) }))
 
   function alCambiar(nueva: string) {
