@@ -22,10 +22,8 @@ import {
   SheetSeguimiento,
   type OpcionPropiedadSeguimiento,
 } from '@/components/seguimientos/sheet-seguimiento'
-import {
-  HojaAgendarVisita,
-  type OpcionPropiedadVisita,
-} from '@/components/visitas/hoja-agendar-visita'
+import { type OpcionPropiedadVisita } from '@/components/visitas/hoja-agendar-visita'
+import { HojaDesenlace } from '@/components/contactos/hoja-desenlace'
 import { ListaVisitasLead } from '@/components/visitas/lista-visitas-lead'
 import {
   TimelineSeguimientos,
@@ -66,8 +64,13 @@ export default async function PaginaDetalleLeadAsesor({
 
   const leadDetalle = lead as unknown as LeadDetalle
 
-  const [{ data: seguimientos }, { data: plantillas }, { data: propiedades }, visitas] =
-    await Promise.all([
+  const [
+    { data: seguimientos },
+    { data: plantillas },
+    { data: propiedades },
+    visitas,
+    { data: ultimoContacto },
+  ] = await Promise.all([
       supabase
         .from('seguimientos')
         .select('id, tipo, nota, creado_en, autor:usuarios(nombre)')
@@ -87,6 +90,15 @@ export default async function PaginaDetalleLeadAsesor({
             .eq('activa', true)
             .order('titulo', { ascending: true }),
       visitasDelLead(supabase, id),
+      // ⚠️ `.limit(1)`, NUNCA `.maybeSingle()`: el dedupe de
+      // `registrarSalidaWhatsapp` acepta una carrera que puede dejar dos
+      // filas pendientes, y `maybeSingle()` reventaría con PGRST116.
+      supabase
+        .from('contactos_whatsapp')
+        .select('id, resultado')
+        .eq('lead_id', id)
+        .order('creado_en', { ascending: false })
+        .limit(1),
     ])
 
   // El asesor solo puede leer SU fila de usuarios (RLS): un autor ajeno
@@ -100,6 +112,10 @@ export default async function PaginaDetalleLeadAsesor({
     creado_en: s.creado_en,
     autor_nombre: s.autor?.nombre ?? null,
   }))
+
+  // El contacto más reciente manda: si sigue 'pendiente', al volver de
+  // WhatsApp la hoja pregunta cómo le fue.
+  const hayPendiente = (ultimoContacto ?? [])[0]?.resultado === 'pendiente'
 
   const contexto = contextoPlantillasLead(leadDetalle, usuario.nombre)
   const opcionesPropiedad = (propiedades ?? []) as OpcionPropiedadSeguimiento[]
@@ -163,7 +179,10 @@ export default async function PaginaDetalleLeadAsesor({
           propiedadLeadId={leadDetalle.propiedad_id}
           propiedades={opcionesPropiedad}
         />
-        <HojaAgendarVisita
+        {/* Monta el botón «Agendar visita» de la rejilla y, encima, la hoja
+            de desenlace al volver de WhatsApp. */}
+        <HojaDesenlace
+          hayPendiente={hayPendiente}
           leadId={leadDetalle.id}
           leadNombre={leadDetalle.nombre}
           telefono={leadDetalle.telefono}
