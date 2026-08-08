@@ -114,8 +114,11 @@ export default async function PaginaDetalleLeadAsesor({
   }))
 
   // El contacto más reciente manda: si sigue 'pendiente', al volver de
-  // WhatsApp la hoja pregunta cómo le fue.
-  const hayPendiente = (ultimoContacto ?? [])[0]?.resultado === 'pendiente'
+  // WhatsApp la hoja pregunta cómo le fue. Se manda el ID (no un booleano)
+  // para que la hoja distinga un pendiente NUEVO de otro que ya se pospuso.
+  const filaUltimoContacto = (ultimoContacto ?? [])[0]
+  const contactoPendienteId =
+    filaUltimoContacto?.resultado === 'pendiente' ? filaUltimoContacto.id : null
 
   const contexto = contextoPlantillasLead(leadDetalle, usuario.nombre)
   const opcionesPropiedad = (propiedades ?? []) as OpcionPropiedadSeguimiento[]
@@ -182,7 +185,7 @@ export default async function PaginaDetalleLeadAsesor({
         {/* Monta el botón «Agendar visita» de la rejilla y, encima, la hoja
             de desenlace al volver de WhatsApp. */}
         <HojaDesenlace
-          hayPendiente={hayPendiente}
+          contactoPendienteId={contactoPendienteId}
           leadId={leadDetalle.id}
           leadNombre={leadDetalle.nombre}
           telefono={leadDetalle.telefono}

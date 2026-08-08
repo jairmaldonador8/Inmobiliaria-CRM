@@ -35,11 +35,16 @@ type PropsVisita = Omit<
 
 type Props = PropsVisita & {
   /**
-   * ¿El lead tiene un contacto de WhatsApp sin reportar? Lo decide el
-   * SERVIDOR en cada render. El cliente nunca lo inventa: así una recarga
-   * (o un `router.refresh()`) no pierde el pendiente.
+   * `id` del contacto de WhatsApp sin reportar, o `null` si no hay. Lo
+   * decide el SERVIDOR en cada render. El cliente nunca lo inventa: así una
+   * recarga (o un `router.refresh()`) no pierde el pendiente.
+   *
+   * Es el ID y no un booleano a propósito: un pendiente puede ser sustituido
+   * por OTRO pendiente sin que un booleano cambie nunca de valor (el asesor
+   * pospone A, pasan >5 min, vuelve a tocar WhatsApp, A se degrada a
+   * `sin_reporte` y entra B). Con el ID esa transición sí se ve.
    */
-  hayPendiente: boolean
+  contactoPendienteId: string | null
 }
 
 const OPCIONES: {
@@ -66,7 +71,7 @@ const OPCIONES: {
  * `visibilitychange` refresca y el servidor dice si hay pendiente → la hoja
  * pregunta cómo le fue.
  */
-export function HojaDesenlace({ hayPendiente, ...propsVisita }: Props) {
+export function HojaDesenlace({ contactoPendienteId, ...propsVisita }: Props) {
   const { leadId, leadNombre } = propsVisita
   const router = useRouter()
   const [pendiente, iniciarTransicion] = useTransition()
@@ -76,18 +81,19 @@ export function HojaDesenlace({ hayPendiente, ...propsVisita }: Props) {
   const [pospuesto, setPospuesto] = useState(false)
   const [visitaAbierta, setVisitaAbierta] = useState(false)
 
-  // Cuando el servidor cambia de opinión sobre el pendiente, lo pospuesto
-  // caduca: si se resolvió (true→false) para dejar limpio el siguiente, y si
-  // apareció uno nuevo (false→true) para no tragárselo. Ajustar estado en el
-  // render es el patrón recomendado de React para derivar de una prop, y
-  // evita el falso positivo de `set-state-in-effect`.
-  const [pendientePrevio, setPendientePrevio] = useState(hayPendiente)
-  if (pendientePrevio !== hayPendiente) {
-    setPendientePrevio(hayPendiente)
+  // Cuando cambia el contacto pendiente, lo pospuesto caduca. Se compara el
+  // ID —no un booleano— para que las TRES transiciones cuenten: sin
+  // pendiente→pendiente, pendiente→resuelto, y pendiente A→pendiente B (un
+  // booleano no distingue la última y se tragaba al contacto nuevo).
+  // Ajustar estado en el render es el patrón recomendado de React para
+  // derivar de una prop, y evita el falso positivo de `set-state-in-effect`.
+  const [pendientePrevio, setPendientePrevio] = useState(contactoPendienteId)
+  if (pendientePrevio !== contactoPendienteId) {
+    setPendientePrevio(contactoPendienteId)
     setPospuesto(false)
   }
 
-  const desenlaceAbierto = hayPendiente && !pospuesto
+  const desenlaceAbierto = contactoPendienteId !== null && !pospuesto
 
   useEffect(() => {
     // Detector de regreso: el asesor se fue a WhatsApp y volvió. La pestaña
