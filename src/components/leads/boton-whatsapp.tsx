@@ -6,7 +6,7 @@ import { toast } from 'sonner'
 import { MessageCircle } from 'lucide-react'
 
 import { rellenarPlantilla, type ContextoPlantilla } from '@/lib/plantillas/rellenar'
-import { registrarSeguimiento } from '@/lib/seguimientos/acciones'
+import { registrarSalidaWhatsapp } from '@/lib/contactos/acciones'
 import { Button } from '@/components/ui/button'
 import {
   Sheet,
@@ -51,16 +51,14 @@ export function BotonWhatsApp({ leadId, telefono, plantillas, contexto }: Props)
     window.open(url, '_blank', 'noopener,noreferrer')
     setAbierto(false)
 
-    const nota = plantilla
-      ? `Se envió plantilla "${plantilla.nombre}"`
-      : 'Mensaje directo por WhatsApp'
     // Fire-and-forget: WhatsApp ya se abrió; el registro corre detrás.
-    void registrarSeguimiento(leadId, { tipo: 'whatsapp', nota }).then((resultado) => {
+    void registrarSalidaWhatsapp(leadId, {
+      nombrePlantilla: plantilla?.nombre ?? null,
+    }).then((resultado) => {
       if ('error' in resultado) {
         toast.error(resultado.error)
         return
       }
-      toast.success('Seguimiento de WhatsApp registrado')
       router.refresh()
     })
   }
