@@ -32,8 +32,14 @@ type Props = {
  * (vista previa YA rellenada con los datos del lead) + opción sin plantilla.
  *
  * Al tocar una opción: abre wa.me DE INMEDIATO (window.open síncrono — los
- * navegadores móviles bloquean popups diferidos) y registra el seguimiento
- * tipo whatsapp en segundo plano (fire-and-forget con toast).
+ * navegadores móviles bloquean popups diferidos) y, en segundo plano
+ * (fire-and-forget), llama a `registrarSalidaWhatsapp`, que escribe el
+ * seguimiento del timeline, abre un «contacto» con desenlace pendiente y
+ * avanza la etapa del lead a «Contactado».
+ *
+ * Sin toast de éxito a propósito: la confirmación ya se ve en la ficha (la
+ * etapa cambia y aparece el aviso de pendiente). El toast de error dice que
+ * no se registró la nota — NUNCA que falló el WhatsApp, que ya se abrió.
  *
  * No consulta nada: plantillas y contexto llegan por props del servidor.
  */
