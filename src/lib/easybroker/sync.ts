@@ -772,9 +772,12 @@ async function notificarLeadNuevo(
   const detalle = referencia ? `${fila.nombre} — ${referencia}` : `${fila.nombre} — ${fila.fuente_detalle ?? 'portal'}`
 
   if (decision.tipo === 'bandeja') {
+    // Mantiene el formato historico «nombre — fuente» (los admins y el test de
+    // integracion dependen de ver el portal de origen) y agrega el porque.
+    const origen = fila.fuente_detalle ?? 'portal'
     const motivo = falloResolutor
-      ? `Nuevo lead en bandeja (falló la asignación por guardia): ${detalle}`
-      : `Nuevo lead: ${detalle} — no hay guardias programadas`
+      ? `Nuevo lead: ${fila.nombre} — ${origen} (falló la asignación por guardia)`
+      : `Nuevo lead: ${fila.nombre} — ${origen} — no hay guardias programadas`
     await notificarAdmins(supabase, { tipo: 'lead_nuevo', texto: motivo, url: '/admin/bandeja' })
     return
   }
