@@ -712,7 +712,7 @@ export async function crearLeadNuevo(
     falloResolutor = mensajeDe(error)
   }
 
-  const asignado = decision.tipo !== 'bandeja'
+  const asignacion = decision.tipo === 'bandeja' ? null : decision
   const { data: creado, error } = await supabase
     .from('leads')
     .insert({
@@ -723,9 +723,9 @@ export async function crearLeadNuevo(
       fuente: fila.fuente,
       fuente_detalle: fila.fuente_detalle,
       propiedad_id: propiedad?.id ?? null,
-      asesor_id: asignado ? decision.asesorId : null,
-      asignado_en: asignado ? ahora.toISOString() : null,
-      escalamiento_desde: asignado ? decision.escalamientoDesde : null,
+      asesor_id: asignacion?.asesorId ?? null,
+      asignado_en: asignacion ? ahora.toISOString() : null,
+      escalamiento_desde: asignacion?.escalamientoDesde ?? null,
       zona_interes: propiedad ? (propiedad.colonia ?? propiedad.ciudad) : null,
       easybroker_id: fila.easybroker_id,
       mensaje_original: fila.mensaje_original,
