@@ -190,6 +190,77 @@ export async function leadEnEscalamientoAbierto(
   return { id: lead.id, nombre: lead.nombre, asesor_id: lead.asesor_id }
 }
 
+export interface LeadEnRiesgo {
+  leadId: string
+  leadNombre: string
+  /** Minutos desde que arrancó su reloj de escalamiento. */
+  minutosEsperando: number
+  asesorId: string
+  asesorNombre: string
+  asesorTelefono: string | null
+}
+
+/**
+ * Leads en RIESGO para el panel del dashboard admin (Fase C): ya cruzaron el
+ * umbral del dueño (paso dueno_120), siguen en etapa `nuevo` sin archivar y
+ * sin respuesta manual. Ordenados del más viejo al más nuevo. SIEMPRE con el
+ * admin client (lee lead_escalamientos y usuarios ajenos).
+ */
+export async function leadsEnRiesgo(supabase: SupabaseClient, ahora: Date): Promise<LeadEnRiesgo[]> {
+  const { data: pasos, error: errorPasos } = await supabase
+    .from('lead_escalamientos')
+    .select('lead_id')
+    .eq('paso', 'dueno_120')
+  if (errorPasos) throw new Error(`consulta de pasos dueno_120: ${errorPasos.message}`)
+  const ids = [...new Set((pasos ?? []).map((p) => p.lead_id))]
+  if (ids.length === 0) return []
+
+  const { data: leads, error: errorLeads } = await supabase
+    .from('leads')
+    .select('id, nombre, asesor_id, escalamiento_desde, asignado_en')
+    .in('id', ids)
+    .eq('etapa', 'nuevo')
+    .eq('archivado', false)
+  if (errorLeads) throw new Error(`consulta de leads en riesgo: ${errorLeads.message}`)
+  if (!leads || leads.length === 0) return []
+
+  // Un lead contestado DESPUÉS del paso del dueño ya no está en riesgo.
+  const vigentes: typeof leads = []
+  for (const lead of leads) {
+    const desde = lead.asignado_en ?? lead.escalamiento_desde
+    const { data: manual, error: errorManual } = await supabase
+      .from('seguimientos')
+      .select('id')
+      .eq('lead_id', lead.id)
+      .neq('tipo', 'sistema')
+      .gt('creado_en', desde)
+      .limit(1)
+    if (errorManual) throw new Error(`consulta de respuesta manual: ${errorManual.message}`)
+    if ((manual ?? []).length === 0) vigentes.push(lead)
+  }
+  if (vigentes.length === 0) return []
+
+  const { data: asesores, error: errorAsesores } = await supabase
+    .from('usuarios')
+    .select('user_id, nombre, telefono')
+    .in('user_id', [...new Set(vigentes.map((l) => l.asesor_id))])
+  if (errorAsesores) throw new Error(`consulta de asesores: ${errorAsesores.message}`)
+  const porId = new Map((asesores ?? []).map((a) => [a.user_id, a]))
+
+  return vigentes
+    .map((lead) => ({
+      leadId: lead.id,
+      leadNombre: lead.nombre,
+      minutosEsperando: Math.floor(
+        (ahora.getTime() - new Date(lead.escalamiento_desde as string).getTime()) / 60_000
+      ),
+      asesorId: lead.asesor_id as string,
+      asesorNombre: porId.get(lead.asesor_id)?.nombre ?? 'Asesor desconocido',
+      asesorTelefono: porId.get(lead.asesor_id)?.telefono ?? null,
+    }))
+    .sort((a, b) => b.minutosEsperando - a.minutosEsperando)
+}
+
 /**
  * VIP = propiedad marcada exclusiva (propiedades_internas) O precio >= umbral
  * configurado. Sin propiedad → false. Sin umbral → solo cuenta la exclusiva.

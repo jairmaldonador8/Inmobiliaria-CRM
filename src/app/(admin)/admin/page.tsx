@@ -5,6 +5,9 @@ import { AlertTriangle, Building2, ChevronRight, Inbox, RefreshCw, UserRound, Us
 
 import { requireAdmin } from '@/lib/auth/usuario-actual'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
+import { leadsEnRiesgo } from '@/lib/guardias/consultas'
+import { PanelLeadsEnRiesgo } from '@/components/guardias/panel-leads-en-riesgo'
 import { ETAPAS_CERRADAS, claseBadgeEtapa, etiquetaEtapa } from '@/lib/leads/formato'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
@@ -113,6 +116,24 @@ export default async function PaginaDashboardAdmin() {
     citasHoy(supabase),
   ])
 
+  // Leads en riesgo (Fase C): va por service role porque lee
+  // lead_escalamientos y los teléfonos de usuarios (RLS los acota); la
+  // página ya pasó requireAdmin. Best-effort: si falla, el dashboard vive.
+  const adminDb = createAdminClient()
+  const [enRiesgo, { data: asesoresParaReasignar }] = await Promise.all([
+    leadsEnRiesgo(adminDb, ahora).catch(() => []),
+    adminDb
+      .from('usuarios')
+      .select('user_id, nombre')
+      .eq('rol', 'asesor')
+      .eq('activo', true)
+      .order('nombre'),
+  ])
+  const opcionesAsesores = (asesoresParaReasignar ?? []).map((a) => ({
+    userId: a.user_id,
+    nombre: a.nombre,
+  }))
+
   if (errorLeads) {
     throw new Error(`No se pudieron cargar los leads sin atender: ${errorLeads.message}`)
   }
@@ -218,6 +239,9 @@ export default async function PaginaDashboardAdmin() {
               <p className="text-3xl font-bold text-[#221B14]">{leadsUltimos30Dias}</p>
               <GraficaLinea datos={serieLeads} color="#C98A3B" className="mt-2" />
             </TarjetaGlass>
+
+            {/* Leads en riesgo (Fase C) — solo aparece si hay */}
+            <PanelLeadsEnRiesgo filas={enRiesgo} asesores={opcionesAsesores} />
 
             {/* Fila de estadísticas */}
             <div className="grid grid-cols-3 gap-2">
@@ -350,6 +374,9 @@ export default async function PaginaDashboardAdmin() {
       {/* Escritorio — intacto (F1) */}
       <div className="hidden lg:block">
         <section className="flex flex-col gap-6">
+      {/* Leads en riesgo (Fase C) — solo aparece si hay */}
+      <PanelLeadsEnRiesgo filas={enRiesgo} asesores={opcionesAsesores} />
+
       <header className="flex flex-col gap-1">
         <h1 className="text-2xl font-semibold tracking-tight text-slate-900">
           Hola, {usuario.nombre.split(' ')[0]}
