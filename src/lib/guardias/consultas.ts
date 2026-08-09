@@ -159,6 +159,37 @@ export async function leerConfiguracion(
 }
 
 /**
+ * ¿El lead está en escalamiento ABIERTO (paso 30 min ya disparado, sigue en
+ * etapa `nuevo` y sin archivar)? Devuelve la fila mínima para el CAS de
+ * «Tomar lead», o null. SIEMPRE con el admin client vía server action /
+ * server component: el cliente jamás lee `lead_escalamientos` (el asesor ni
+ * sabe que la tabla existe).
+ */
+export async function leadEnEscalamientoAbierto(
+  supabase: SupabaseClient,
+  leadId: string
+): Promise<{ id: string; nombre: string; asesor_id: string | null } | null> {
+  const { data: lead, error } = await supabase
+    .from('leads')
+    .select('id, nombre, asesor_id, etapa, archivado')
+    .eq('id', leadId)
+    .maybeSingle()
+  if (error) throw new Error(`consulta de lead en escalamiento: ${error.message}`)
+  if (!lead || lead.etapa !== 'nuevo' || lead.archivado) return null
+
+  const { data: paso, error: errorPaso } = await supabase
+    .from('lead_escalamientos')
+    .select('id')
+    .eq('lead_id', leadId)
+    .eq('paso', 'abierto_30')
+    .maybeSingle()
+  if (errorPaso) throw new Error(`consulta de escalamiento abierto: ${errorPaso.message}`)
+  if (!paso) return null
+
+  return { id: lead.id, nombre: lead.nombre, asesor_id: lead.asesor_id }
+}
+
+/**
  * VIP = propiedad marcada exclusiva (propiedades_internas) O precio >= umbral
  * configurado. Sin propiedad → false. Sin umbral → solo cuenta la exclusiva.
  * Lanza en errores de consulta: el resolutor degrada a bandeja (el sync jamás

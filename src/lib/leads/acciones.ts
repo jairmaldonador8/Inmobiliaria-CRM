@@ -3,9 +3,10 @@
 import { revalidatePath } from 'next/cache'
 import type { SupabaseClient } from '@supabase/supabase-js'
 
-import { requireAdmin, type UsuarioActual } from '@/lib/auth/usuario-actual'
+import { requireAdmin, requireAsesor, type UsuarioActual } from '@/lib/auth/usuario-actual'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { crearNotificacion } from '@/lib/notificaciones/crear'
+import { leadEnEscalamientoAbierto } from '@/lib/guardias/consultas'
 import { normalizarTelefono } from '@/lib/easybroker/mapeo'
 import { FUENTES_LEAD, type FuenteLead } from '@/lib/leads/formato'
 
@@ -118,6 +119,71 @@ export async function asignarLead(leadId: string, asesorId: string): Promise<Res
   }
 
   revalidarRutasLeads()
+  return { ok: true }
+}
+
+/**
+ * «Tomar lead» del escalamiento abierto (paso 30 min): el PRIMER asesor que
+ * lo toma se lo queda; los demás ven «ya fue tomado».
+ *
+ * El candado es compare-and-swap sobre el asesor VIGENTE
+ * (`.eq('asesor_id', asesorOriginal)`) — NO el `.is('asesor_id', null)` de
+ * bandeja, porque aquí el lead SÍ tiene asesor asignado por guardia. Si dos
+ * asesores tocan «Tomar» a la vez, el segundo update no afecta filas.
+ *
+ * NO detiene el escalamiento: tomarlo no es contestarlo. El paso de 2 h al
+ * dueño sigue corriendo hasta que alguien marque contactado o registre un
+ * seguimiento manual (decisión 3 del spec de guardias).
+ */
+export async function tomarLead(leadId: string): Promise<ResultadoAccion> {
+  const usuario = await requireAsesor()
+  const supabase = createAdminClient()
+
+  const lead = await leadEnEscalamientoAbierto(supabase, leadId)
+  if (!lead) return { error: 'Este lead ya no está en escalamiento abierto' }
+  if (lead.asesor_id === usuario.user_id) return { error: 'Este lead ya es tuyo' }
+
+  const { data: actualizados, error } = await supabase
+    .from('leads')
+    .update({ asesor_id: usuario.user_id, asignado_en: new Date().toISOString() })
+    .eq('id', leadId)
+    .eq('asesor_id', lead.asesor_id)
+    .eq('etapa', 'nuevo')
+    .eq('archivado', false)
+    .select('id, nombre')
+
+  if (error) return { error: `No se pudo tomar el lead: ${error.message}` }
+  if (!actualizados?.[0]) return { error: 'Este lead ya fue tomado' }
+
+  // Best-effort documentado: la toma ya quedó persistida; si el registro
+  // falla se reporta sin deshacerla (mismo criterio que registrarAsignacion).
+  try {
+    const { error: errorSeguimiento } = await supabase.from('seguimientos').insert({
+      lead_id: leadId,
+      autor_id: usuario.user_id,
+      tipo: 'sistema',
+      nota: `${usuario.nombre} tomó el lead desde el escalamiento abierto`,
+    })
+    if (errorSeguimiento) {
+      throw new Error(`No se pudo registrar el seguimiento: ${errorSeguimiento.message}`)
+    }
+
+    if (lead.asesor_id) {
+      await crearNotificacion(supabase, {
+        destinatarioId: lead.asesor_id,
+        tipo: 'lead_asignado',
+        texto: `${usuario.nombre} tomó tu lead ${lead.nombre} del escalamiento`,
+        url: '/asesor/leads',
+      })
+    }
+  } catch (e) {
+    revalidarRutasLeads()
+    return { error: e instanceof Error ? e.message : 'Error al registrar la toma del lead' }
+  }
+
+  revalidarRutasLeads()
+  revalidatePath('/asesor/leads')
+  revalidatePath(`/asesor/leads/${leadId}`)
   return { ok: true }
 }
 
