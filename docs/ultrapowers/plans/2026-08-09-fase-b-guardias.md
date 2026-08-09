@@ -10,6 +10,8 @@
 
 **Spec:** `docs/ultrapowers/specs/2026-08-05-guardias-design.md` (leerlo primero — tiene TODAS las decisiones de producto).
 
+> **ESTADO 2026-08-09 — Tasks 1–12 COMPLETAS** en la rama `feat/guardias` (485 tests unit + 66 de integración verdes; UI verificada en navegador con playwright contra DEV). **Falta SOLO la Task 13** (checklist manual de producción, abajo) — requiere al usuario: cuenta Resend, secrets en Vercel, aplicar 0014 a PROD, pg_cron y configuración inicial en la UI. Notas de ejecución: el texto de la notificación de bandeja conserva «nombre — fuente» (contrato del test de integración del sync) y las guardias fixture de tests RLS usan fechas PASADAS para no alimentar al resolutor real.
+
 ---
 
 ## Contexto del repo (leer esto y NO re-explorar)
