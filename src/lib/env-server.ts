@@ -23,3 +23,12 @@ export function vapidPrivateKey(): string {
 export function vapidSubject(): string {
   return requerida(process.env.VAPID_SUBJECT, 'VAPID_SUBJECT')
 }
+
+export function resendApiKey(): string {
+  return requerida(process.env.RESEND_API_KEY, 'RESEND_API_KEY')
+}
+
+/** Remitente de correo transaccional; default de pruebas de Resend hasta tener dominio propio. */
+export function correoRemitente(): string {
+  return process.env.CORREO_REMITENTE ?? 'Klo-Ser CRM <onboarding@resend.dev>'
+}
