@@ -15,7 +15,8 @@ import { createClient } from '@/lib/supabase/server'
 import { proximasVisitas } from '@/lib/dashboard/consultas'
 import { leadsSinRespuesta } from '@/lib/contactos/consultas'
 import { ETAPAS_CERRADAS, NOTA_CIERRE } from '@/lib/leads/formato'
-import { formatearFechaHoraMonterrey } from '@/lib/fechas/monterrey'
+import { fechaHoyMonterrey, formatearFechaHoraMonterrey } from '@/lib/fechas/monterrey'
+import { horaCorta } from '@/lib/guardias/calendario'
 import {
   CardConexionGoogle,
   type AvisoConexionGoogle,
@@ -77,6 +78,7 @@ export default async function PaginaInicioAsesor({
     { data: cierresMes },
     visitasProximas,
     { data: conexionGoogle },
+    { data: guardiasHoyData },
   ] = await Promise.all([
       // Leads activos (no cerrados, no archivados): base de ambas listas y
       // del chip «leads activos».
@@ -119,6 +121,15 @@ export default async function PaginaInicioAsesor({
         .select('google_email, estado')
         .eq('user_id', usuario.user_id)
         .maybeSingle(),
+      // Guardias MÍAS de hoy (banner «Estás de guardia», Fase B). El acotado
+      // por asesor_id es explícito por la misma razón que la query de leads:
+      // un admin en vista de asesor pasa RLS y vería el rol completo.
+      supabase
+        .from('guardias')
+        .select('turno, hora_inicio, hora_fin')
+        .eq('fecha', fechaHoyMonterrey())
+        .eq('asesor_id', usuario.user_id)
+        .order('hora_inicio'),
     ])
 
   if (errorLeads) {
@@ -246,6 +257,33 @@ export default async function PaginaInicioAsesor({
           {fechaHoy}
         </p>
       </header>
+
+      {(guardiasHoyData ?? []).length > 0 ? (
+        <Link
+          href="/asesor/guardias"
+          className="flex items-center justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 transition-colors active:bg-amber-100"
+        >
+          <span className="flex items-center gap-2.5">
+            <CalendarDays aria-hidden className="size-4 shrink-0 text-amber-600" />
+            <span className="text-sm font-medium text-amber-900">
+              Estás de guardia hoy{' '}
+              {(guardiasHoyData ?? [])
+                .map((g) => `${horaCorta(g.hora_inicio)}–${horaCorta(g.hora_fin)}`)
+                .join(' y ')}
+            </span>
+          </span>
+          <ChevronRight aria-hidden className="size-4 shrink-0 text-amber-600" />
+        </Link>
+      ) : (
+        <Link
+          href="/asesor/guardias"
+          className="inline-flex items-center gap-1.5 self-start text-sm text-slate-500 transition-colors hover:text-slate-900"
+        >
+          <CalendarDays aria-hidden className="size-4" />
+          Rol de guardias del mes
+          <ChevronRight aria-hidden className="size-3.5" />
+        </Link>
+      )}
 
       {/* Atiende ahora: nuevos sin atender */}
       <div className="flex flex-col gap-3">

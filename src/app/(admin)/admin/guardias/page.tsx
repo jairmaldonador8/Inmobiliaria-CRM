@@ -7,19 +7,7 @@ import { ConfiguracionGuardiasForm } from '@/components/guardias/configuracion-g
 
 export const dynamic = 'force-dynamic'
 
-const RE_MES = /^\d{4}-(0[1-9]|1[0-2])$/
-
-function ultimoDiaDelMes(mes: string): string {
-  const [anio, mesNum] = mes.split('-').map(Number)
-  const ultimo = new Date(Date.UTC(anio, mesNum, 0)).getUTCDate()
-  return `${mes}-${String(ultimo).padStart(2, '0')}`
-}
-
-function mesRelativo(mes: string, delta: number): string {
-  const [anio, mesNum] = mes.split('-').map(Number)
-  const d = new Date(Date.UTC(anio, mesNum - 1 + delta, 1))
-  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}`
-}
+import { mesRelativo, RE_MES, ultimoDiaDelMes } from '@/lib/guardias/calendario'
 
 /**
  * Admin → Guardias: calendario del mes (tap en día → asignar turnos),

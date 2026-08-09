@@ -6,6 +6,9 @@ import { ArrowLeft, Phone } from 'lucide-react'
 
 import { requireAsesor } from '@/lib/auth/usuario-actual'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
+import { leadEnEscalamientoAbierto } from '@/lib/guardias/consultas'
+import { BotonTomarLead } from '@/components/guardias/boton-tomar-lead'
 import { etiquetaFuenteConDetalle } from '@/lib/leads/formato'
 import { visitasDelLead } from '@/lib/visitas/consultas'
 import { Badge } from '@/components/ui/badge'
@@ -65,7 +68,46 @@ export default async function PaginaDetalleLeadAsesor({
     .eq('asesor_id', usuario.user_id)
     .eq('archivado', false)
     .maybeSingle()
-  if (!lead) notFound()
+
+  if (!lead) {
+    // Lead ajeno: solo es visible si está en escalamiento ABIERTO (30 min sin
+    // respuesta) — la push «tómalo» trae aquí a todos los asesores. La
+    // consulta va por service role a propósito: el asesor no tiene RLS sobre
+    // leads ajenos ni sobre lead_escalamientos, y esta pantalla solo expone
+    // el nombre del lead + el botón (el detalle completo se gana tomándolo).
+    const abierto = await leadEnEscalamientoAbierto(createAdminClient(), id)
+    if (!abierto || abierto.asesor_id === usuario.user_id) notFound()
+
+    return (
+      <section className="mx-auto flex w-full max-w-md flex-col gap-6">
+        <div>
+          <Link
+            href="/asesor"
+            className="inline-flex items-center gap-1.5 text-sm text-slate-500 transition-colors hover:text-slate-900"
+          >
+            <ArrowLeft aria-hidden className="size-4" />
+            Volver al inicio
+          </Link>
+        </div>
+
+        <div className="rounded-xl bg-white p-5 text-center ring-1 ring-slate-200">
+          <p className="text-xs font-semibold tracking-wide text-red-600 uppercase">
+            Lead disponible
+          </p>
+          <h1 className="mt-2 text-xl font-semibold tracking-tight text-slate-900">
+            {abierto.nombre}
+          </h1>
+          <p className="mt-2 text-sm text-slate-500">
+            Lleva más de 30 minutos sin respuesta. El primero que lo tome se lo queda y le da
+            seguimiento.
+          </p>
+          <div className="mt-4">
+            <BotonTomarLead leadId={id} />
+          </div>
+        </div>
+      </section>
+    )
+  }
 
   const leadDetalle = lead as unknown as LeadDetalle
 

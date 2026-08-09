@@ -14,6 +14,7 @@ import { toast } from 'sonner'
 
 import { copiarSemanaAnterior, guardarGuardia } from '@/lib/guardias/acciones'
 import type { Guardia } from '@/lib/guardias/consultas'
+import { nombreCorto, semanasDelMes } from '@/lib/guardias/calendario'
 import { cn } from '@/lib/utils'
 import {
   Sheet,
@@ -42,28 +43,6 @@ const TURNOS: { turno: 'manana' | 'tarde'; etiqueta: string }[] = [
   { turno: 'manana', etiqueta: 'Mañana' },
   { turno: 'tarde', etiqueta: 'Tarde' },
 ]
-
-function nombreCorto(nombre: string): string {
-  return nombre.split(' ')[0]
-}
-
-/** Semanas del mes, lunes-primero; null = celda de relleno de otro mes. */
-function semanasDelMes(mes: string): (string | null)[][] {
-  const [anio, mesNum] = mes.split('-').map(Number)
-  const totalDias = new Date(Date.UTC(anio, mesNum, 0)).getUTCDate()
-  const primerDia = new Date(Date.UTC(anio, mesNum - 1, 1))
-  const offsetLunes = (primerDia.getUTCDay() + 6) % 7
-
-  const celdas: (string | null)[] = Array(offsetLunes).fill(null)
-  for (let dia = 1; dia <= totalDias; dia++) {
-    celdas.push(`${mes}-${String(dia).padStart(2, '0')}`)
-  }
-  while (celdas.length % 7 !== 0) celdas.push(null)
-
-  const semanas: (string | null)[][] = []
-  for (let i = 0; i < celdas.length; i += 7) semanas.push(celdas.slice(i, i + 7))
-  return semanas
-}
 
 const NOMBRE_MES = new Intl.DateTimeFormat('es-MX', {
   month: 'long',
