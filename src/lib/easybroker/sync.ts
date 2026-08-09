@@ -61,6 +61,8 @@ import {
   type PropiedadListaEB,
 } from '@/lib/easybroker/mapeo'
 import { crearNotificacion, notificarAdmins } from '@/lib/notificaciones/crear'
+import { enviarPush } from '@/lib/push/enviar'
+import { resolverAsignacion, type DecisionAsignacion } from '@/lib/guardias/resolutor'
 
 // ---------------------------------------------------------------------------
 // Tipos publicos
@@ -619,7 +621,7 @@ export async function procesarContactRequests(
           // esNuevo queda false: la consulta repetida cuenta como duplicado.
         } else {
           clasificacion = await clasificarLeadNuevo(ctx, fila, propiedad)
-          esNuevo = await crearLeadEnBandeja(supabase, ctx.agenciaId, fila, propiedad, clasificacion)
+          esNuevo = await crearLeadNuevo(supabase, ctx.agenciaId, fila, propiedad, clasificacion)
         }
       }
 
@@ -683,41 +685,156 @@ async function registrarConsultaRepetida(
   }
 }
 
-/** Devuelve true si el lead se creo; false si otra corrida gano la carrera (23505). */
-async function crearLeadEnBandeja(
+/**
+ * Crea el lead nuevo aplicando el resolutor de guardias (Fase B): VIP →
+ * dueño, guardia activa → asesor de guardia, fuera de horario → siguiente
+ * guardia con reloj diferido, sin rol → bandeja como siempre.
+ *
+ * Si el resolutor LANZA por cualquier razón, el lead cae a bandeja y se
+ * alerta a admins — el sync jamás pierde un lead por las guardias.
+ *
+ * Devuelve true si el lead se creo; false si otra corrida gano la carrera
+ * (23505). Exportada para tests unitarios (guardias-sync.test.ts).
+ */
+export async function crearLeadNuevo(
   supabase: SupabaseClient,
   agenciaId: string,
   fila: ReturnType<typeof mapearContactRequest>,
   propiedad: PropiedadResuelta | null,
-  clasificacionEb: ClasificacionLeadEB | null
+  clasificacionEb: ClasificacionLeadEB | null,
+  ahora: Date = new Date()
 ): Promise<boolean> {
-  const { error } = await supabase.from('leads').insert({
-    agencia_id: agenciaId,
-    nombre: fila.nombre,
-    telefono: fila.telefono,
-    email: fila.email,
-    fuente: fila.fuente,
-    fuente_detalle: fila.fuente_detalle,
-    propiedad_id: propiedad?.id ?? null,
-    asesor_id: null, // bandeja: lo asigna un admin
-    zona_interes: propiedad ? (propiedad.colonia ?? propiedad.ciudad) : null,
-    easybroker_id: fila.easybroker_id,
-    mensaje_original: fila.mensaje_original,
-    creado_en: fila.creado_en, // happened_at real del contact request (UTC)
-    clasificacion_eb: clasificacionEb,
-  })
+  let decision: DecisionAsignacion = { tipo: 'bandeja' }
+  let falloResolutor: string | null = null
+  try {
+    ;({ decision } = await resolverAsignacion(supabase, propiedad?.id ?? null, ahora))
+  } catch (error) {
+    falloResolutor = mensajeDe(error)
+  }
+
+  const asignado = decision.tipo !== 'bandeja'
+  const { data: creado, error } = await supabase
+    .from('leads')
+    .insert({
+      agencia_id: agenciaId,
+      nombre: fila.nombre,
+      telefono: fila.telefono,
+      email: fila.email,
+      fuente: fila.fuente,
+      fuente_detalle: fila.fuente_detalle,
+      propiedad_id: propiedad?.id ?? null,
+      asesor_id: asignado ? decision.asesorId : null,
+      asignado_en: asignado ? ahora.toISOString() : null,
+      escalamiento_desde: asignado ? decision.escalamientoDesde : null,
+      zona_interes: propiedad ? (propiedad.colonia ?? propiedad.ciudad) : null,
+      easybroker_id: fila.easybroker_id,
+      mensaje_original: fila.mensaje_original,
+      creado_en: fila.creado_en, // happened_at real del contact request (UTC)
+      clasificacion_eb: clasificacionEb,
+    })
+    .select('id')
+    .single()
   if (error) {
     // Otra corrida traslapada ya creo este lead: duplicado, no notificar.
     if (error.code === UNIQUE_VIOLATION) return false
     throw new Error(`insert de lead nuevo: ${error.message}`)
   }
 
-  await notificarAdmins(supabase, {
-    tipo: 'lead_nuevo',
-    texto: `Nuevo lead: ${fila.nombre} — ${fila.fuente_detalle ?? 'portal'}`,
-    url: '/admin/bandeja',
-  })
+  await notificarLeadNuevo(supabase, creado.id, fila, propiedad, decision, falloResolutor)
   return true
+}
+
+async function nombreDeUsuario(supabase: SupabaseClient, userId: string): Promise<string> {
+  const { data } = await supabase
+    .from('usuarios')
+    .select('nombre')
+    .eq('user_id', userId)
+    .maybeSingle()
+  return data?.nombre ?? 'el asesor de guardia'
+}
+
+/**
+ * Side effects post-insert del lead nuevo (el insert ya es autoritativo; esto
+ * es best-effort dentro del catch por-CR del caller). Push + campanita al
+ * responsable, seguimiento de sistema si hubo asignación automática, y los
+ * avisos del spec: dueño cuando el lead entró fuera de horario, «Lead VIP»
+ * al dueño, alerta a admins si el resolutor falló o no hay rol cargado.
+ */
+async function notificarLeadNuevo(
+  supabase: SupabaseClient,
+  leadId: string,
+  fila: ReturnType<typeof mapearContactRequest>,
+  propiedad: PropiedadResuelta | null,
+  decision: DecisionAsignacion,
+  falloResolutor: string | null
+): Promise<void> {
+  const referencia = propiedad?.titulo ?? fila.propiedad_eb_id
+  const detalle = referencia ? `${fila.nombre} — ${referencia}` : `${fila.nombre} — ${fila.fuente_detalle ?? 'portal'}`
+
+  if (decision.tipo === 'bandeja') {
+    const motivo = falloResolutor
+      ? `Nuevo lead en bandeja (falló la asignación por guardia): ${detalle}`
+      : `Nuevo lead: ${detalle} — no hay guardias programadas`
+    await notificarAdmins(supabase, { tipo: 'lead_nuevo', texto: motivo, url: '/admin/bandeja' })
+    return
+  }
+
+  const nombreAsesor = await nombreDeUsuario(supabase, decision.asesorId)
+
+  const nota =
+    decision.tipo === 'vip'
+      ? `Lead VIP asignado en automático al dueño (${nombreAsesor})`
+      : `Asignado en automático a ${nombreAsesor} por guardia`
+  const { error: errorSeguimiento } = await supabase.from('seguimientos').insert({
+    lead_id: leadId,
+    autor_id: null, // generado por el sistema
+    tipo: 'sistema',
+    propiedad_id: propiedad?.id ?? null,
+    nota,
+  })
+  if (errorSeguimiento) {
+    throw new Error(`seguimiento de asignación automática: ${errorSeguimiento.message}`)
+  }
+
+  if (decision.tipo === 'vip') {
+    const urlDueno = `/admin/leads/${leadId}`
+    const texto = `Lead VIP: ${detalle} — decide quién lo atiende`
+    await crearNotificacion(supabase, {
+      destinatarioId: decision.asesorId,
+      tipo: 'lead_asignado',
+      texto,
+      url: urlDueno,
+    })
+    await enviarPush(supabase, decision.asesorId, {
+      titulo: 'Lead VIP',
+      cuerpo: `${detalle} — decide quién lo atiende`,
+      url: urlDueno,
+    })
+    return
+  }
+
+  const urlAsesor = `/asesor/leads/${leadId}`
+  await crearNotificacion(supabase, {
+    destinatarioId: decision.asesorId,
+    tipo: 'lead_asignado',
+    texto: `Nuevo lead asignado por guardia: ${detalle}`,
+    url: urlAsesor,
+  })
+  await enviarPush(supabase, decision.asesorId, {
+    titulo: 'Nuevo lead asignado',
+    cuerpo: detalle,
+    url: urlAsesor,
+  })
+
+  if (decision.tipo === 'guardia_futura') {
+    // Lead fuera de horario: se avisa a admins (incluye al dueño) que quedó
+    // asignado a la siguiente guardia con el reloj diferido.
+    await notificarAdmins(supabase, {
+      tipo: 'lead_nuevo',
+      texto: `Lead fuera de horario: ${detalle} → asignado a ${nombreAsesor} (siguiente guardia)`,
+      url: `/admin/leads/${leadId}`,
+    })
+  }
 }
 
 // ---------------------------------------------------------------------------
