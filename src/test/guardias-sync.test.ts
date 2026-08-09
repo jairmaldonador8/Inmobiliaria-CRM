@@ -132,7 +132,7 @@ describe('crearLeadNuevo con guardias', () => {
     expect(notificarAdminsMock).not.toHaveBeenCalled()
   })
 
-  it('fuera de horario: asigna a la siguiente guardia con reloj diferido y avisa a admins', async () => {
+  it('fuera de horario: asigna con reloj diferido, campanita SIN push (no despertar a las 3am) y aviso a admins', async () => {
     decision({ tipo: 'guardia_futura', asesorId: 'asesor-2', escalamientoDesde: '2026-08-10T21:00:00.000Z' })
     const { supabase, insertsLeads } = crearSupabaseFake()
 
@@ -142,6 +142,12 @@ describe('crearLeadNuevo con guardias', () => {
       asesor_id: 'asesor-2',
       escalamiento_desde: '2026-08-10T21:00:00.000Z',
     })
+    // campanita in-app sí; push NO — su primer push llega al abrir su turno
+    expect(crearNotificacionMock).toHaveBeenCalledWith(
+      supabase,
+      expect.objectContaining({ destinatarioId: 'asesor-2' })
+    )
+    expect(enviarPushMock).not.toHaveBeenCalled()
     expect(notificarAdminsMock).toHaveBeenCalledWith(
       supabase,
       expect.objectContaining({ texto: expect.stringContaining('fuera de horario') })

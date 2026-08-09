@@ -823,18 +823,22 @@ async function notificarLeadNuevo(
     texto: `Nuevo lead asignado por guardia: ${detalle}`,
     url: urlAsesor,
   })
-  await enviarPush(supabase, decision.asesorId, {
-    titulo: 'Nuevo lead asignado',
-    cuerpo: detalle,
-    url: urlAsesor,
-  })
 
-  if (decision.tipo === 'guardia_futura') {
-    // Lead fuera de horario: se avisa a admins (incluye al dueño) que quedó
-    // asignado a la siguiente guardia con el reloj diferido.
+  if (decision.tipo === 'guardia_activa') {
+    await enviarPush(supabase, decision.asesorId, {
+      titulo: 'Nuevo lead asignado',
+      cuerpo: detalle,
+      url: urlAsesor,
+    })
+  } else {
+    // Fuera de horario (madrugada/hueco): el lead queda asignado con la
+    // campanita, pero SIN push — no hay que despertar al asesor a las 3am.
+    // Su primer push llega ya en horario via el escalador (recordatorio a
+    // los N min de abrir su turno, porque escalamiento_desde quedó diferido
+    // a la apertura). Se avisa a admins para que la dirección tenga registro.
     await notificarAdmins(supabase, {
       tipo: 'lead_nuevo',
-      texto: `Lead fuera de horario: ${detalle} → asignado a ${nombreAsesor} (siguiente guardia)`,
+      texto: `Lead fuera de horario: ${detalle} → asignado a ${nombreAsesor} (su turno lo atiende al abrir)`,
       url: `/admin/leads/${leadId}`,
     })
   }
