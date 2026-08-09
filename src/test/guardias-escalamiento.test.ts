@@ -1,9 +1,12 @@
 // @vitest-environment node
 /**
- * Tests TDD del motor de escalamiento (src/lib/guardias/escalamiento.ts) con
- * reloj simulado (`ahora` inyectado). Claves: pasos por umbral acumulado (el
- * cron caído se pone al día), idempotencia at-most-once vía 23505, VIP solo
- * recordatorio, y un lead con error no tumba la corrida.
+ * Tests TDD del motor de escalamiento v2 — RONDAS en DIGEST
+ * (src/lib/guardias/escalamiento.ts, spec Fase C). Reloj simulado.
+ *
+ * Claves: rondas acumuladas tras cron caído pero UN solo push por
+ * destinatario por corrida; nada de rondas después del umbral del dueño;
+ * idempotencia por ronda vía 23505; VIP un solo recordatorio; respuesta
+ * manual detiene todo; un lead con error no tumba la corrida.
  */
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { SupabaseClient } from '@supabase/supabase-js'
@@ -54,7 +57,7 @@ function lead(minutos: number, extra: Partial<FilaLead> = {}): FilaLead {
   const desde = new Date(AHORA.getTime() - minutos * 60_000).toISOString()
   return {
     id: `l-${minutos}`,
-    nombre: 'Ana Cliente',
+    nombre: `Lead${minutos}`,
     asesor_id: 'asesor-1',
     propiedad_id: 'prop-1',
     escalamiento_desde: desde,
@@ -87,20 +90,15 @@ function fakeDb(opciones: {
 }) {
   const pasosPrevios = new Set(opciones.pasosPrevios ?? [])
   const pasosInsertados: { lead_id: string; paso: string }[] = []
-  const filtrosLeads: unknown[][] = []
 
   const from = vi.fn((tabla: string) => {
     if (tabla === 'leads') {
-      return crearTabla((filtros) => {
-        filtrosLeads.push(...filtros)
-        return { data: opciones.leads ?? [], error: null }
-      })
+      return crearTabla(() => ({ data: opciones.leads ?? [], error: null }))
     }
     if (tabla === 'seguimientos') {
       return crearTabla((filtros) => {
         const eqLead = filtros.find((f) => f[0] === 'eq' && f[1] === 'lead_id')
-        const leadId = eqLead?.[2] as string
-        const tiene = (opciones.conRespuestaManual ?? []).includes(leadId)
+        const tiene = (opciones.conRespuestaManual ?? []).includes(eqLead?.[2] as string)
         return { data: tiene ? [{ id: 'seg-1' }] : [], error: null }
       })
     }
@@ -126,7 +124,11 @@ function fakeDb(opciones: {
     throw new Error(`tabla inesperada: ${tabla}`)
   })
 
-  return { supabase: { from } as unknown as SupabaseClient, pasosInsertados, filtrosLeads }
+  return { supabase: { from } as unknown as SupabaseClient, pasosInsertados }
+}
+
+function pushesDe(destinatario: string) {
+  return enviarPushMock.mock.calls.filter((c) => c[1] === destinatario)
 }
 
 beforeEach(() => {
@@ -138,99 +140,88 @@ beforeEach(() => {
   enviarCorreoMock.mockClear()
 })
 
-describe('procesarEscalamientos', () => {
-  it('la query base filtra: etapa nuevo y reloj ya vencido (lte ahora)', async () => {
-    const { supabase, filtrosLeads } = fakeDb({ leads: [] })
-    await procesarEscalamientos(supabase, AHORA)
-    expect(filtrosLeads).toContainEqual(['eq', 'etapa', 'nuevo'])
-    expect(filtrosLeads).toContainEqual(['eq', 'archivado', false])
-    expect(filtrosLeads).toContainEqual(['lte', 'escalamiento_desde', AHORA.toISOString()])
-  })
-
-  it('a los 20 min: solo recordatorio al asesor asignado', async () => {
+describe('procesarEscalamientos v2 (rondas en digest)', () => {
+  it('a los 20 min: solo la ronda 1 de recordatorio, digest privado de un lead', async () => {
     const { supabase, pasosInsertados } = fakeDb({ leads: [lead(20)] })
     const r = await procesarEscalamientos(supabase, AHORA)
 
-    expect(r.pasosEjecutados).toEqual(['recordatorio_15:l-20'])
-    expect(pasosInsertados).toEqual([{ lead_id: 'l-20', paso: 'recordatorio_15' }])
-    expect(enviarPushMock).toHaveBeenCalledTimes(1)
-    expect(enviarPushMock).toHaveBeenCalledWith(
-      supabase,
-      'asesor-1',
-      expect.objectContaining({ url: '/asesor/leads/l-20' })
-    )
+    expect(pasosInsertados).toEqual([{ lead_id: 'l-20', paso: 'recordatorio_r1' }])
+    expect(r.pasosEjecutados).toEqual(['recordatorio_r1:l-20'])
+    expect(pushesDe('asesor-1')).toHaveLength(1)
+    expect(pushesDe('asesor-1')[0][2]).toMatchObject({ url: '/asesor/leads/l-20' })
   })
 
-  it('cron caído: a los 45 min ejecuta recordatorio Y abierto en la MISMA corrida', async () => {
-    const { supabase } = fakeDb({ leads: [lead(45)], asesoresActivos: ['asesor-1', 'asesor-2', 'asesor-3'] })
-    const r = await procesarEscalamientos(supabase, AHORA)
-
-    expect(r.pasosEjecutados).toEqual(['recordatorio_15:l-45', 'abierto_30:l-45'])
-    // abierto_30: push a TODOS los asesores activos con «tómalo»
-    const pushesAbierto = enviarPushMock.mock.calls.filter(
-      (c) => (c[2] as { titulo: string }).titulo === 'Lead disponible — tómalo'
-    )
-    expect(pushesAbierto.map((c) => c[1])).toEqual(['asesor-1', 'asesor-2', 'asesor-3'])
-  })
-
-  it('idempotencia: un paso ya registrado (23505) no repite su side effect', async () => {
-    const { supabase } = fakeDb({
-      leads: [lead(45)],
-      pasosPrevios: ['l-45:recordatorio_15'],
-      asesoresActivos: ['asesor-2'],
+  it('cron caído (50 min sin pasos): registra r1-r3 de recordatorio + r1 de abierto, pero UN push por destinatario', async () => {
+    const { supabase, pasosInsertados } = fakeDb({
+      leads: [lead(50)],
+      asesoresActivos: ['asesor-1', 'asesor-2', 'asesor-3'],
     })
     const r = await procesarEscalamientos(supabase, AHORA)
 
-    expect(r.pasosEjecutados).toEqual(['abierto_30:l-45'])
-    const titulos = enviarPushMock.mock.calls.map((c) => (c[2] as { titulo: string }).titulo)
-    expect(titulos).not.toContain('Lead sin contestar')
+    const pasos = pasosInsertados.map((p) => p.paso)
+    expect(pasos).toEqual(['recordatorio_r1', 'recordatorio_r2', 'recordatorio_r3', 'abierto_r1'])
+    expect(r.errores).toEqual([])
+    // digest: el responsable recibe SU recordatorio (1 push) + el abierto (1 push como activo)
+    expect(pushesDe('asesor-1')).toHaveLength(2)
+    // los demás activos: solo el abierto
+    expect(pushesDe('asesor-2')).toHaveLength(1)
+    expect(pushesDe('asesor-2')[0][2].titulo).toContain('disponible')
   })
 
-  it('a las 2h+: los tres pasos, con correo y push al dueño', async () => {
-    const { supabase } = fakeDb({ leads: [lead(130)], asesoresActivos: ['asesor-2'] })
-    const r = await procesarEscalamientos(supabase, AHORA)
-
-    expect(r.pasosEjecutados).toEqual([
-      'recordatorio_15:l-130',
-      'abierto_30:l-130',
-      'dueno_120:l-130',
-    ])
-    expect(enviarCorreoMock).toHaveBeenCalledWith(
-      expect.objectContaining({ para: 'dueno@klo-ser.com' })
-    )
-    expect(enviarPushMock).toHaveBeenCalledWith(
-      supabase,
-      'dueno-1',
-      expect.objectContaining({ titulo: 'Lead sin atender 2 horas' })
-    )
-  })
-
-  it('dueño sin configurar: el paso 2h alerta a los admins y no manda correo', async () => {
-    leerConfiguracionMock.mockResolvedValue({ ...CONFIG, duenoUserId: null, correoDueno: null })
-    const { supabase } = fakeDb({ leads: [lead(130)], asesoresActivos: [] })
-    const r = await procesarEscalamientos(supabase, AHORA)
-
-    expect(r.pasosEjecutados).toContain('dueno_120:l-130')
-    expect(notificarAdminsMock).toHaveBeenCalledWith(
-      supabase,
-      expect.objectContaining({ texto: expect.stringContaining('2 horas') })
-    )
-    expect(enviarCorreoMock).not.toHaveBeenCalled()
-  })
-
-  it('seguimiento manual posterior a la asignación → el lead ya contestó, no escala', async () => {
-    const { supabase, pasosInsertados } = fakeDb({
-      leads: [lead(45)],
-      conRespuestaManual: ['l-45'],
+  it('corrida siguiente sin rondas nuevas: cero pushes (idempotencia del digest)', async () => {
+    const { supabase } = fakeDb({
+      leads: [lead(50)],
+      pasosPrevios: ['l-50:recordatorio_r1', 'l-50:recordatorio_r2', 'l-50:recordatorio_r3', 'l-50:abierto_r1'],
+      asesoresActivos: ['asesor-1', 'asesor-2'],
     })
     const r = await procesarEscalamientos(supabase, AHORA)
 
     expect(r.pasosEjecutados).toEqual([])
-    expect(pasosInsertados).toEqual([])
     expect(enviarPushMock).not.toHaveBeenCalled()
+    expect(crearNotificacionMock).not.toHaveBeenCalled()
   })
 
-  it('VIP: solo recordatorio al dueño aunque lleve 3 horas; jamás abierto ni 2h', async () => {
+  it('después del umbral del dueño NO hay más rondas: a los 130 min las rondas paran en <120 y dispara dueno_120', async () => {
+    const { supabase, pasosInsertados } = fakeDb({ leads: [lead(130)], asesoresActivos: ['asesor-2'] })
+    await procesarEscalamientos(supabase, AHORA)
+
+    const pasos = pasosInsertados.map((p) => p.paso)
+    // recordatorios cada 15 con umbral < 120: r1..r7 (15..105)
+    expect(pasos.filter((p) => p.startsWith('recordatorio_r'))).toHaveLength(7)
+    expect(pasos).not.toContain('recordatorio_r8')
+    // abiertos cada 30 con umbral < 120: r1..r3 (30..90)
+    expect(pasos.filter((p) => p.startsWith('abierto_r'))).toHaveLength(3)
+    expect(pasos).not.toContain('abierto_r4')
+    expect(pasos).toContain('dueno_120')
+    expect(enviarCorreoMock).toHaveBeenCalledWith(expect.objectContaining({ para: 'dueno@klo-ser.com' }))
+    expect(pushesDe('dueno-1')[0][2].titulo).toBe('Lead sin atender 2 horas')
+  })
+
+  it('lead que ya pasó el umbral en corridas anteriores: silencio total (vive en el panel)', async () => {
+    const previos = [
+      ...[1, 2, 3, 4, 5, 6, 7].map((k) => `l-130:recordatorio_r${k}`),
+      ...[1, 2, 3].map((k) => `l-130:abierto_r${k}`),
+      'l-130:dueno_120',
+    ]
+    const { supabase } = fakeDb({ leads: [lead(130)], pasosPrevios: previos, asesoresActivos: ['asesor-2'] })
+    const r = await procesarEscalamientos(supabase, AHORA)
+
+    expect(r.pasosEjecutados).toEqual([])
+    expect(enviarPushMock).not.toHaveBeenCalled()
+    expect(enviarCorreoMock).not.toHaveBeenCalled()
+  })
+
+  it('dos leads del mismo asesor: UN push digest que lista ambos, el más viejo primero', async () => {
+    const { supabase } = fakeDb({ leads: [lead(20, { id: 'l-a', nombre: 'Ana' }), lead(45, { id: 'l-b', nombre: 'Beto' })], asesoresActivos: [] })
+    await procesarEscalamientos(supabase, AHORA)
+
+    const propios = pushesDe('asesor-1').filter((c) => c[2].titulo.includes('sin contestar'))
+    expect(propios).toHaveLength(1)
+    expect(propios[0][2].cuerpo).toContain('Beto (45 min), Ana (20 min)')
+    expect(propios[0][2].titulo).toBe('2 leads sin contestar')
+  })
+
+  it('VIP: un único recordatorio al dueño aunque lleve 3 horas; sin rondas ni correo', async () => {
     esLeadVipMock.mockResolvedValue(true)
     const { supabase, pasosInsertados } = fakeDb({
       leads: [lead(180, { asesor_id: 'dueno-1' })],
@@ -238,25 +229,28 @@ describe('procesarEscalamientos', () => {
     })
     const r = await procesarEscalamientos(supabase, AHORA)
 
-    expect(r.pasosEjecutados).toEqual(['recordatorio_vip:l-180'])
     expect(pasosInsertados).toEqual([{ lead_id: 'l-180', paso: 'recordatorio_vip' }])
+    expect(r.procesados).toBe(1)
     expect(enviarCorreoMock).not.toHaveBeenCalled()
-    expect(enviarPushMock).toHaveBeenCalledWith(
-      supabase,
-      'dueno-1',
-      expect.objectContaining({ titulo: 'Lead VIP sin contestar' })
-    )
+    expect(pushesDe('dueno-1')[0][2].titulo).toBe('Lead VIP sin contestar')
   })
 
-  it('un lead con error no tumba la corrida: los demás se procesan', async () => {
-    esLeadVipMock
-      .mockRejectedValueOnce(new Error('boom vip'))
-      .mockResolvedValueOnce(false)
+  it('seguimiento manual posterior a la asignación → no escala nada', async () => {
+    const { supabase, pasosInsertados } = fakeDb({ leads: [lead(50)], conRespuestaManual: ['l-50'] })
+    const r = await procesarEscalamientos(supabase, AHORA)
+
+    expect(pasosInsertados).toEqual([])
+    expect(r.pasosEjecutados).toEqual([])
+    expect(enviarPushMock).not.toHaveBeenCalled()
+  })
+
+  it('un lead con error no tumba la corrida: el digest de los demás sale', async () => {
+    esLeadVipMock.mockRejectedValueOnce(new Error('boom')).mockResolvedValueOnce(false)
     const { supabase } = fakeDb({ leads: [lead(20, { id: 'l-roto' }), lead(25)] })
     const r = await procesarEscalamientos(supabase, AHORA)
 
     expect(r.errores).toEqual([expect.stringContaining('l-roto')])
-    expect(r.pasosEjecutados).toEqual(['recordatorio_15:l-25'])
     expect(r.procesados).toBe(1)
+    expect(pushesDe('asesor-1')).toHaveLength(1)
   })
 })

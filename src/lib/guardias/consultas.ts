@@ -177,14 +177,15 @@ export async function leadEnEscalamientoAbierto(
   if (error) throw new Error(`consulta de lead en escalamiento: ${error.message}`)
   if (!lead || lead.etapa !== 'nuevo' || lead.archivado) return null
 
-  const { data: paso, error: errorPaso } = await supabase
+  // Rondas v2: cualquier abierto_rN ya disparado abre la toma (Fase C).
+  const { data: pasos, error: errorPaso } = await supabase
     .from('lead_escalamientos')
     .select('id')
     .eq('lead_id', leadId)
-    .eq('paso', 'abierto_30')
-    .maybeSingle()
+    .like('paso', 'abierto_r%')
+    .limit(1)
   if (errorPaso) throw new Error(`consulta de escalamiento abierto: ${errorPaso.message}`)
-  if (!paso) return null
+  if ((pasos ?? []).length === 0) return null
 
   return { id: lead.id, nombre: lead.nombre, asesor_id: lead.asesor_id }
 }

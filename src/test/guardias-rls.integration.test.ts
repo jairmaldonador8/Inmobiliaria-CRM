@@ -61,7 +61,7 @@ let agenciaId: string;
 
 let guardiaId: string; // fixture en FECHA_G1/manana, cubierta por asesor1
 let propiedadId: string; // fixture con marca exclusiva
-let leadId: string; // asignado a asesor1, etapa nuevo, con paso abierto_30
+let leadId: string; // asignado a asesor1, etapa nuevo, con paso abierto_r1
 
 beforeAll(async () => {
   if (!SUPABASE_URL || !PUBLISHABLE_KEY || !SECRET_KEY) {
@@ -140,7 +140,7 @@ beforeAll(async () => {
   leadId = l.id;
   const { error: leError } = await svc
     .from('lead_escalamientos')
-    .insert({ lead_id: leadId, paso: 'abierto_30' });
+    .insert({ lead_id: leadId, paso: 'abierto_r1' });
   if (leError) throw new Error(`No se pudo crear el paso fixture: ${leError.message}`);
 }, 30_000);
 
@@ -281,7 +281,7 @@ describe('lead_escalamientos: admin solo-lectura; escribe solo el sistema', () =
   it('asesor NO puede insertar pasos (grant de INSERT revocado: 42501)', async () => {
     const { error } = await asesor1
       .from('lead_escalamientos')
-      .insert({ lead_id: leadId, paso: 'recordatorio_15' });
+      .insert({ lead_id: leadId, paso: 'recordatorio_r1' });
     expect(error).not.toBeNull();
     expect(error!.code).toBe('42501');
   });
@@ -289,7 +289,7 @@ describe('lead_escalamientos: admin solo-lectura; escribe solo el sistema', () =
   it('admin SI lee los pasos (control positivo)', async () => {
     const { data, error } = await admin.from('lead_escalamientos').select('paso').eq('lead_id', leadId);
     expect(error).toBeNull();
-    expect(data!.map((f) => f.paso)).toEqual(['abierto_30']);
+    expect(data!.map((f) => f.paso)).toEqual(['abierto_r1']);
   });
 });
 
