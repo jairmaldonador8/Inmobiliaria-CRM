@@ -12,6 +12,7 @@ import {
 import { GaleriaFotos } from '@/components/propiedades/galeria-fotos'
 import { PortalesManuales } from '@/components/propiedades/portales-manuales'
 import { SelectorAsesor } from '@/components/propiedades/selector-asesor'
+import { ToggleExclusiva } from '@/components/propiedades/toggle-exclusiva'
 import { ChipEstatus } from '@/components/propiedades/tarjeta-propiedad'
 import { cn } from '@/lib/utils'
 
@@ -42,7 +43,7 @@ export default async function PaginaDetallePropiedadAdmin({
     .maybeSingle()
   if (!propiedad) notFound()
 
-  const [{ data: asesores }, { data: portales }] = await Promise.all([
+  const [{ data: asesores }, { data: portales }, { data: interna }] = await Promise.all([
     supabase
       .from('usuarios')
       .select('user_id, nombre')
@@ -50,6 +51,7 @@ export default async function PaginaDetallePropiedadAdmin({
       .eq('activo', true)
       .order('nombre', { ascending: true }),
     supabase.from('propiedad_portales').select('portal').eq('propiedad_id', id),
+    supabase.from('propiedades_internas').select('exclusiva').eq('propiedad_id', id).maybeSingle(),
   ])
 
   const fotos = (propiedad.fotos ?? []) as string[]
@@ -152,6 +154,14 @@ export default async function PaginaDetallePropiedadAdmin({
               asesorId={propiedad.asesor_id}
               asesores={(asesores ?? []).map((a) => ({ userId: a.user_id, nombre: a.nombre }))}
             />
+          </div>
+
+          <div className="rounded-xl bg-white p-5 ring-1 ring-slate-200">
+            <h2 className="mb-1 text-sm font-semibold text-slate-900">Dirección</h2>
+            <p className="mb-3 text-xs text-slate-500">
+              Marca interna — los asesores no la ven.
+            </p>
+            <ToggleExclusiva propiedadId={propiedad.id} exclusivaInicial={interna?.exclusiva === true} />
           </div>
 
           <div className="rounded-xl bg-white p-5 ring-1 ring-slate-200">

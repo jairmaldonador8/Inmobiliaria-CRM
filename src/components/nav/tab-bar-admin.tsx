@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation'
 import {
   Bell,
   Building2,
+  CalendarClock,
   Ellipsis,
   House,
   Inbox,
@@ -55,6 +56,7 @@ type PestanaMas = Omit<Pestana, 'exacta'>
  */
 const DESTINOS_MAS: PestanaMas[] = [
   { href: '/admin/asesores', etiqueta: 'Asesores', Icono: UserRound },
+  { href: '/admin/guardias', etiqueta: 'Guardias', Icono: CalendarClock },
   { href: '/admin/ajustes', etiqueta: 'Plantillas', Icono: MessageSquareText },
   { href: '/admin/sugerencias', etiqueta: 'Sugerencias', Icono: Lightbulb },
   { href: '/admin/notificaciones', etiqueta: 'Notificaciones', Icono: Bell },

@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
   Building2,
+  CalendarClock,
   Inbox,
   LayoutDashboard,
   Lightbulb,
@@ -31,6 +32,7 @@ const ENLACES: Enlace[] = [
   { href: '/admin/leads', etiqueta: 'Leads', Icono: Users },
   { href: '/admin/propiedades', etiqueta: 'Propiedades', Icono: Building2 },
   { href: '/admin/asesores', etiqueta: 'Asesores', Icono: UserRound },
+  { href: '/admin/guardias', etiqueta: 'Guardias', Icono: CalendarClock },
   { href: '/admin/sugerencias', etiqueta: 'Sugerencias', Icono: Lightbulb },
   { href: '/admin/ajustes', etiqueta: 'Ajustes', Icono: Settings },
 ]
