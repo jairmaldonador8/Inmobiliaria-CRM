@@ -243,6 +243,7 @@ function CeldaDia({
     <button
       type="button"
       onClick={onTap}
+      data-fecha={fecha}
       className={cn(
         'flex min-h-14 flex-col items-stretch gap-0.5 rounded-lg border p-1 text-left transition-colors',
         esPasado
