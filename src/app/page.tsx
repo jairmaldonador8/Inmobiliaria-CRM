@@ -6,6 +6,7 @@ import { Wordmark } from '@/components/marca/wordmark'
 import { MarqueePortales } from '@/components/landing/marquee-portales'
 import { GraficaTesis } from '@/components/landing/grafica-tesis'
 import { PasosComoFunciona } from '@/components/landing/pasos-funciona'
+import { Triptico } from '@/components/landing/triptico'
 
 export const metadata: Metadata = {
   title: 'Klo-Ser · Un buen cierre se construye',
@@ -155,19 +156,9 @@ export default function PaginaLanding() {
           </div>
         </section>
 
-        {/* ───── Foto editorial ───── */}
+        {/* ───── Tríptico editorial ───── */}
         <section className="mx-auto max-w-6xl px-6">
-          <div className="relative aspect-[21/9] w-full overflow-hidden">
-            <Image
-              src="/landing/mood-01.jpg"
-              alt="Arquitectura en luz y sombra"
-              fill
-              priority
-              sizes="(max-width: 1152px) 100vw, 1152px"
-              className="object-cover grayscale"
-              style={{ objectPosition: 'center 62%' }}
-            />
-          </div>
+          <Triptico />
         </section>
 
         {/* ───── Los tres pilares ───── */}
@@ -260,12 +251,12 @@ export default function PaginaLanding() {
         <section className="mx-auto max-w-6xl px-6 pt-24">
           <div className="relative aspect-[21/8] w-full overflow-hidden">
             <Image
-              src="/landing/mood-00.jpg"
-              alt="Escalera y columnas de concreto bajo luz diagonal"
+              src="/landing/mb-sombra.jpg"
+              alt="Volumen de concreto recortado por la sombra"
               fill
               sizes="(max-width: 1152px) 100vw, 1152px"
               className="object-cover grayscale"
-              style={{ objectPosition: 'center 38%' }}
+              style={{ objectPosition: 'center 58%' }}
             />
           </div>
         </section>

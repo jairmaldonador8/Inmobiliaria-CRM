@@ -176,6 +176,31 @@
   }
 }
 
+/* Tríptico de la landing: cada pieza entra desde abajo, escalonada. */
+.gal-item {
+  opacity: 0;
+}
+.gal-go .gal-item {
+  animation: gal-entrar 900ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+@keyframes gal-entrar {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@media (prefers-reduced-motion: reduce), (scripting: none) {
+  .gal-item {
+    opacity: 1;
+    animation: none !important;
+    transform: none;
+  }
+}
+
 /* Íconos animados de «Cómo funciona» (ver
    src/components/landing/pasos-funciona.tsx). Estado inicial quieto; la
    clase .pasos-go los dispara al entrar la sección en pantalla. Los
