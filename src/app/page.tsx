@@ -263,12 +263,12 @@ export default function PaginaLanding() {
         <section className="mx-auto max-w-6xl px-6 pt-24">
           <div className="relative aspect-[21/8] w-full overflow-hidden">
             <Image
-              src="/landing/mood-05.jpg"
-              alt="Volúmenes de concreto"
+              src="/landing/mood-00.jpg"
+              alt="Escalera y columnas de concreto bajo luz diagonal"
               fill
               sizes="(max-width: 1152px) 100vw, 1152px"
               className="object-cover grayscale"
-              style={{ objectPosition: 'center 55%' }}
+              style={{ objectPosition: 'center 38%' }}
             />
           </div>
           <p className="mt-3 text-[10px] tracking-[0.2em] uppercase text-[#A5A29A]">
