@@ -11,8 +11,19 @@ import { PanelLeadsEnRiesgo } from '@/components/guardias/panel-leads-en-riesgo'
 import { ETAPAS_CERRADAS, claseBadgeEtapa, etiquetaEtapa } from '@/lib/leads/formato'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
-import { cierresGanadosMes, citasHoy, serieLeads30Dias } from '@/lib/dashboard/consultas'
+import {
+  actividadContacto7d,
+  cierresGanadosMes,
+  citasHoy,
+  embudoPorEtapa,
+  leadsPorFuente30d,
+  medianaPrimeraRespuesta7d,
+  serieLeads30Dias,
+  type ConteoEtapa,
+  type ConteoFuente,
+} from '@/lib/dashboard/consultas'
 import { agruparPorEtapa } from '@/lib/dashboard/pipeline'
+import { PanelComoVanLeads } from '@/components/dashboard/panel-como-van-leads'
 import FondoFintech from '@/components/fintech/fondo-fintech'
 import TarjetaGlass from '@/components/fintech/tarjeta-glass'
 import TarjetaTinta from '@/components/fintech/tarjeta-tinta'
@@ -79,6 +90,10 @@ export default async function PaginaDashboardAdmin() {
     serieLeads,
     cierresGanados,
     citasDeHoy,
+    embudoLeads,
+    medianaRespuesta,
+    fuentesLeads,
+    actividadContacto,
   ] = await Promise.all([
     supabase
       .from('leads')
@@ -114,6 +129,13 @@ export default async function PaginaDashboardAdmin() {
     serieLeads30Dias(supabase),
     cierresGanadosMes(supabase),
     citasHoy(supabase),
+    // «Cómo van los leads»: best-effort — si lead_eventos no responde, el
+    // dashboard vive con el panel en su estado vacío (mismo criterio que
+    // leadsEnRiesgo más abajo).
+    embudoPorEtapa(supabase).catch((): ConteoEtapa[] => []),
+    medianaPrimeraRespuesta7d(supabase).catch((): number | null => null),
+    leadsPorFuente30d(supabase).catch((): ConteoFuente[] => []),
+    actividadContacto7d(supabase).catch((): number[] => new Array(7).fill(0) as number[]),
   ])
 
   // Leads en riesgo (Fase C): va por service role porque lee
@@ -312,6 +334,17 @@ export default async function PaginaDashboardAdmin() {
               )}
             </TarjetaGlass>
 
+            {/* Cómo van los leads (historia de lead_eventos) */}
+            <PanelComoVanLeads
+              variante="movil"
+              metricas={{
+                embudo: embudoLeads,
+                medianaMin: medianaRespuesta,
+                fuentes: fuentesLeads,
+                actividad: actividadContacto,
+              }}
+            />
+
             {/* Sin atender >24h */}
             <div className="flex flex-col gap-2">
               <div className="flex items-center gap-2">
@@ -439,6 +472,17 @@ export default async function PaginaDashboardAdmin() {
           )
         })}
       </div>
+
+      {/* Cómo van los leads (historia de lead_eventos) */}
+      <PanelComoVanLeads
+        variante="escritorio"
+        metricas={{
+          embudo: embudoLeads,
+          medianaMin: medianaRespuesta,
+          fuentes: fuentesLeads,
+          actividad: actividadContacto,
+        }}
+      />
 
       {/* Leads sin atender >24h */}
       <div className="flex flex-col gap-3">
