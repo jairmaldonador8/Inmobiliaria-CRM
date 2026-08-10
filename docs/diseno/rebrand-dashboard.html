@@ -1,0 +1,205 @@
+<title>Klo-Ser — rebranding B&N · mockups dashboard</title>
+<style>
+  * { box-sizing: border-box; margin: 0; }
+  body { background: #E8E6E1; font: 14px/1.5 "Segoe UI", system-ui, sans-serif; color: #222; padding: 40px 20px; }
+  .marco { display: flex; gap: 48px; justify-content: center; flex-wrap: wrap; }
+  .telefono { width: 390px; border-radius: 28px; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.25); }
+  .etiqueta { text-align: center; font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: #666; margin: 14px 0 0; }
+
+  /* ===== base compartida ===== */
+  .app { padding: 0 0 76px; min-height: 800px; position: relative; }
+  .lomo { padding: 22px 22px 0; }
+  .wordmark { display: flex; justify-content: space-between; align-items: center; }
+  .wordmark svg { height: 15px; width: auto; }
+  .hola { font-size: 26px; font-weight: 200; letter-spacing: -0.01em; margin-top: 26px; }
+  .kicker { font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase; margin-bottom: 6px; }
+  .numero-gigante { font-size: 56px; font-weight: 100; line-height: 1; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+  .seccion { padding: 26px 22px 0; }
+  .fila-stats { display: grid; grid-template-columns: 1fr 1fr 1fr; }
+  .stat { padding: 14px 0; }
+  .stat b { display: block; font-size: 26px; font-weight: 200; font-variant-numeric: tabular-nums; }
+  .stat span { font-size: 9.5px; letter-spacing: 0.18em; text-transform: uppercase; }
+  .lista-riesgo li { display: flex; justify-content: space-between; align-items: baseline; padding: 11px 0; list-style: none; }
+  .lista-riesgo .nombre { font-weight: 400; font-size: 14.5px; }
+  .lista-riesgo .meta { font-size: 11.5px; }
+  .chip { font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; padding: 3px 8px; border-radius: 2px; }
+  .tabbar { position: absolute; bottom: 0; left: 0; right: 0; display: grid; grid-template-columns: repeat(5,1fr); padding: 14px 8px 18px; }
+  .tabbar span { text-align: center; font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; }
+  .embudo { display: flex; flex-direction: column; gap: 8px; }
+  .embudo .f { display: flex; align-items: center; gap: 10px; font-size: 11px; }
+  .embudo .f i { font-style: normal; width: 88px; }
+  .embudo .f em { font-style: normal; margin-left: auto; font-variant-numeric: tabular-nums; font-size: 12px; }
+  .barra { height: 1.5px; }
+
+  /* ===== V1: blanco galería ===== */
+  .v1 { background: #FCFCFA; color: #141414; }
+  .v1 .hairline { border-bottom: 1px solid #E3E1DB; }
+  .v1 .kicker, .v1 .stat span, .v1 .lista-riesgo .meta { color: #8C8A84; }
+  .v1 .fila-stats { border-top: 1px solid #E3E1DB; border-bottom: 1px solid #E3E1DB; }
+  .v1 .fila-stats .stat + .stat { border-left: 1px solid #E3E1DB; padding-left: 16px; }
+  .v1 .chip { background: #141414; color: #FCFCFA; }
+  .v1 .chip.suave { background: transparent; color: #8C8A84; border: 1px solid #D9D7D0; }
+  .v1 .lista-riesgo li + li { border-top: 1px solid #EEECE6; }
+  .v1 .tabbar { background: #FCFCFA; border-top: 1px solid #E3E1DB; color: #A9A7A0; }
+  .v1 .tabbar .activo { color: #141414; font-weight: 600; }
+  .v1 .barra { background: #141414; }
+  .v1 .barra.gris { background: #D9D7D0; }
+
+  /* ===== V2: negro editorial ===== */
+  .v2 { background: #0E0D0B; color: #F2F0EA; }
+  .v2 .hairline { border-bottom: 1px solid #26241F; }
+  .v2 .kicker, .v2 .stat span, .v2 .lista-riesgo .meta { color: #7A776E; }
+  .v2 .fila-stats { border-top: 1px solid #26241F; border-bottom: 1px solid #26241F; }
+  .v2 .fila-stats .stat + .stat { border-left: 1px solid #26241F; padding-left: 16px; }
+  .v2 .chip { background: #F2F0EA; color: #0E0D0B; }
+  .v2 .chip.suave { background: transparent; color: #7A776E; border: 1px solid #33312B; }
+  .v2 .lista-riesgo li + li { border-top: 1px solid #1C1A16; }
+  .v2 .tabbar { background: #0E0D0B; border-top: 1px solid #26241F; color: #6A675F; }
+  .v2 .tabbar .activo { color: #F2F0EA; font-weight: 600; }
+  .v2 .barra { background: #F2F0EA; }
+  .v2 .barra.gris { background: #2E2C26; }
+</style>
+
+<div class="marco">
+
+  <!-- ============ V1: BLANCO GALERÍA ============ -->
+  <div>
+    <div class="telefono">
+      <div class="app v1">
+        <div class="lomo">
+          <div class="wordmark">
+            <svg viewBox="0 12 296 88" fill="none" stroke="#141414" stroke-width="2.2" stroke-linecap="round">
+              <g><path d="M0,35 V85"/><path d="M30,35 L2,61.5 L30,85"/></g>
+              <g transform="translate(54,0)"><path d="M0,35 V85 H26"/></g>
+              <g transform="translate(104,0)"><ellipse cx="19" cy="60" rx="19" ry="25"/><path d="M9,22 H29"/></g>
+              <g transform="translate(166,0)"><path d="M26,41 C22,35.5 6,35 3.5,44 C1,53 27,55 26.5,68 C26,81 6,86 1.5,76"/></g>
+              <g transform="translate(218,0)"><path d="M26,35 H0 V85 H26"/><path d="M0,60 H20"/></g>
+              <g transform="translate(268,0)"><path d="M0,35 V85"/><path d="M0,35 H16 C27,35 27,59 16,59 H0"/><path d="M14,59 L28,85"/></g>
+            </svg>
+            <span style="font-size:10px; letter-spacing:0.2em; color:#8C8A84">ADMIN</span>
+          </div>
+          <p class="hola">Hola, Jair</p>
+        </div>
+
+        <div class="seccion">
+          <p class="kicker">Leads · 30 días</p>
+          <div style="display:flex; align-items:flex-end; justify-content:space-between">
+            <span class="numero-gigante">11</span>
+            <svg width="150" height="44" viewBox="0 0 150 44" fill="none">
+              <path d="M0,40 L30,40 L52,38 L74,40 L96,30 L118,12 L134,26 L150,6" stroke="#141414" stroke-width="1.4"/>
+              <circle cx="150" cy="6" r="2.5" fill="#141414"/>
+            </svg>
+          </div>
+        </div>
+
+        <div class="seccion">
+          <div class="fila-stats">
+            <div class="stat"><b>10</b><span>Sin atender</span></div>
+            <div class="stat"><b>0</b><span>Citas hoy</span></div>
+            <div class="stat"><b>1</b><span>Cierres · mes</span></div>
+          </div>
+        </div>
+
+        <div class="seccion">
+          <p class="kicker">Cómo van los leads</p>
+          <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:12px">
+            <span style="font-size:22px; font-weight:200">0 min <span style="font-size:10px; letter-spacing:0.16em; color:#8C8A84">1.ª RESPUESTA</span></span>
+            <span style="font-size:11px; color:#8C8A84">Ver métricas →</span>
+          </div>
+          <div class="embudo">
+            <div class="f"><i>Nuevo</i><span class="barra" style="width:96px"></span><em>3</em></div>
+            <div class="f"><i>Contactado</i><span class="barra" style="width:96px"></span><em>3</em></div>
+            <div class="f"><i>Cita agendada</i><span class="barra" style="width:64px"></span><em>2</em></div>
+            <div class="f"><i>Visitó</i><span class="barra gris" style="width:32px"></span><em>1</em></div>
+            <div class="f"><i>Negociación</i><span class="barra" style="width:64px"></span><em>2</em></div>
+          </div>
+        </div>
+
+        <div class="seccion">
+          <p class="kicker" style="display:flex; justify-content:space-between">Leads en riesgo <span>10</span></p>
+          <ul class="lista-riesgo" style="padding:0">
+            <li><div><p class="nombre">Roberto Sánchez</p><p class="meta">Asesor Uno · hace 4 días</p></div><span class="chip">&gt;24 h</span></li>
+            <li><div><p class="nombre">Fernanda López</p><p class="meta">Asesor Uno · hace 4 días</p></div><span class="chip">&gt;24 h</span></li>
+            <li><div><p class="nombre">Mariana Quiroga</p><p class="meta">Jair · hace 2 días</p></div><span class="chip suave">&gt;24 h</span></li>
+          </ul>
+        </div>
+
+        <div class="tabbar">
+          <span class="activo">Inicio</span><span>Bandeja</span><span>Leads</span><span>Props</span><span>Más</span>
+        </div>
+      </div>
+    </div>
+    <p class="etiqueta">V1 · Blanco galería</p>
+  </div>
+
+  <!-- ============ V2: NEGRO EDITORIAL ============ -->
+  <div>
+    <div class="telefono">
+      <div class="app v2">
+        <div class="lomo">
+          <div class="wordmark">
+            <svg viewBox="0 12 296 88" fill="none" stroke="#F2F0EA" stroke-width="2.2" stroke-linecap="round">
+              <g><path d="M0,35 V85"/><path d="M30,35 L2,61.5 L30,85"/></g>
+              <g transform="translate(54,0)"><path d="M0,35 V85 H26"/></g>
+              <g transform="translate(104,0)"><ellipse cx="19" cy="60" rx="19" ry="25"/><path d="M9,22 H29"/></g>
+              <g transform="translate(166,0)"><path d="M26,41 C22,35.5 6,35 3.5,44 C1,53 27,55 26.5,68 C26,81 6,86 1.5,76"/></g>
+              <g transform="translate(218,0)"><path d="M26,35 H0 V85 H26"/><path d="M0,60 H20"/></g>
+              <g transform="translate(268,0)"><path d="M0,35 V85"/><path d="M0,35 H16 C27,35 27,59 16,59 H0"/><path d="M14,59 L28,85"/></g>
+            </svg>
+            <span style="font-size:10px; letter-spacing:0.2em; color:#7A776E">ADMIN</span>
+          </div>
+          <p class="hola">Hola, Jair</p>
+        </div>
+
+        <div class="seccion">
+          <p class="kicker">Leads · 30 días</p>
+          <div style="display:flex; align-items:flex-end; justify-content:space-between">
+            <span class="numero-gigante">11</span>
+            <svg width="150" height="44" viewBox="0 0 150 44" fill="none">
+              <path d="M0,40 L30,40 L52,38 L74,40 L96,30 L118,12 L134,26 L150,6" stroke="#F2F0EA" stroke-width="1.4"/>
+              <circle cx="150" cy="6" r="2.5" fill="#F2F0EA"/>
+            </svg>
+          </div>
+        </div>
+
+        <div class="seccion">
+          <div class="fila-stats">
+            <div class="stat"><b>10</b><span>Sin atender</span></div>
+            <div class="stat"><b>0</b><span>Citas hoy</span></div>
+            <div class="stat"><b>1</b><span>Cierres · mes</span></div>
+          </div>
+        </div>
+
+        <div class="seccion">
+          <p class="kicker">Cómo van los leads</p>
+          <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:12px">
+            <span style="font-size:22px; font-weight:200">0 min <span style="font-size:10px; letter-spacing:0.16em; color:#7A776E">1.ª RESPUESTA</span></span>
+            <span style="font-size:11px; color:#7A776E">Ver métricas →</span>
+          </div>
+          <div class="embudo">
+            <div class="f"><i>Nuevo</i><span class="barra" style="width:96px"></span><em>3</em></div>
+            <div class="f"><i>Contactado</i><span class="barra" style="width:96px"></span><em>3</em></div>
+            <div class="f"><i>Cita agendada</i><span class="barra" style="width:64px"></span><em>2</em></div>
+            <div class="f"><i>Visitó</i><span class="barra gris" style="width:32px"></span><em>1</em></div>
+            <div class="f"><i>Negociación</i><span class="barra" style="width:64px"></span><em>2</em></div>
+          </div>
+        </div>
+
+        <div class="seccion">
+          <p class="kicker" style="display:flex; justify-content:space-between">Leads en riesgo <span>10</span></p>
+          <ul class="lista-riesgo" style="padding:0">
+            <li><div><p class="nombre">Roberto Sánchez</p><p class="meta">Asesor Uno · hace 4 días</p></div><span class="chip">&gt;24 h</span></li>
+            <li><div><p class="nombre">Fernanda López</p><p class="meta">Asesor Uno · hace 4 días</p></div><span class="chip">&gt;24 h</span></li>
+            <li><div><p class="nombre">Mariana Quiroga</p><p class="meta">Jair · hace 2 días</p></div><span class="chip suave">&gt;24 h</span></li>
+          </ul>
+        </div>
+
+        <div class="tabbar">
+          <span class="activo">Inicio</span><span>Bandeja</span><span>Leads</span><span>Props</span><span>Más</span>
+        </div>
+      </div>
+    </div>
+    <p class="etiqueta">V2 · Negro editorial</p>
+  </div>
+
+</div>

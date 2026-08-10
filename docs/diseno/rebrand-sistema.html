@@ -1,0 +1,268 @@
+<title>Klo-Ser — sistema completo · negro editorial</title>
+<style>
+  * { box-sizing: border-box; margin: 0; }
+  body { background: #DCDAD5; font: 14px/1.5 "Segoe UI", system-ui, sans-serif; padding: 40px 24px; }
+  .marco { display: flex; gap: 36px; justify-content: center; flex-wrap: wrap; max-width: 1500px; margin: 0 auto; }
+  .tel { width: 375px; border-radius: 26px; overflow: hidden; box-shadow: 0 16px 50px rgba(0,0,0,0.3); }
+  .etq { text-align: center; font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: #555; margin: 12px 0 28px; }
+
+  .app { background: #0E0D0B; color: #F2F0EA; min-height: 780px; position: relative; padding-bottom: 70px; }
+  .app.claro { background: #FCFCFA; color: #141414; }
+
+  .kicker { font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase; color: #7A776E; }
+  .claro .kicker { color: #8C8A84; }
+  .num { font-weight: 100; font-variant-numeric: tabular-nums; }
+  .hair { border-bottom: 1px solid #26241F; }
+  .claro .hair { border-bottom-color: #E3E1DB; }
+  .sec { padding: 24px 22px 0; }
+
+  .top { display: flex; justify-content: space-between; align-items: center; padding: 20px 22px 0; }
+  .top svg { height: 14px; width: auto; }
+  .top .rol { font-size: 10px; letter-spacing: 0.2em; color: #7A776E; }
+
+  .tabbar { position: absolute; bottom: 0; left: 0; right: 0; display: grid; grid-template-columns: repeat(5,1fr); padding: 13px 8px 17px; border-top: 1px solid #26241F; background: inherit; color: #6A675F; }
+  .claro .tabbar { border-top-color: #E3E1DB; color: #A9A7A0; }
+  .tabbar span { text-align: center; font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; }
+  .tabbar .on { color: #F2F0EA; font-weight: 600; }
+  .claro .tabbar .on { color: #141414; }
+
+  .chip { font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; padding: 3px 9px; border-radius: 2px; background: #F2F0EA; color: #0E0D0B; white-space: nowrap; }
+  .chip.sv { background: transparent; color: #7A776E; border: 1px solid #33312B; }
+  .claro .chip { background: #141414; color: #FCFCFA; }
+  .claro .chip.sv { background: transparent; color: #8C8A84; border-color: #D9D7D0; }
+
+  .lista li { list-style: none; display: flex; justify-content: space-between; align-items: baseline; gap: 10px; padding: 12px 0; }
+  .lista li + li { border-top: 1px solid #1C1A16; }
+  .claro .lista li + li { border-top-color: #EEECE6; }
+  .lista .n { font-size: 14.5px; }
+  .lista .m { font-size: 11.5px; color: #7A776E; }
+  .claro .lista .m { color: #8C8A84; }
+
+  .input { border: none; border-bottom: 1px solid #33312B; background: transparent; color: #7A776E; font-size: 13px; padding: 8px 0; width: 100%; letter-spacing: 0.04em; }
+  .filtros { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+
+  .btn { border: 1px solid #33312B; padding: 12px 0; text-align: center; font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: #F2F0EA; }
+  .btn.solido { background: #F2F0EA; color: #0E0D0B; font-weight: 600; }
+
+  .tl { padding-left: 14px; border-left: 1px solid #26241F; display: flex; flex-direction: column; gap: 16px; margin-top: 14px; }
+  .tl .e { position: relative; }
+  .tl .e::before { content: ''; position: absolute; left: -17.5px; top: 5px; width: 6px; height: 6px; border-radius: 50%; background: #0E0D0B; border: 1px solid #F2F0EA; }
+  .tl .e.solido::before { background: #F2F0EA; }
+  .tl .t { font-size: 13px; }
+  .tl .f { font-size: 10.5px; color: #7A776E; }
+
+  .grid-prop { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 14px; }
+  .prop .foto { height: 110px; filter: grayscale(1); background: linear-gradient(135deg, #3A3733, #22201C 55%, #4A4741); }
+  .prop .foto.b { background: linear-gradient(120deg, #55524C, #2A2823 60%, #38352F); }
+  .prop p { font-size: 12.5px; margin-top: 7px; }
+  .prop .pr { font-size: 15px; font-weight: 200; font-variant-numeric: tabular-nums; }
+
+  .fila-cfg { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; }
+  .fila-cfg + .fila-cfg { border-top: 1px solid #1C1A16; }
+  .fila-cfg .a { font-size: 14px; }
+  .fila-cfg .b { font-size: 11px; color: #7A776E; }
+  .seg { display: flex; border: 1px solid #33312B; border-radius: 2px; overflow: hidden; }
+  .seg span { font-size: 9.5px; letter-spacing: 0.14em; text-transform: uppercase; padding: 6px 14px; color: #7A776E; }
+  .seg .on { background: #F2F0EA; color: #0E0D0B; font-weight: 600; }
+
+  .seletapa { display: flex; gap: 0; margin-top: 10px; }
+  .seletapa i { font-style: normal; flex: 1; text-align: center; font-size: 8.5px; letter-spacing: 0.08em; text-transform: uppercase; color: #55524A; padding: 7px 0; border-bottom: 1px solid #26241F; }
+  .seletapa .on { color: #F2F0EA; border-bottom: 1.5px solid #F2F0EA; font-weight: 600; }
+</style>
+
+<svg width="0" height="0" style="position:absolute"><defs>
+  <g id="lg" fill="none" stroke-linecap="round">
+    <g><path d="M0,35 V85"/><path d="M30,35 L2,61.5 L30,85"/></g>
+    <g transform="translate(54,0)"><path d="M0,35 V85 H26"/></g>
+    <g transform="translate(104,0)"><ellipse cx="19" cy="60" rx="19" ry="25"/></g>
+    <g transform="translate(166,0)"><path d="M26,41 C22,35.5 6,35 3.5,44 C1,53 27,55 26.5,68 C26,81 6,86 1.5,76"/></g>
+    <g transform="translate(218,0)"><path d="M26,35 H0 V85 H26"/><path d="M0,60 H20"/></g>
+    <g transform="translate(268,0)"><path d="M0,35 V85"/><path d="M0,35 H16 C27,35 27,59 16,59 H0"/><path d="M14,59 L28,85"/></g>
+  </g>
+  <path id="mcr" d="M113,22 H133" stroke="#C98A3B" stroke-linecap="round"/>
+</defs></svg>
+
+<div class="marco">
+
+  <!-- ========== LOGIN ========== -->
+  <div><div class="tel"><div class="app" style="display:grid; place-items:center">
+    <div style="text-align:center; width:100%; padding:0 40px">
+      <svg viewBox="0 12 296 88" style="width:200px" stroke="#F2F0EA" stroke-width="3.25"><use href="#lg"/><use href="#mcr" stroke-width="3.25"/></svg>
+      <p class="kicker" style="margin:10px 0 60px">CRM Inmobiliario</p>
+      <input class="input" value="nombre@correo.com" readonly style="margin-bottom:22px">
+      <input class="input" value="••••••••••" readonly style="margin-bottom:44px">
+      <div class="btn solido">Entrar</div>
+    </div>
+  </div></div><p class="etq">Login</p></div>
+
+  <!-- ========== DASHBOARD ========== -->
+  <div><div class="tel"><div class="app">
+    <div class="top">
+      <svg viewBox="0 12 296 88" stroke="#F2F0EA" stroke-width="2.4"><use href="#lg"/><use href="#mcr" stroke-width="2.4"/></svg>
+      <span class="rol">ADMIN</span>
+    </div>
+    <div class="sec"><p style="font-size:25px; font-weight:200">Hola, Jair</p></div>
+    <div class="sec">
+      <p class="kicker">Leads · 30 días</p>
+      <div style="display:flex; align-items:flex-end; justify-content:space-between">
+        <span class="num" style="font-size:54px; line-height:1">11</span>
+        <svg width="140" height="42" fill="none"><path d="M0,38 L28,38 L48,36 L68,38 L88,28 L108,11 L124,24 L140,5" stroke="#F2F0EA" stroke-width="1.4"/><circle cx="140" cy="5" r="2.5" fill="#C98A3B"/></svg>
+      </div>
+    </div>
+    <div class="sec"><div style="display:grid; grid-template-columns:1fr 1fr 1fr; border-top:1px solid #26241F; border-bottom:1px solid #26241F">
+      <div style="padding:13px 0"><b class="num" style="font-size:25px; font-weight:200; display:block">10</b><span class="kicker" style="font-size:9px">Sin atender</span></div>
+      <div style="padding:13px 0 13px 14px; border-left:1px solid #26241F"><b class="num" style="font-size:25px; font-weight:200; display:block">0</b><span class="kicker" style="font-size:9px">Citas hoy</span></div>
+      <div style="padding:13px 0 13px 14px; border-left:1px solid #26241F"><b class="num" style="font-size:25px; font-weight:200; display:block">1</b><span class="kicker" style="font-size:9px">Cierres · mes</span></div>
+    </div></div>
+    <div class="sec">
+      <p class="kicker" style="display:flex; justify-content:space-between">Cómo van los leads <span>Ver métricas →</span></p>
+      <p style="font-size:21px; font-weight:200; margin-top:8px">0 min <span class="kicker" style="font-size:9.5px">1.ª respuesta</span></p>
+    </div>
+    <div class="sec">
+      <p class="kicker" style="display:flex; justify-content:space-between">Leads en riesgo <span>10</span></p>
+      <ul class="lista" style="padding:0">
+        <li><div><p class="n">Roberto Sánchez</p><p class="m">Asesor Uno · hace 4 días</p></div><span class="chip">&gt;24 h</span></li>
+        <li><div><p class="n">Fernanda López</p><p class="m">Asesor Uno · hace 4 días</p></div><span class="chip">&gt;24 h</span></li>
+        <li><div><p class="n">Mariana Quiroga</p><p class="m">Jair · hace 2 días</p></div><span class="chip sv">&gt;24 h</span></li>
+      </ul>
+    </div>
+    <div class="tabbar"><span class="on">Inicio</span><span>Bandeja</span><span>Leads</span><span>Props</span><span>Más</span></div>
+  </div></div><p class="etq">Dashboard admin</p></div>
+
+  <!-- ========== BANDEJA ========== -->
+  <div><div class="tel"><div class="app">
+    <div class="top"><svg viewBox="0 12 296 88" stroke="#F2F0EA" stroke-width="2.4"><use href="#lg"/><use href="#mcr" stroke-width="2.4"/></svg><span class="rol">ASESOR</span></div>
+    <div class="sec"><p style="font-size:25px; font-weight:200">Bandeja</p><p class="kicker" style="margin-top:4px">2 leads esperando</p></div>
+    <div class="sec" style="border:1px solid #33312B; margin:20px 22px 0; padding:14px 16px">
+      <p class="kicker" style="color:#C98A3B">● Escalamiento abierto</p>
+      <p style="font-size:14px; margin-top:6px">Laura Treviño lleva 32 min sin atención</p>
+      <p class="m" style="font-size:11.5px; color:#7A776E; margin-top:2px">Portal · Depto. Cumbres · $2.4 M</p>
+      <div class="btn solido" style="margin-top:12px">Tomar lead</div>
+    </div>
+    <div class="sec">
+      <ul class="lista" style="padding:0">
+        <li><div><p class="n">Hugo Balderas</p><p class="m">WhatsApp · hace 8 min · Casa Contry</p></div><span class="chip sv">Nuevo</span></li>
+        <li><div><p class="n">Karla Espino</p><p class="m">Portal · hace 15 min · Terreno Apodaca</p></div><span class="chip sv">Nuevo</span></li>
+      </ul>
+    </div>
+    <div class="sec">
+      <p class="kicker">Guardia de hoy</p>
+      <ul class="lista" style="padding:0">
+        <li><div><p class="n">Mañana · 9:00–14:00</p><p class="m">Asesor Uno</p></div></li>
+        <li><div><p class="n">Tarde · 14:00–19:00</p><p class="m">Tú</p></div><span class="chip">Activa</span></li>
+      </ul>
+    </div>
+    <div class="tabbar"><span>Inicio</span><span class="on">Bandeja</span><span>Leads</span><span>Props</span><span>Más</span></div>
+  </div></div><p class="etq">Bandeja + guardias</p></div>
+
+  <!-- ========== LEADS LISTA ========== -->
+  <div><div class="tel"><div class="app">
+    <div class="top"><svg viewBox="0 12 296 88" stroke="#F2F0EA" stroke-width="2.4"><use href="#lg"/><use href="#mcr" stroke-width="2.4"/></svg><span class="rol">ADMIN</span></div>
+    <div class="sec"><p style="font-size:25px; font-weight:200">Leads</p></div>
+    <div class="sec">
+      <input class="input" value="Buscar por nombre o teléfono" readonly>
+      <div class="filtros">
+        <span class="chip">Todos</span><span class="chip sv">Sin atender</span><span class="chip sv">Negociación</span><span class="chip sv">Asesor Uno</span>
+      </div>
+    </div>
+    <div class="sec">
+      <ul class="lista" style="padding:0">
+        <li><div><p class="n">Tomás Berlanga</p><p class="m">Jair · Walk-in · hace 2 días</p></div><span class="kicker" style="font-size:8.5px">Negociación</span></li>
+        <li><div><p class="n">Renata Solís</p><p class="m">Jair · Portal · hace 2 días</p></div><span class="kicker" style="font-size:8.5px">Cita</span></li>
+        <li><div><p class="n">Sofía Cantú</p><p class="m">Jair · Portal · hace 2 días</p></div><span class="kicker" style="font-size:8.5px">Negociación</span></li>
+        <li><div><p class="n">Carlos Medina</p><p class="m">Asesor Uno · Referido · hace 4 días</p></div><span class="kicker" style="font-size:8.5px">Contactado</span></li>
+        <li><div><p class="n">Fernanda López</p><p class="m">Asesor Uno · WhatsApp · hace 4 días</p></div><span class="kicker" style="font-size:8.5px; color:#F2F0EA">● Nuevo</span></li>
+        <li><div><p class="n">Ricardo Ibarra</p><p class="m">Jair · Redes · hace 2 días</p></div><span class="kicker" style="font-size:8.5px">Visitó</span></li>
+      </ul>
+    </div>
+    <div class="tabbar"><span>Inicio</span><span>Bandeja</span><span class="on">Leads</span><span>Props</span><span>Más</span></div>
+  </div></div><p class="etq">Leads · lista</p></div>
+
+  <!-- ========== DETALLE DE LEAD ========== -->
+  <div><div class="tel"><div class="app">
+    <div class="top"><span class="kicker">← Leads</span><span class="rol">ASESOR</span></div>
+    <div class="sec">
+      <p style="font-size:25px; font-weight:200">Carlos Medina</p>
+      <p class="m" style="color:#7A776E; font-size:12px; margin-top:2px">Referido · 555 100 1003 · hace 4 días</p>
+      <div class="seletapa">
+        <i>Nuevo</i><i class="on">Contact.</i><i>Cita</i><i>Visitó</i><i>Negoc.</i><i>Cierre</i>
+      </div>
+    </div>
+    <div class="sec"><div style="display:grid; grid-template-columns:1fr 1fr; gap:10px">
+      <div class="btn solido">WhatsApp</div><div class="btn">Llamar</div>
+      <div class="btn">Seguimiento</div><div class="btn">Agendar visita</div>
+    </div></div>
+    <div class="sec">
+      <p class="kicker">Historia del lead</p>
+      <div class="tl">
+        <div class="e solido"><p class="t">Seguimiento registrado: Llamada</p><p class="f">Asesor Uno · hace 5 min</p></div>
+        <div class="e solido"><p class="t">Pasó a Contactado</p><p class="f">Asesor Uno · hace 20 min</p></div>
+        <div class="e"><p class="t">Se le envió WhatsApp</p><p class="f">Asesor Uno · hace 1 h</p></div>
+        <div class="e"><p class="t">Se asignó a Asesor Uno</p><p class="f">Sistema · hace 4 días</p></div>
+        <div class="e"><p class="t">Llegó desde Referido</p><p class="f">Sistema · hace 4 días</p></div>
+      </div>
+    </div>
+    <div class="tabbar"><span>Inicio</span><span>Bandeja</span><span class="on">Leads</span><span>Props</span><span>Más</span></div>
+  </div></div><p class="etq">Detalle · historia del lead</p></div>
+
+  <!-- ========== PROPIEDADES ========== -->
+  <div><div class="tel"><div class="app">
+    <div class="top"><svg viewBox="0 12 296 88" stroke="#F2F0EA" stroke-width="2.4"><use href="#lg"/><use href="#mcr" stroke-width="2.4"/></svg><span class="rol">ADMIN</span></div>
+    <div class="sec"><p style="font-size:25px; font-weight:200">Propiedades</p><p class="kicker" style="margin-top:4px">24 activas</p></div>
+    <div class="sec"><div class="grid-prop">
+      <div class="prop"><div class="foto"></div><p>Casa · Contry</p><p class="pr">$4,850,000</p><p class="m" style="font-size:10.5px; color:#7A776E">3 rec · 2.5 baños</p></div>
+      <div class="prop"><div class="foto b"></div><p>Depto. · Cumbres</p><p class="pr">$2,400,000</p><p class="m" style="font-size:10.5px; color:#7A776E">2 rec · 2 baños</p></div>
+      <div class="prop"><div class="foto b"></div><p>Terreno · Apodaca</p><p class="pr">$1,150,000</p><p class="m" style="font-size:10.5px; color:#7A776E">250 m²</p></div>
+      <div class="prop"><div class="foto"></div><p>Casa · Anáhuac</p><p class="pr">$3,600,000</p><p class="m" style="font-size:10.5px; color:#7A776E">4 rec · 3 baños</p></div>
+    </div></div>
+    <div class="tabbar"><span>Inicio</span><span>Bandeja</span><span>Leads</span><span class="on">Props</span><span>Más</span></div>
+  </div></div><p class="etq">Propiedades</p></div>
+
+  <!-- ========== CONFIGURACIÓN ========== -->
+  <div><div class="tel"><div class="app">
+    <div class="top"><svg viewBox="0 12 296 88" stroke="#F2F0EA" stroke-width="2.4"><use href="#lg"/><use href="#mcr" stroke-width="2.4"/></svg><span class="rol">ADMIN</span></div>
+    <div class="sec"><p style="font-size:25px; font-weight:200">Ajustes</p></div>
+    <div class="sec">
+      <p class="kicker">Apariencia</p>
+      <div class="fila-cfg">
+        <div><p class="a">Tema</p><p class="b">Negro editorial es el tema de la casa</p></div>
+        <div class="seg"><span class="on">Negro</span><span>Blanco</span></div>
+      </div>
+    </div>
+    <div class="sec">
+      <p class="kicker">Cuenta</p>
+      <div class="fila-cfg"><div><p class="a">Jair Maldonado</p><p class="b">jairmaldonador8@gmail.com · Admin</p></div><span class="kicker">→</span></div>
+      <div class="fila-cfg"><div><p class="a">Ver como asesor</p><p class="b">Cambiar al perfil de asesor</p></div><span class="kicker">→</span></div>
+      <div class="fila-cfg"><div><p class="a">Notificaciones push</p><p class="b">Activadas en este dispositivo</p></div><span class="chip">ON</span></div>
+    </div>
+    <div class="sec">
+      <p class="kicker">Operación</p>
+      <div class="fila-cfg"><div><p class="a">Guardias</p><p class="b">Rol del mes, dueño y umbrales</p></div><span class="kicker">→</span></div>
+      <div class="fila-cfg"><div><p class="a">Plantillas de WhatsApp</p><p class="b">6 activas</p></div><span class="kicker">→</span></div>
+      <div class="fila-cfg"><div><p class="a">Sincronización EasyBroker</p><p class="b">Última: hace 12 min</p></div><span class="kicker">→</span></div>
+    </div>
+    <div class="tabbar"><span>Inicio</span><span>Bandeja</span><span>Leads</span><span>Props</span><span class="on">Más</span></div>
+  </div></div><p class="etq">Ajustes · switch de tema</p></div>
+
+  <!-- ========== MODO CLARO (mismo sistema) ========== -->
+  <div><div class="tel"><div class="app claro">
+    <div class="top"><svg viewBox="0 12 296 88" stroke="#141414" stroke-width="2.4"><use href="#lg"/><use href="#mcr" stroke-width="2.4"/></svg><span class="rol">ADMIN</span></div>
+    <div class="sec"><p style="font-size:25px; font-weight:200">Leads</p></div>
+    <div class="sec">
+      <input class="input" value="Buscar por nombre o teléfono" readonly style="border-bottom-color:#D9D7D0; color:#8C8A84">
+      <div class="filtros">
+        <span class="chip">Todos</span><span class="chip sv">Sin atender</span><span class="chip sv">Negociación</span>
+      </div>
+    </div>
+    <div class="sec">
+      <ul class="lista" style="padding:0">
+        <li><div><p class="n">Tomás Berlanga</p><p class="m">Jair · Walk-in · hace 2 días</p></div><span class="kicker" style="font-size:8.5px">Negociación</span></li>
+        <li><div><p class="n">Renata Solís</p><p class="m">Jair · Portal · hace 2 días</p></div><span class="kicker" style="font-size:8.5px">Cita</span></li>
+        <li><div><p class="n">Carlos Medina</p><p class="m">Asesor Uno · Referido · hace 4 días</p></div><span class="kicker" style="font-size:8.5px">Contactado</span></li>
+        <li><div><p class="n">Fernanda López</p><p class="m">Asesor Uno · WhatsApp · hace 4 días</p></div><span class="kicker" style="font-size:8.5px; color:#141414">● Nuevo</span></li>
+      </ul>
+    </div>
+    <div class="tabbar"><span>Inicio</span><span>Bandeja</span><span class="on">Leads</span><span>Props</span><span>Más</span></div>
+  </div></div><p class="etq">Modo blanco · desde ajustes</p></div>
+
+</div>

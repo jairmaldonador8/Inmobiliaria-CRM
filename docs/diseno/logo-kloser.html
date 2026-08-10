@@ -1,0 +1,282 @@
+<title>Klo-Ser — propuestas de logo</title>
+<style>
+  :root {
+    --tinta: #1C1610;
+    --crema: #F4EFE6;
+    --ambar: #C98A3B;
+    --papel: #FAF7F0;
+    --texto: #2A231A;
+    --texto-suave: #8A7D6A;
+    --linea: #E4DCCC;
+    --panel-oscuro: #1C1610;
+    --panel-claro: #FFFFFF;
+  }
+  :root:not([data-theme="light"]) { }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --papel: #16110C;
+      --texto: #EDE6D8;
+      --texto-suave: #9A8D78;
+      --linea: #2E2620;
+      --panel-claro: #F4EFE6;
+    }
+  }
+  :root[data-theme="dark"] {
+    --papel: #16110C;
+    --texto: #EDE6D8;
+    --texto-suave: #9A8D78;
+    --linea: #2E2620;
+    --panel-claro: #F4EFE6;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--papel);
+    color: var(--texto);
+    font: 15px/1.6 system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  main { max-width: 880px; margin: 0 auto; padding: 48px 24px 80px; display: flex; flex-direction: column; gap: 40px; }
+  header h1 { font-size: 1.35rem; font-weight: 600; letter-spacing: -0.01em; margin: 0 0 6px; text-wrap: balance; }
+  header p { margin: 0; color: var(--texto-suave); max-width: 62ch; }
+  .eyebrow { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.14em; color: var(--ambar); font-weight: 600; margin: 0 0 10px; }
+  section { display: flex; flex-direction: column; gap: 12px; }
+  .nota { color: var(--texto-suave); font-size: 0.85rem; max-width: 68ch; margin: 0; }
+  .lienzo { border-radius: 14px; padding: 56px 32px; display: grid; place-items: center; border: 1px solid var(--linea); }
+  .lienzo.oscuro { background: var(--panel-oscuro); }
+  .lienzo.claro { background: var(--panel-claro); }
+  .lienzo svg { width: min(420px, 80%); height: auto; display: block; }
+  .fila { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .fila.tres { grid-template-columns: 1fr 1fr 1fr; }
+  @media (max-width: 640px) { .fila, .fila.tres { grid-template-columns: 1fr; } }
+  use { fill: none; }
+  .trazo-crema { stroke: #F4EFE6; }
+  .trazo-tinta { stroke: #1C1610; }
+  .trazo-ambar { stroke: #C98A3B; }
+  .iconos { display: flex; align-items: flex-end; gap: 28px; flex-wrap: wrap; justify-content: center; padding: 40px 24px; }
+  .tile { border-radius: 22%; display: grid; place-items: center; }
+  .tile.t96 { width: 96px; height: 96px; }
+  .tile.t56 { width: 56px; height: 56px; border-radius: 24%; }
+  .tile.t32 { width: 32px; height: 32px; border-radius: 26%; }
+  .tile.obsidiana { background: #1C1610; }
+  .tile.crema { background: #F4EFE6; border: 1px solid #E4DCCC; }
+  figcaption { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.12em; color: var(--texto-suave); text-align: center; margin-top: 10px; }
+  figure { margin: 0; }
+</style>
+
+<main>
+  <header>
+    <p class="eyebrow">Klo-Ser · Identidad</p>
+    <h1>Propuestas de logo — wordmark monolínea</h1>
+    <p>Trazo ultradelgado y tracking amplio, al estilo del referente. El gesto propio: el guion de
+    Klo-Ser se vuelve un macrón sobre la O — <strong>Klōser</strong> se lee «closer», el que cierra.
+    Letterforms dibujados en geometría pura: escalan a cualquier tamaño sin depender de una fuente.</p>
+  </header>
+
+  <!-- ============ A: KLŌSER ============ -->
+  <section>
+    <p class="eyebrow">Propuesta A — principal</p>
+    <figure>
+      <div class="lienzo oscuro">
+        <!-- KLŌSER: K30 L26 Ō38 S28 E26 R28, tracking 24, cap 35..85 -->
+        <svg viewBox="0 12 296 88" fill="none" stroke-width="3.25" stroke-linecap="round" aria-label="KLŌSER">
+          <g class="trazo-crema">
+            <g><path d="M0,35 V85"/><path d="M30,35 L2,61.5 L30,85"/></g>
+            <g transform="translate(54,0)"><path d="M0,35 V85 H26"/></g>
+            <g transform="translate(104,0)"><ellipse cx="19" cy="60" rx="19" ry="25"/><path d="M9,22 H29" class="trazo-ambar"/></g>
+            <g transform="translate(166,0)"><path d="M26,41 C22,35.5 6,35 3.5,44 C1,53 27,55 26.5,68 C26,81 6,86 1.5,76"/></g>
+            <g transform="translate(218,0)"><path d="M26,35 H0 V85 H26"/><path d="M0,60 H20"/></g>
+            <g transform="translate(268,0)"><path d="M0,35 V85"/><path d="M0,35 H16 C27,35 27,59 16,59 H0"/><path d="M14,59 L28,85"/></g>
+          </g>
+        </svg>
+      </div>
+      <figcaption>KLŌSER · macrón en ámbar sobre obsidiana</figcaption>
+    </figure>
+    <div class="fila">
+      <figure>
+        <div class="lienzo claro">
+          <svg viewBox="0 12 296 88" fill="none" stroke-width="3.25" stroke-linecap="round" aria-label="KLŌSER">
+            <g class="trazo-tinta">
+              <g><path d="M0,35 V85"/><path d="M30,35 L2,61.5 L30,85"/></g>
+              <g transform="translate(54,0)"><path d="M0,35 V85 H26"/></g>
+              <g transform="translate(104,0)"><ellipse cx="19" cy="60" rx="19" ry="25"/><path d="M9,22 H29" class="trazo-ambar"/></g>
+              <g transform="translate(166,0)"><path d="M26,41 C22,35.5 6,35 3.5,44 C1,53 27,55 26.5,68 C26,81 6,86 1.5,76"/></g>
+              <g transform="translate(218,0)"><path d="M26,35 H0 V85 H26"/><path d="M0,60 H20"/></g>
+              <g transform="translate(268,0)"><path d="M0,35 V85"/><path d="M0,35 H16 C27,35 27,59 16,59 H0"/><path d="M14,59 L28,85"/></g>
+            </g>
+          </svg>
+        </div>
+        <figcaption>Sobre claro</figcaption>
+      </figure>
+      <figure>
+        <div class="lienzo oscuro">
+          <svg viewBox="0 12 296 88" fill="none" stroke-width="3.25" stroke-linecap="round" aria-label="KLŌSER monocromo">
+            <g class="trazo-crema">
+              <g><path d="M0,35 V85"/><path d="M30,35 L2,61.5 L30,85"/></g>
+              <g transform="translate(54,0)"><path d="M0,35 V85 H26"/></g>
+              <g transform="translate(104,0)"><ellipse cx="19" cy="60" rx="19" ry="25"/><path d="M9,22 H29"/></g>
+              <g transform="translate(166,0)"><path d="M26,41 C22,35.5 6,35 3.5,44 C1,53 27,55 26.5,68 C26,81 6,86 1.5,76"/></g>
+              <g transform="translate(218,0)"><path d="M26,35 H0 V85 H26"/><path d="M0,60 H20"/></g>
+              <g transform="translate(268,0)"><path d="M0,35 V85"/><path d="M0,35 H16 C27,35 27,59 16,59 H0"/><path d="M14,59 L28,85"/></g>
+            </g>
+          </svg>
+        </div>
+        <figcaption>Monocromo (una tinta)</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- ============ B: KLO—SER ============ -->
+  <section>
+    <p class="eyebrow">Propuesta B — em-dash</p>
+    <p class="nota">La forma que ya usa la app hoy: el guion como pausa, dos bloques. Más literal, menos marca.</p>
+    <figure>
+      <div class="lienzo oscuro">
+        <!-- K30 L26 O38 dash30 S28 E26 R28 tracking 22 -->
+        <svg viewBox="0 18 338 76" fill="none" stroke-width="3.25" stroke-linecap="round" aria-label="KLO—SER">
+          <g class="trazo-crema">
+            <g><path d="M0,35 V85"/><path d="M30,35 L2,61.5 L30,85"/></g>
+            <g transform="translate(52,0)"><path d="M0,35 V85 H26"/></g>
+            <g transform="translate(100,0)"><ellipse cx="19" cy="60" rx="19" ry="25"/></g>
+            <g transform="translate(160,0)"><path d="M0,60 H30" class="trazo-ambar"/></g>
+            <g transform="translate(212,0)"><path d="M26,41 C22,35.5 6,35 3.5,44 C1,53 27,55 26.5,68 C26,81 6,86 1.5,76"/></g>
+            <g transform="translate(262,0)"><path d="M26,35 H0 V85 H26"/><path d="M0,60 H20"/></g>
+            <g transform="translate(310,0)"><path d="M0,35 V85"/><path d="M0,35 H16 C27,35 27,59 16,59 H0"/><path d="M14,59 L28,85"/></g>
+          </g>
+        </svg>
+      </div>
+      <figcaption>KLO—SER · el guion en ámbar</figcaption>
+    </figure>
+  </section>
+
+  <!-- ============ C: Monograma ============ -->
+  <section>
+    <p class="eyebrow">Propuesta C — monograma Ō</p>
+    <p class="nota">Para favicon, ícono de la PWA y avatar: la Ō sola. Circular, legible a 16 px, inconfundible.</p>
+    <div class="lienzo claro iconos">
+      <figure>
+        <div class="tile t96 obsidiana">
+          <svg viewBox="0 0 64 64" width="64" fill="none" stroke-width="3" stroke-linecap="round">
+            <ellipse cx="32" cy="38" rx="14" ry="17" class="trazo-crema"/>
+            <path d="M24,12 H40" class="trazo-ambar"/>
+          </svg>
+        </div>
+        <figcaption>96 px</figcaption>
+      </figure>
+      <figure>
+        <div class="tile t56 obsidiana">
+          <svg viewBox="0 0 64 64" width="38" fill="none" stroke-width="3.6" stroke-linecap="round">
+            <ellipse cx="32" cy="38" rx="14" ry="17" class="trazo-crema"/>
+            <path d="M24,12 H40" class="trazo-ambar"/>
+          </svg>
+        </div>
+        <figcaption>56 px</figcaption>
+      </figure>
+      <figure>
+        <div class="tile t32 crema">
+          <svg viewBox="0 0 64 64" width="22" fill="none" stroke-width="4.4" stroke-linecap="round">
+            <ellipse cx="32" cy="38" rx="14" ry="17" class="trazo-tinta"/>
+            <path d="M24,12 H40" class="trazo-ambar"/>
+          </svg>
+        </div>
+        <figcaption>32 px</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- ============ Defs compartidos: el wordmark dibujado una sola vez ============ -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+      <g id="kword" fill="none">
+        <g><path d="M0,35 V85"/><path d="M30,35 L2,61.5 L30,85"/></g>
+        <g transform="translate(54,0)"><path d="M0,35 V85 H26"/></g>
+        <g transform="translate(104,0)"><ellipse cx="19" cy="60" rx="19" ry="25"/><path d="M9,22 H29"/></g>
+        <g transform="translate(166,0)"><path d="M26,41 C22,35.5 6,35 3.5,44 C1,53 27,55 26.5,68 C26,81 6,86 1.5,76"/></g>
+        <g transform="translate(218,0)"><path d="M26,35 H0 V85 H26"/><path d="M0,60 H20"/></g>
+        <g transform="translate(268,0)"><path d="M0,35 V85"/><path d="M0,35 H16 C27,35 27,59 16,59 H0"/><path d="M14,59 L28,85"/></g>
+      </g>
+      <g id="kword-ancho" fill="none">
+        <g><path d="M0,35 V85"/><path d="M32,35 L2,61.5 L32,85"/></g>
+        <g transform="translate(64,0)"><path d="M0,35 V85 H28"/></g>
+        <g transform="translate(124,0)"><ellipse cx="26" cy="60" rx="26" ry="25"/><path d="M12,22 H40"/></g>
+        <g transform="translate(208,0)"><path d="M28,41 C24,35.5 6,35 3.5,44 C1,53 29,55 28.5,68 C28,81 6,86 1.5,76"/></g>
+        <g transform="translate(268,0)"><path d="M28,35 H0 V85 H28"/><path d="M0,60 H22"/></g>
+        <g transform="translate(328,0)"><path d="M0,35 V85"/><path d="M0,35 H17 C29,35 29,59 17,59 H0"/><path d="M15,59 L30,85"/></g>
+      </g>
+      <g id="kword-min" fill="none">
+        <g><path d="M0,35 V85"/><path d="M18,52 L1,68"/><path d="M8,61.5 L20,85"/></g>
+        <g transform="translate(40,0)"><path d="M0,35 V85"/></g>
+        <g transform="translate(62,0)"><ellipse cx="14.5" cy="67.5" rx="14.5" ry="17.5"/><path d="M4.5,41 H24.5"/></g>
+        <g transform="translate(113,0)"><path d="M22,54.5 C19,49.5 6,49 4.5,56 C3,63 23,64 22.5,72 C22,79.5 6,80.5 2.5,74"/></g>
+        <g transform="translate(158,0)"><path d="M1,64 H27"/><path d="M27,64 A14,17.5 0 1 0 24,79"/></g>
+        <g transform="translate(208,0)"><path d="M0,50 V85"/><path d="M0,60 C1,52 11,48.5 16,52.5"/></g>
+      </g>
+    </defs>
+  </svg>
+
+  <!-- ============ Exploración: pesos ============ -->
+  <section>
+    <p class="eyebrow">Exploración 1 — el mismo trazo en tres pesos</p>
+    <p class="nota">La esencia aguanta desde el hilo casi invisible hasta un peso con más cuerpo.
+    El hairline es el más cercano al referente; el book gana presencia en tamaños chicos.</p>
+    <div class="fila tres">
+      <figure>
+        <div class="lienzo oscuro"><svg viewBox="0 12 296 88" stroke-linecap="round"><use href="#kword" class="trazo-crema" stroke-width="1.9"/></svg></div>
+        <figcaption>Hairline · 1.9</figcaption>
+      </figure>
+      <figure>
+        <div class="lienzo oscuro"><svg viewBox="0 12 296 88" stroke-linecap="round"><use href="#kword" class="trazo-crema" stroke-width="3.25"/></svg></div>
+        <figcaption>Light · 3.25 (propuesta A)</figcaption>
+      </figure>
+      <figure>
+        <div class="lienzo oscuro"><svg viewBox="0 12 296 88" stroke-linecap="round"><use href="#kword" class="trazo-crema" stroke-width="4.6"/></svg></div>
+        <figcaption>Book · 4.6</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- ============ Exploración: tipografías ============ -->
+  <section>
+    <p class="eyebrow">Exploración 2 — variaciones tipográficas, misma esencia</p>
+    <figure>
+      <div class="lienzo oscuro"><svg viewBox="0 12 358 88" stroke-linecap="butt"><use href="#kword-ancho" class="trazo-crema" stroke-width="2.4"/></svg></div>
+      <figcaption>Extendida · O circular protagonista, terminales rectos, aire máximo</figcaption>
+    </figure>
+    <div class="fila">
+      <figure>
+        <div class="lienzo oscuro"><svg viewBox="0 28 230 64" stroke-linecap="round"><use href="#kword-min" class="trazo-crema" stroke-width="3"/></svg></div>
+        <figcaption>Minúsculas · klōser — moderno, cercano, muy tech</figcaption>
+      </figure>
+      <figure>
+        <div class="lienzo oscuro">
+          <svg viewBox="0 4 296 104" stroke-linecap="round">
+            <path d="M0,10 H296" class="trazo-ambar" stroke-width="1.6"/>
+            <use href="#kword" class="trazo-crema" stroke-width="2.6" transform="translate(0,8)"/>
+          </svg>
+        </div>
+        <figcaption>Overline · la línea corona todo el nombre (sin macrón)</figcaption>
+      </figure>
+    </div>
+    <div class="fila">
+      <figure>
+        <div class="lienzo claro"><svg viewBox="0 12 296 88" stroke-linecap="round"><use href="#kword" class="trazo-tinta" stroke-width="1.9"/></svg></div>
+        <figcaption>Hairline sobre claro · papelería, firma de correo</figcaption>
+      </figure>
+      <figure>
+        <div class="lienzo oscuro">
+          <svg viewBox="0 12 296 88" stroke-linecap="round">
+            <use href="#kword" class="trazo-crema" stroke-width="3.25" stroke-dasharray="10 5"/>
+          </svg>
+        </div>
+        <figcaption>Segmentada · trazo interrumpido, guiño digital (arriesgada)</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section>
+    <p class="eyebrow">Racional</p>
+    <p class="nota">Trazo 3.25/50 de altura de caja — el peso «ultralight» del referente. Tracking ancho
+    (≈0.45 de caja) para el aire premium. La única nota de color es el macrón/guion en ámbar
+    — el mismo acento de la app — y desaparece en la versión monocroma para sellos, bordado o grabado.
+    Si eliges una, entrego los SVG finales (positivo, negativo y monograma) listos en el repo.</p>
+  </section>
+</main>
