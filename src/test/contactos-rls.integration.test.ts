@@ -15,12 +15,12 @@
  *
  * Higiene de fixtures: a diferencia de `leads`/`seguimientos`,
  * `contactos_whatsapp` NO tiene trigger de inmutabilidad, asi que el
- * service-role si puede borrar sus filas. PERO `contactos_whatsapp.lead_id`
- * es una FK NO ACTION: un lead con contactos no se puede borrar. Por eso el
- * afterAll borra PRIMERO los contactos y DESPUES los leads. Ninguno de los
- * leads de este archivo recibe seguimientos, asi que si se pueden borrar de
- * verdad (no hace falta archivarlos como en rls.integration.test.ts) y este
- * archivo no deja basura en la base de dev.
+ * service-role si puede borrar sus filas y el afterAll lo hace. Los LEADS en
+ * cambio son imborrables desde la migracion 0016 (el delete en cascada de su
+ * evento `lead_creado` choca con el trigger de inmutabilidad de
+ * lead_eventos), asi que se ARCHIVAN en el afterAll — mismo patron que
+ * rls.integration.test.ts / easybroker-sync — y se acumulan archivados en la
+ * base de dev entre corridas (aceptado, documentado a proposito).
  *
  * Ejecutar con: npm run test:rls
  */
@@ -154,12 +154,21 @@ afterAll(async () => {
   if (svc) {
     const leadIds = [leadA1Id, leadA1BisId, leadA2Id, leadReasignableId].filter(Boolean);
     if (leadIds.length > 0) {
-      // ORDEN OBLIGATORIO: contactos_whatsapp.lead_id es una FK NO ACTION, asi
-      // que un lead con contactos no se puede borrar. Se borra por lead_id (no
-      // por los ids de contacto conocidos) para arrastrar tambien cualquier
-      // fila que se hubiera colado si el aislamiento fallara.
+      // Los contactos si se borran (sin trigger de inmutabilidad). Se borra
+      // por lead_id (no por los ids de contacto conocidos) para arrastrar
+      // tambien cualquier fila que se hubiera colado si el aislamiento fallara.
       await svc.from('contactos_whatsapp').delete().in('lead_id', leadIds);
-      await svc.from('leads').delete().in('id', leadIds);
+      // Desde la migracion 0016 los leads son imborrables (su `lead_creado` en
+      // cascada choca con el trigger de inmutabilidad de lead_eventos):
+      // archivar en vez de borrar — patron easybroker-sync — y ASERTAR el
+      // resultado, porque un {error} silencioso de supabase-js dejaria los
+      // fixtures activos fugados en dev. `propiedad_id: null` por consistencia
+      // con ese patron (estos leads no cuelgan de ninguna propiedad fixture).
+      const { error: archivaError } = await svc
+        .from('leads')
+        .update({ archivado: true, propiedad_id: null })
+        .in('id', leadIds);
+      expect(archivaError).toBeNull();
     }
   }
   await admin?.auth.signOut();

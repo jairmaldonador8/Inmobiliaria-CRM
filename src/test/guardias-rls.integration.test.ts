@@ -12,10 +12,13 @@
  *   - policy WITH CHECK (insert que no cumple)              -> error 42501.
  *   - grant de columna/tabla ausente                        -> error 42501.
  *
- * Higiene de fixtures: las guardias usan fechas 2099-* (imposible chocar con
- * el rol real de dev) y todo se borra en afterAll. El lead del test de
- * concurrencia no recibe seguimientos, asi que se borra de verdad; sus
- * lead_escalamientos caen en cascada.
+ * Higiene de fixtures: las guardias usan fechas pasadas (imposible chocar con
+ * el rol real de dev) y se borran en afterAll. El lead del test de
+ * concurrencia NO se puede borrar desde la migracion 0016: su `lead_creado`
+ * en cascada choca con el trigger de inmutabilidad de lead_eventos, asi que
+ * se ARCHIVA (patron de easybroker-sync.integration.test.ts). Sus
+ * lead_escalamientos ya no caen en cascada y se borran a mano (esa tabla no
+ * tiene trigger de inmutabilidad).
  *
  * Ejecutar con: npm run test:rls
  */
@@ -146,9 +149,24 @@ beforeAll(async () => {
 
 afterAll(async () => {
   if (svc) {
-    // lead_escalamientos cae en cascada con el lead; propiedades_internas con
-    // la propiedad. El lead no tiene seguimientos, asi que se borra de verdad.
-    if (leadId) await svc.from('leads').delete().eq('id', leadId);
+    // Desde la migracion 0016 TODO lead es imborrable (el delete en cascada de
+    // su `lead_creado` choca con el trigger de inmutabilidad de lead_eventos),
+    // asi que se archiva en vez de borrar — patron de easybroker-sync — y se
+    // ASERTA el resultado: un {error} silencioso de supabase-js dejaria el
+    // fixture activo fugado en dev. `propiedad_id: null` desengancha la
+    // propiedad fixture para que su delete de abajo siga funcionando.
+    if (leadId) {
+      const { error: escalamientosError } = await svc
+        .from('lead_escalamientos')
+        .delete()
+        .eq('lead_id', leadId);
+      expect(escalamientosError).toBeNull();
+      const { error: archivaError } = await svc
+        .from('leads')
+        .update({ archivado: true, propiedad_id: null })
+        .eq('id', leadId);
+      expect(archivaError).toBeNull();
+    }
     if (propiedadId) await svc.from('propiedades').delete().eq('id', propiedadId);
     await svc.from('guardias').delete().in('fecha', [FECHA_G1, FECHA_G2]);
   }
