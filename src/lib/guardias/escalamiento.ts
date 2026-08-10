@@ -27,6 +27,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 
 import { esLeadVip, leerConfiguracion, type ConfiguracionGuardias } from '@/lib/guardias/consultas'
+import { registrarEvento } from '@/lib/eventos/registrar'
 import { crearNotificacion, notificarAdmins } from '@/lib/notificaciones/crear'
 import { enviarPush } from '@/lib/push/enviar'
 import { enviarCorreo } from '@/lib/correo/enviar'
@@ -45,6 +46,8 @@ interface LeadEscalable {
 interface LeadPendiente {
   lead: LeadEscalable
   edadMin: number
+  /** Paso de recordatorio que metió al lead en el digest (para el evento push_recordatorio). */
+  paso?: string
 }
 
 export interface ResultadoEscalamiento {
@@ -111,16 +114,16 @@ export async function procesarEscalamientos(
       // Solo rondas con umbral ESTRICTAMENTE menor al del dueño: a partir de
       // ahí el problema es de dirección, no del asesor.
       const rondasRecordatorio = rondasVencidas(edadMin, umbrales.recordatorio, umbrales.dueno)
-      let recordatorioNuevo = false
+      let ultimaRondaNueva: number | null = null
       for (const ronda of rondasRecordatorio) {
         if (await registrarPaso(supabase, lead.id, `recordatorio_r${ronda}`)) {
-          recordatorioNuevo = true
+          ultimaRondaNueva = ronda
           resultado.pasosEjecutados.push(`recordatorio_r${ronda}:${lead.id}`)
         }
       }
-      if (recordatorioNuevo) {
+      if (ultimaRondaNueva !== null) {
         const lista = recordatoriosPorAsesor.get(lead.asesor_id) ?? []
-        lista.push({ lead, edadMin })
+        lista.push({ lead, edadMin, paso: `recordatorio_r${ultimaRondaNueva}` })
         recordatoriosPorAsesor.set(lead.asesor_id, lista)
       }
 
@@ -209,6 +212,8 @@ async function registrarPaso(supabase: SupabaseClient, leadId: string, paso: str
     if (error.code === UNIQUE_VIOLATION) return false
     throw new Error(`registro del paso ${paso}: ${error.message}`)
   }
+  // Evento de supervisión (actor null = sistema), best-effort: nunca falla.
+  await registrarEvento(supabase, leadId, 'escalamiento_paso', { paso })
   return true
 }
 
@@ -230,6 +235,12 @@ async function enviarDigestRecordatorios(
       cuerpo,
       url,
     })
+    // Rastro por lead del push de recordatorio que salió en este digest.
+    for (const pendiente of pendientes) {
+      await registrarEvento(supabase, pendiente.lead.id, 'push_recordatorio', {
+        paso: pendiente.paso,
+      })
+    }
   }
 }
 
@@ -269,6 +280,7 @@ async function recordatorioVip(supabase: SupabaseClient, lead: LeadEscalable): P
     cuerpo: `${lead.nombre} sigue esperando tu decisión`,
     url,
   })
+  await registrarEvento(supabase, lead.id, 'push_recordatorio', { paso: 'recordatorio_vip' })
 }
 
 /** Umbral del dueño: correo + push (o alerta a admins si no está configurado). */

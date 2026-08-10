@@ -90,6 +90,7 @@ function fakeDb(opciones: {
 }) {
   const pasosPrevios = new Set(opciones.pasosPrevios ?? [])
   const pasosInsertados: { lead_id: string; paso: string }[] = []
+  const eventosInsertados: { lead_id: string; tipo: string; actor_id: string | null; payload: Record<string, unknown> }[] = []
 
   const from = vi.fn((tabla: string) => {
     if (tabla === 'leads') {
@@ -121,10 +122,18 @@ function fakeDb(opciones: {
         error: null,
       }))
     }
+    if (tabla === 'lead_eventos') {
+      return {
+        insert: vi.fn((payload: (typeof eventosInsertados)[number]) => {
+          eventosInsertados.push(payload)
+          return Promise.resolve({ error: null })
+        }),
+      }
+    }
     throw new Error(`tabla inesperada: ${tabla}`)
   })
 
-  return { supabase: { from } as unknown as SupabaseClient, pasosInsertados }
+  return { supabase: { from } as unknown as SupabaseClient, pasosInsertados, eventosInsertados }
 }
 
 function pushesDe(destinatario: string) {
@@ -151,6 +160,50 @@ describe('procesarEscalamientos v2 (rondas en digest)', () => {
     expect(pushesDe('asesor-1')[0][2]).toMatchObject({ url: '/asesor/leads/l-20' })
   })
 
+  it('cada paso registrado y cada push de recordatorio dejan su evento en lead_eventos (actor null = sistema)', async () => {
+    const { supabase, eventosInsertados } = fakeDb({ leads: [lead(20)] })
+    await procesarEscalamientos(supabase, AHORA)
+
+    expect(eventosInsertados).toEqual([
+      {
+        lead_id: 'l-20',
+        tipo: 'escalamiento_paso',
+        actor_id: null,
+        payload: { paso: 'recordatorio_r1' },
+      },
+      {
+        lead_id: 'l-20',
+        tipo: 'push_recordatorio',
+        actor_id: null,
+        payload: { paso: 'recordatorio_r1' },
+      },
+    ])
+  })
+
+  it('cron caído: un escalamiento_paso por ronda registrada y UN push_recordatorio con la última ronda', async () => {
+    const { supabase, eventosInsertados } = fakeDb({
+      leads: [lead(50)],
+      asesoresActivos: ['asesor-1', 'asesor-2'],
+    })
+    await procesarEscalamientos(supabase, AHORA)
+
+    const pasosEventos = eventosInsertados
+      .filter((e) => e.tipo === 'escalamiento_paso')
+      .map((e) => e.payload.paso)
+    expect(pasosEventos).toEqual(['recordatorio_r1', 'recordatorio_r2', 'recordatorio_r3', 'abierto_r1'])
+    // El digest manda UN push por destinatario → UN push_recordatorio por lead,
+    // anotado con la última ronda nueva (el abierto no es recordatorio).
+    const pushEventos = eventosInsertados.filter((e) => e.tipo === 'push_recordatorio')
+    expect(pushEventos).toEqual([
+      {
+        lead_id: 'l-50',
+        tipo: 'push_recordatorio',
+        actor_id: null,
+        payload: { paso: 'recordatorio_r3' },
+      },
+    ])
+  })
+
   it('cron caído (50 min sin pasos): registra r1-r3 de recordatorio + r1 de abierto, pero UN push por destinatario', async () => {
     const { supabase, pasosInsertados } = fakeDb({
       leads: [lead(50)],
@@ -169,7 +222,7 @@ describe('procesarEscalamientos v2 (rondas en digest)', () => {
   })
 
   it('corrida siguiente sin rondas nuevas: cero pushes (idempotencia del digest)', async () => {
-    const { supabase } = fakeDb({
+    const { supabase, eventosInsertados } = fakeDb({
       leads: [lead(50)],
       pasosPrevios: ['l-50:recordatorio_r1', 'l-50:recordatorio_r2', 'l-50:recordatorio_r3', 'l-50:abierto_r1'],
       asesoresActivos: ['asesor-1', 'asesor-2'],
@@ -179,6 +232,8 @@ describe('procesarEscalamientos v2 (rondas en digest)', () => {
     expect(r.pasosEjecutados).toEqual([])
     expect(enviarPushMock).not.toHaveBeenCalled()
     expect(crearNotificacionMock).not.toHaveBeenCalled()
+    // Sin rondas nuevas tampoco hay eventos: at-most-once por ronda.
+    expect(eventosInsertados).toEqual([])
   })
 
   it('después del umbral del dueño NO hay más rondas: a los 130 min las rondas paran en <120 y dispara dueno_120', async () => {
@@ -223,7 +278,7 @@ describe('procesarEscalamientos v2 (rondas en digest)', () => {
 
   it('VIP: un único recordatorio al dueño aunque lleve 3 horas; sin rondas ni correo', async () => {
     esLeadVipMock.mockResolvedValue(true)
-    const { supabase, pasosInsertados } = fakeDb({
+    const { supabase, pasosInsertados, eventosInsertados } = fakeDb({
       leads: [lead(180, { asesor_id: 'dueno-1' })],
       asesoresActivos: ['asesor-2'],
     })
@@ -233,6 +288,20 @@ describe('procesarEscalamientos v2 (rondas en digest)', () => {
     expect(r.procesados).toBe(1)
     expect(enviarCorreoMock).not.toHaveBeenCalled()
     expect(pushesDe('dueno-1')[0][2].titulo).toBe('Lead VIP sin contestar')
+    expect(eventosInsertados).toEqual([
+      {
+        lead_id: 'l-180',
+        tipo: 'escalamiento_paso',
+        actor_id: null,
+        payload: { paso: 'recordatorio_vip' },
+      },
+      {
+        lead_id: 'l-180',
+        tipo: 'push_recordatorio',
+        actor_id: null,
+        payload: { paso: 'recordatorio_vip' },
+      },
+    ])
   })
 
   it('seguimiento manual posterior a la asignación → no escala nada', async () => {
