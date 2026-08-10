@@ -1,0 +1,218 @@
+<title>Klo-Ser — animación de los cuatro pasos</title>
+<style>
+  * { box-sizing: border-box; margin: 0; }
+  body { background: #FCFCFA; color: #141414; font: 15px/1.6 "Segoe UI", system-ui, sans-serif; padding: 44px 0 100px; }
+  .w { max-width: 1100px; margin: 0 auto; padding: 0 28px; }
+  h1 { font-weight: 200; font-size: 27px; letter-spacing: -0.01em; }
+  .sub { color: #6E6C66; font-size: 13.5px; margin-top: 8px; max-width: 66ch; }
+  .barra { display: flex; gap: 12px; margin: 26px 0 10px; }
+  button { background: #141414; color: #FCFCFA; border: none; padding: 11px 22px; font: inherit; font-size: 10.5px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; cursor: pointer; }
+  button.ghost { background: transparent; color: #6E6C66; border: 1px solid #D0CEC7; }
+
+  .set { border-top: 1px solid #E3E1DB; padding: 42px 0 8px; }
+  .set-cab { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; }
+  .set-cab .et { font-size: 10px; letter-spacing: 0.24em; text-transform: uppercase; color: #A5A29A; }
+  .set-cab h2 { font-weight: 200; font-size: 26px; letter-spacing: -0.01em; }
+  .rec { font-size: 9.5px; letter-spacing: 0.16em; text-transform: uppercase; border: 1px solid #141414; padding: 3px 9px; }
+  .set-cab p { color: #6E6C66; font-size: 13px; width: 100%; max-width: 70ch; margin-top: 6px; }
+
+  .pasos { display: grid; grid-template-columns: repeat(4, 1fr); gap: 36px; margin-top: 40px; }
+  @media (max-width: 900px) { .pasos { grid-template-columns: 1fr 1fr; } }
+  .paso .n { font-size: 10px; letter-spacing: 0.22em; color: #A5A29A; }
+  .paso h3 { font-weight: 500; font-size: 17px; margin: 9px 0 8px; }
+  .paso p { font-size: 13.5px; color: #6E6C66; }
+  .icono { margin-top: 18px; height: 40px; }
+  svg { display: block; overflow: visible; }
+  .tinta { stroke: #141414; }
+
+  /* ══════════ SET A · narrativa ══════════ */
+  .a1-punto { animation: none; }
+  .goA .a1-punto { animation: a-viajar 1500ms cubic-bezier(.45,0,.2,1) 250ms forwards; }
+  .goA .a1-flecha { animation: a-marcar 600ms ease-out 1600ms forwards; }
+  .a1-flecha { opacity: .25; }
+
+  .a2-traz { stroke-dasharray: 1; stroke-dashoffset: 1; }
+  .goA .a2-circ { animation: a-dibujar 750ms cubic-bezier(.4,0,.2,1) 150ms forwards; }
+  .goA .a2-check { animation: a-dibujar 420ms cubic-bezier(.3,0,.2,1) 800ms forwards; }
+
+  .a3-esc { stroke-dasharray: 1; stroke-dashoffset: 1; }
+  .goA .a3-esc { animation: a-escalar 2000ms linear 150ms forwards; }
+  .a3-pt { opacity: 0; transform-box: fill-box; transform-origin: center; }
+  .goA .a3-pt { animation: a-brotar 480ms cubic-bezier(.22,1.3,.36,1) 2050ms forwards; }
+
+  .a4-barra { transform-box: fill-box; transform-origin: bottom; transform: scaleY(0); }
+  .goA .a4-barra { animation: a-crecer 620ms cubic-bezier(.22,1.05,.36,1) forwards; }
+
+  @keyframes a-viajar { from { transform: translateX(0); } to { transform: translateX(88px); } }
+  @keyframes a-marcar { to { opacity: 1; } }
+  @keyframes a-dibujar { to { stroke-dashoffset: 0; } }
+  @keyframes a-escalar {
+    0% { stroke-dashoffset: 1; }
+    22% { stroke-dashoffset: .74; } 34% { stroke-dashoffset: .74; }
+    54% { stroke-dashoffset: .47; } 66% { stroke-dashoffset: .47; }
+    86% { stroke-dashoffset: .13; } 100% { stroke-dashoffset: 0; }
+  }
+  @keyframes a-brotar { from { opacity: 0; transform: scale(.2); } to { opacity: 1; transform: scale(1); } }
+  @keyframes a-crecer { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+
+  /* ══════════ SET B · barrido de luz ══════════ */
+  .b-capa { clip-path: inset(0 100% 0 0); }
+  .goB .b-capa { animation: b-revelar 900ms linear forwards; }
+  .b-luz { opacity: 0; }
+  .goB .b-luz { animation: b-barrer 900ms linear forwards; }
+  .goB .b1 .b-capa, .goB .b1 .b-luz { animation-delay: 0ms; }
+  .goB .b2 .b-capa, .goB .b2 .b-luz { animation-delay: 170ms; }
+  .goB .b3 .b-capa, .goB .b3 .b-luz { animation-delay: 340ms; }
+  .goB .b4 .b-capa, .goB .b4 .b-luz { animation-delay: 510ms; }
+  @keyframes b-revelar { to { clip-path: inset(0 0 0 0); } }
+  @keyframes b-barrer {
+    0% { opacity: .8; transform: translateX(0); }
+    100% { opacity: 0; transform: translateX(120px); }
+  }
+
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
+</style>
+
+<div class="w">
+  <h1>Cómo animar los cuatro pasos</h1>
+  <p class="sub">Los mismos íconos de «Cómo funciona», animados de dos maneras distintas. Se reinician solos cada 7 segundos.</p>
+  <div class="barra">
+    <button onclick="repetir()">Repetir ahora</button>
+    <button class="ghost" onclick="auto = !auto; this.textContent = auto ? 'Pausar bucle' : 'Reanudar bucle'">Pausar bucle</button>
+  </div>
+</div>
+
+<!-- ══════════ SET A ══════════ -->
+<div class="w"><div class="set setA">
+  <div class="set-cab">
+    <span class="et">Set A</span>
+    <h2>Cada ícono actúa lo que dice</h2>
+    <span class="rec">Recomendado</span>
+    <p>El punto viaja hasta la flecha, la palomita se marca, la escalera sube con pausas (como el sistema insistiendo) y las barras crecen desde el suelo. Cada gesto cuenta su propio paso.</p>
+  </div>
+  <div class="pasos">
+    <div class="paso">
+      <span class="n">01</span><h3>El lead entra</h3>
+      <p>Portal, WhatsApp o referido: cae a la cola con su propiedad, su fuente y su mensaje.</p>
+      <div class="icono">
+        <svg width="120" height="34" fill="none">
+          <circle class="tinta" cx="8" cy="17" r="4" stroke-width="1.3"/>
+          <path d="M14,17 H104" stroke="#D0CEC7" stroke-width="1.2" stroke-dasharray="3 4"/>
+          <circle class="a1-punto" cx="8" cy="17" r="1.9" fill="#141414"/>
+          <path class="tinta a1-flecha" d="M100,13 L106,17 L100,21" stroke-width="1.3"/>
+        </svg>
+      </div>
+    </div>
+    <div class="paso">
+      <span class="n">02</span><h3>La guardia lo toma</h3>
+      <p>El asesor de turno lo recibe al instante, con aviso en su teléfono.</p>
+      <div class="icono">
+        <svg width="120" height="34" fill="none">
+          <circle class="tinta a2-traz a2-circ" cx="17" cy="17" r="9" stroke-width="1.3" pathLength="1"/>
+          <path class="tinta a2-traz a2-check" d="M13,17.5 L16,20.5 L22,13.5" stroke-width="1.3" pathLength="1" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+    </div>
+    <div class="paso">
+      <span class="n">03</span><h3>El sistema insiste</h3>
+      <p>¿Sin respuesta en 15 min? Recordatorio. ¿Sigue igual? Se abre a todos. ¿Nada? Aviso al dueño.</p>
+      <div class="icono">
+        <svg width="120" height="34" fill="none">
+          <path class="tinta a3-esc" d="M8,26 L28,26 L28,14 L48,14 L48,20 L68,20 L68,8 L88,8" stroke-width="1.3" pathLength="1" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle class="a3-pt" cx="88" cy="8" r="2.5" fill="#141414"/>
+        </svg>
+      </div>
+    </div>
+    <div class="paso">
+      <span class="n">04</span><h3>Todo queda medido</h3>
+      <p>Velocidad, embudo, fuentes y actividad: el tablero que la dirección lee cada lunes.</p>
+      <div class="icono">
+        <svg width="120" height="34" fill="none">
+          <rect class="a4-barra" x="8" y="18" width="7" height="10" fill="#D0CEC7" style="animation-delay:0ms"/>
+          <rect class="a4-barra" x="20" y="12" width="7" height="16" fill="#8C8A84" style="animation-delay:130ms"/>
+          <rect class="a4-barra" x="32" y="20" width="7" height="8" fill="#D0CEC7" style="animation-delay:260ms"/>
+          <rect class="a4-barra" x="44" y="6" width="7" height="22" fill="#141414" style="animation-delay:390ms"/>
+        </svg>
+      </div>
+    </div>
+  </div>
+</div></div>
+
+<!-- ══════════ SET B ══════════ -->
+<div class="w"><div class="set setB">
+  <div class="set-cab">
+    <span class="et">Set B</span>
+    <h2>Los cuatro revelados por la luz, en cascada</h2>
+    <p>El mismo gesto de la gráfica de «Lo que no se mide»: una luz cruza cada ícono revelándolo, uno tras otro de izquierda a derecha. Más sobrio y más coherente con el resto de la página.</p>
+  </div>
+  <div class="pasos">
+    <div class="paso b1">
+      <span class="n">01</span><h3>El lead entra</h3>
+      <p>Portal, WhatsApp o referido: cae a la cola con su propiedad, su fuente y su mensaje.</p>
+      <div class="icono">
+        <svg width="120" height="34" fill="none">
+          <g class="b-capa">
+            <circle class="tinta" cx="8" cy="17" r="4" stroke-width="1.3"/>
+            <circle cx="8" cy="17" r="1.5" fill="#141414"/>
+            <path d="M14,17 H104" stroke="#D0CEC7" stroke-width="1.2" stroke-dasharray="3 4"/>
+            <path class="tinta" d="M100,13 L106,17 L100,21" stroke-width="1.3"/>
+          </g>
+          <line class="b-luz" x1="0" y1="2" x2="0" y2="32" stroke="#141414" stroke-width="1"/>
+        </svg>
+      </div>
+    </div>
+    <div class="paso b2">
+      <span class="n">02</span><h3>La guardia lo toma</h3>
+      <p>El asesor de turno lo recibe al instante, con aviso en su teléfono.</p>
+      <div class="icono">
+        <svg width="120" height="34" fill="none">
+          <g class="b-capa">
+            <circle class="tinta" cx="17" cy="17" r="9" stroke-width="1.3"/>
+            <path class="tinta" d="M13,17.5 L16,20.5 L22,13.5" stroke-width="1.3"/>
+          </g>
+          <line class="b-luz" x1="0" y1="2" x2="0" y2="32" stroke="#141414" stroke-width="1"/>
+        </svg>
+      </div>
+    </div>
+    <div class="paso b3">
+      <span class="n">03</span><h3>El sistema insiste</h3>
+      <p>¿Sin respuesta en 15 min? Recordatorio. ¿Sigue igual? Se abre a todos. ¿Nada? Aviso al dueño.</p>
+      <div class="icono">
+        <svg width="120" height="34" fill="none">
+          <g class="b-capa">
+            <path class="tinta" d="M8,26 L28,26 L28,14 L48,14 L48,20 L68,20 L68,8 L88,8" stroke-width="1.3"/>
+            <circle cx="88" cy="8" r="2.5" fill="#141414"/>
+          </g>
+          <line class="b-luz" x1="0" y1="2" x2="0" y2="32" stroke="#141414" stroke-width="1"/>
+        </svg>
+      </div>
+    </div>
+    <div class="paso b4">
+      <span class="n">04</span><h3>Todo queda medido</h3>
+      <p>Velocidad, embudo, fuentes y actividad: el tablero que la dirección lee cada lunes.</p>
+      <div class="icono">
+        <svg width="120" height="34" fill="none">
+          <g class="b-capa">
+            <rect x="8" y="18" width="7" height="10" fill="#D0CEC7"/>
+            <rect x="20" y="12" width="7" height="16" fill="#8C8A84"/>
+            <rect x="32" y="20" width="7" height="8" fill="#D0CEC7"/>
+            <rect x="44" y="6" width="7" height="22" fill="#141414"/>
+          </g>
+          <line class="b-luz" x1="0" y1="2" x2="0" y2="32" stroke="#141414" stroke-width="1"/>
+        </svg>
+      </div>
+    </div>
+  </div>
+</div></div>
+
+<script>
+  let auto = true
+  function repetir() {
+    const a = document.querySelector('.setA'), b = document.querySelector('.setB')
+    a.classList.remove('goA'); b.classList.remove('goB')
+    void a.offsetWidth
+    a.classList.add('goA'); b.classList.add('goB')
+  }
+  repetir()
+  setInterval(() => { if (auto) repetir() }, 7000)
+</script>
