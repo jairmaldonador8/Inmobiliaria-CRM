@@ -148,6 +148,26 @@
   --sidebar-ring: #C98A3B;
 }
 
+/* Cinta infinita de portales de la landing (ver
+   src/components/landing/marquee-portales.tsx): la pista duplicada avanza
+   -50% para que el ciclo no tenga costura. */
+@keyframes marquee-x {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+.marquee-pista {
+  animation: marquee-x 42s linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .marquee-pista {
+    animation: none;
+  }
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

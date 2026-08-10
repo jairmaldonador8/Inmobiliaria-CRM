@@ -3,6 +3,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 
 import { Wordmark } from '@/components/marca/wordmark'
+import { MarqueePortales } from '@/components/landing/marquee-portales'
 
 export const metadata: Metadata = {
   title: 'Klo-Ser · Un buen cierre se construye',
@@ -117,7 +118,7 @@ const PASOS = [
   },
 ]
 
-const FAQ = [
+const FAQ: { q: string; a: string; extra?: React.ReactNode }[] = [
   {
     q: '¿Solo sirve para dar seguimiento a prospectos?',
     a: 'No. El seguimiento es el corazón del sistema, ahí vive cada cliente y su historia, pero Klo-Ser también organiza al equipo: turnos de guardia, reparto de leads, escalamiento cuando alguien no responde, avisos al teléfono y un tablero de dirección. Una sola herramienta en lugar de una hoja de cálculo, un grupo de WhatsApp y la memoria de cada quien.',
@@ -125,6 +126,7 @@ const FAQ = [
   {
     q: '¿Tengo que dejar mis portales o mi WhatsApp?',
     a: 'No. Klo-Ser se conecta a lo que ya usas: los leads de portales entran solos y los de WhatsApp y referidos se capturan en segundos. El sistema ordena; tú sigues vendiendo donde siempre.',
+    extra: <MarqueePortales />,
   },
   {
     q: '¿Qué tan difícil es que mi equipo lo adopte?',
@@ -369,6 +371,7 @@ export default function PaginaLanding() {
                   </span>
                 </summary>
                 <p className="max-w-[62ch] pb-6 text-sm leading-relaxed text-[#6E6C66]">{f.a}</p>
+                {f.extra ? <div className="pb-8">{f.extra}</div> : null}
               </details>
             ))}
           </div>
