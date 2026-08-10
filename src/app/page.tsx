@@ -31,7 +31,7 @@ const PILARES = [
   {
     n: '01',
     t: 'Captación y seguimiento',
-    d: 'El CRM: cada prospecto entra a una sola cola y nadie se queda sin respuesta.',
+    d: 'El corazón del sistema: cada prospecto entra a una sola cola y nadie se queda sin respuesta.',
     puntos: [
       'Portales, WhatsApp y referidos en una bandeja',
       'Etapas del lead en un toque',
@@ -119,8 +119,8 @@ const PASOS = [
 
 const FAQ = [
   {
-    q: '¿Es solo un CRM?',
-    a: 'No. El CRM es el corazón —ahí vive cada prospecto y su historia—, pero Klo-Ser también organiza al equipo: turnos de guardia, reparto de leads, escalamiento cuando alguien no responde, avisos al teléfono y un tablero de dirección. Una sola herramienta en lugar de un CRM, un grupo de WhatsApp y una hoja de cálculo.',
+    q: '¿Solo sirve para dar seguimiento a prospectos?',
+    a: 'No. El seguimiento es el corazón —ahí vive cada cliente y su historia—, pero Klo-Ser también organiza al equipo: turnos de guardia, reparto de leads, escalamiento cuando alguien no responde, avisos al teléfono y un tablero de dirección. Una sola herramienta en lugar de una hoja de cálculo, un grupo de WhatsApp y la memoria de cada quien.',
   },
   {
     q: '¿Tengo que dejar mis portales o mi WhatsApp?',
@@ -228,9 +228,9 @@ export default function PaginaLanding() {
             el lead y el cierre.
           </h2>
           <p className="mt-6 max-w-xl text-sm leading-relaxed text-[#6E6C66]">
-            Un CRM guarda contactos. Klo-Ser ordena el trabajo alrededor de
-            ellos: quién atiende, con qué prioridad, en cuánto tiempo y con qué
-            resultado.
+            Guardar contactos es el punto de partida, no el sistema. Klo-Ser
+            ordena el trabajo alrededor de cada prospecto: quién atiende, con
+            qué prioridad, en cuánto tiempo y con qué resultado.
           </p>
 
           <div className="mt-16 grid gap-x-10 gap-y-14 border-t border-[#E3E1DB] pt-14 lg:grid-cols-3">
