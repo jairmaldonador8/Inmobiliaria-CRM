@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { Wordmark } from '@/components/marca/wordmark'
 import { MarqueePortales } from '@/components/landing/marquee-portales'
 import { GraficaTesis } from '@/components/landing/grafica-tesis'
+import { PasosComoFunciona } from '@/components/landing/pasos-funciona'
 
 export const metadata: Metadata = {
   title: 'Klo-Ser · Un buen cierre se construye',
@@ -65,57 +66,6 @@ const PILARES = [
       'Actividad del equipo semana a semana',
       'Buzón de sugerencias del piso de ventas',
     ],
-  },
-]
-
-const PASOS = [
-  {
-    n: '01',
-    t: 'El lead entra',
-    d: 'Portal, WhatsApp o referido: cae a la cola con su propiedad, su fuente y su mensaje.',
-    svg: (
-      <svg width="120" height="34" fill="none" aria-hidden>
-        <circle cx="8" cy="17" r="4" stroke="#141414" strokeWidth="1.3" />
-        <circle cx="8" cy="17" r="1.5" fill="#141414" />
-        <path d="M14,17 H104" stroke="#D0CEC7" strokeWidth="1.2" strokeDasharray="3 4" />
-        <path d="M100,13 L106,17 L100,21" stroke="#141414" strokeWidth="1.3" />
-      </svg>
-    ),
-  },
-  {
-    n: '02',
-    t: 'La guardia lo toma',
-    d: 'El asesor de turno lo recibe al instante, con aviso en su teléfono.',
-    svg: (
-      <svg width="120" height="34" fill="none" aria-hidden>
-        <circle cx="17" cy="17" r="9" stroke="#141414" strokeWidth="1.3" />
-        <path d="M13,17.5 L16,20.5 L22,13.5" stroke="#141414" strokeWidth="1.3" />
-      </svg>
-    ),
-  },
-  {
-    n: '03',
-    t: 'El sistema insiste',
-    d: '¿Sin respuesta en 15 min? Recordatorio. ¿Sigue igual? Se abre a todos. ¿Nada? Aviso al dueño.',
-    svg: (
-      <svg width="120" height="34" fill="none" aria-hidden>
-        <path d="M8,26 L28,26 L28,14 L48,14 L48,20 L68,20 L68,8 L88,8" stroke="#141414" strokeWidth="1.3" />
-        <circle cx="88" cy="8" r="2.5" fill="#141414" />
-      </svg>
-    ),
-  },
-  {
-    n: '04',
-    t: 'Todo queda medido',
-    d: 'Velocidad, embudo, fuentes y actividad: el tablero que la dirección lee cada lunes.',
-    svg: (
-      <svg width="120" height="34" fill="none" aria-hidden>
-        <rect x="8" y="18" width="7" height="10" fill="#D0CEC7" />
-        <rect x="20" y="12" width="7" height="16" fill="#8C8A84" />
-        <rect x="32" y="20" width="7" height="8" fill="#D0CEC7" />
-        <rect x="44" y="6" width="7" height="22" fill="#141414" />
-      </svg>
-    ),
   },
 ]
 
@@ -280,16 +230,7 @@ export default function PaginaLanding() {
             Del primer mensaje
             <br />a la junta del lunes.
           </h2>
-          <div className="mt-14 grid gap-x-9 gap-y-12 sm:grid-cols-2 lg:grid-cols-4">
-            {PASOS.map((p) => (
-              <div key={p.n} className="flex flex-col gap-2.5">
-                <span className="text-[10px] tracking-[0.22em] text-[#A5A29A]">{p.n}</span>
-                <h3 className="text-lg font-medium">{p.t}</h3>
-                <p className="text-sm leading-relaxed text-[#6E6C66]">{p.d}</p>
-                <div className="mt-3">{p.svg}</div>
-              </div>
-            ))}
-          </div>
+          <PasosComoFunciona />
         </section>
 
         {/* ───── Banda negra: la tesis ───── */}
