@@ -2,11 +2,14 @@
 
 import { useEffect, useRef, useState } from 'react'
 
+import { CICLO_MS } from './ritmo'
+
 /**
  * Los cuatro pasos de «Cómo funciona», con el set A de animación aprobado
- * (docs/diseno/animacion-pasos.html): cada ícono actúa lo que dice. Corren
- * una sola vez, en cascada de izquierda a derecha, cuando la sección entra
- * en pantalla. Los keyframes viven en globals.css (`.p-*`).
+ * (docs/diseno/animacion-pasos.html): cada ícono actúa lo que dice. Entran
+ * en cascada de izquierda a derecha cuando la sección aparece y se repiten
+ * en bucle con el mismo compás que la gráfica de la tesis (ver ritmo.ts).
+ * Los keyframes viven en globals.css (`.p-*`).
  *
  * Los retrasos se pasan inline porque dependen de la posición de la tarjeta:
  * `base` desplaza toda la tarjeta y cada elemento suma el suyo.
@@ -144,6 +147,7 @@ const PASOS = [
 export function PasosComoFunciona() {
   const ref = useRef<HTMLDivElement>(null)
   const [visible, setVisible] = useState(false)
+  const [pasada, setPasada] = useState(0)
 
   useEffect(() => {
     const nodo = ref.current
@@ -153,17 +157,20 @@ export function PasosComoFunciona() {
       return
     }
     const observador = new IntersectionObserver(
-      ([entrada]) => {
-        if (entrada.isIntersecting) {
-          setVisible(true)
-          observador.disconnect()
-        }
-      },
+      ([entrada]) => setVisible(entrada.isIntersecting),
       { threshold: 0.3 }
     )
     observador.observe(nodo)
     return () => observador.disconnect()
   }, [])
+
+  // El bucle solo corre mientras la sección está a la vista.
+  useEffect(() => {
+    if (!visible) return
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return
+    const id = setInterval(() => setPasada((n) => n + 1), CICLO_MS)
+    return () => clearInterval(id)
+  }, [visible])
 
   return (
     <div
@@ -178,7 +185,8 @@ export function PasosComoFunciona() {
           <h3 className="text-lg font-medium">{paso.t}</h3>
           <p className="text-sm leading-relaxed text-[#6E6C66]">{paso.d}</p>
           <div className="mt-3">
-            <paso.Icono base={indice * CASCADA_MS} />
+            {/* `key` remonta el <svg> en cada pasada: así reinician los keyframes. */}
+            <paso.Icono key={pasada} base={indice * CASCADA_MS} />
           </div>
         </div>
       ))}

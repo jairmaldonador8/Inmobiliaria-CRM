@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState } from 'react'
 
+import { CICLO_MS } from './ritmo'
+
 /** Las ocho mediciones del ejemplo: x, y y el retraso con que la luz las deposita. */
 const PUNTOS = [
   { x: 10, y: 28, ms: 41 },
@@ -16,10 +18,6 @@ const PUNTOS = [
 
 const TRAZO = 'M10,28 L70,42 L130,38 L190,64 L250,78 L310,92 L370,104 L430,112'
 
-/** Barrido (1800) + cifra que sube (1900 + 650): lo que tarda una pasada. */
-const DURACION_MS = 2550
-/** Respiro entre pasadas, a petición: la gráfica se relee cada tanto. */
-const PAUSA_MS = 3000
 
 /**
  * Gráfica animada de «La tesis del sistema»: una línea de luz cruza el
@@ -59,7 +57,7 @@ export function GraficaTesis() {
   useEffect(() => {
     if (!visible) return
     if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return
-    const id = setInterval(() => setPasada((n) => n + 1), DURACION_MS + PAUSA_MS)
+    const id = setInterval(() => setPasada((n) => n + 1), CICLO_MS)
     return () => clearInterval(id)
   }, [visible])
 
