@@ -223,9 +223,9 @@ export default function PaginaLanding() {
             El sistema
           </p>
           <h2 className="font-logo mt-5 max-w-3xl text-4xl leading-tight font-extralight text-balance sm:text-5xl">
-            Más que un CRM: la forma
+            Todo lo que pasa entre
             <br />
-            en que trabaja tu inmobiliaria.
+            el lead y el cierre.
           </h2>
           <p className="mt-6 max-w-xl text-sm leading-relaxed text-[#6E6C66]">
             Un CRM guarda contactos. Klo-Ser ordena el trabajo alrededor de
@@ -254,29 +254,17 @@ export default function PaginaLanding() {
           </div>
         </section>
 
-        {/* ───── Métricas gigantes ───── */}
+        {/* ───── Métrica de cierre de la sección ───── */}
         <section className="mx-auto max-w-6xl px-6 pb-8">
-          <div className="grid border-t border-[#E3E1DB] sm:grid-cols-3">
-            {[
-              ['15', 'min', 'y el sistema escala solo un lead sin respuesta — a otro asesor, a todos, al dueño.'],
-              ['100', '%', 'de la historia de cada cliente queda escrita: llamadas, mensajes, visitas, etapas. Nada vive en la memoria de nadie.'],
-              ['1', 'sistema', 'para leads, turnos, propiedades, equipo y tablero de dirección. Se acabaron las hojas sueltas.'],
-            ].map(([v, u, d], i) => (
-              <div
-                key={u}
-                className={
-                  i === 0
-                    ? 'py-9 pr-8'
-                    : 'border-t border-[#E3E1DB] py-9 sm:border-t-0 sm:border-l sm:pr-8 sm:pl-8'
-                }
-              >
-                <p className="font-logo text-6xl font-extralight tabular-nums">
-                  {v}
-                  <span className="text-2xl text-[#6E6C66]"> {u}</span>
-                </p>
-                <p className="mt-3 max-w-[28ch] text-sm leading-relaxed text-[#6E6C66]">{d}</p>
-              </div>
-            ))}
+          <div className="flex flex-col gap-6 border-t border-[#E3E1DB] py-10 sm:flex-row sm:items-baseline sm:gap-14">
+            <p className="font-logo shrink-0 text-6xl font-extralight tabular-nums">
+              1<span className="text-2xl text-[#6E6C66]"> sistema</span>
+            </p>
+            <p className="max-w-[46ch] text-sm leading-relaxed text-[#6E6C66]">
+              para leads, turnos, propiedades, equipo y tablero de dirección.
+              Se acabaron las hojas sueltas y los pendientes que solo viven en
+              la cabeza de alguien.
+            </p>
           </div>
         </section>
 
