@@ -16,7 +16,7 @@
  */
 import type { SupabaseClient } from '@supabase/supabase-js'
 
-import { NOTA_CIERRE } from '@/lib/leads/formato'
+import { ETAPAS_LEAD, NOTA_CIERRE } from '@/lib/leads/formato'
 import { diaMonterrey, inicioDeHoyMonterrey, inicioDeMesMonterrey } from '@/lib/fechas/monterrey'
 
 const UN_DIA_MS = 24 * 60 * 60 * 1000
@@ -191,4 +191,191 @@ export async function proximasVisitas(
     leadNombre: fila.lead?.nombre ?? '',
     propiedadTitulo: fila.propiedad?.titulo ?? null,
   }))
+}
+
+// ---------------------------------------------------------------------------
+// Métricas «Cómo van los leads» (historia de lead_eventos + foto de leads).
+// Mismo contrato que el resto del módulo: (supabase, ahora = new Date()).
+// Los eventos de backfill cuentan igual — son historia real del negocio.
+// ---------------------------------------------------------------------------
+
+/** Tipos de evento que cuentan como "contacto" con el lead. */
+const TIPOS_CONTACTO = ['whatsapp_enviado', 'seguimiento_registrado'] as const
+
+export interface ConteoEtapa {
+  etapa: string
+  cuenta: number
+}
+
+/**
+ * Embudo por etapa de los leads ACTIVOS (no archivados), en el orden
+ * canónico de `ETAPAS_LEAD` y sin etapas en cero (mismo criterio que
+ * `agruparPorEtapa` del pipeline de cápsulas). Una etapa fuera del
+ * vocabulario (defensa) se anexa al final en vez de perderse.
+ *
+ * `ahora` no interviene (es una foto, no una ventana) — se acepta por
+ * uniformidad del contrato del módulo.
+ */
+export async function embudoPorEtapa(
+  supabase: SupabaseClient,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  ahora: Date = new Date()
+): Promise<ConteoEtapa[]> {
+  const { data, error } = await supabase.from('leads').select('etapa').eq('archivado', false)
+
+  if (error) {
+    throw new Error(`No se pudo obtener el embudo por etapa: ${error.message}`)
+  }
+
+  const conteos = new Map<string, number>()
+  for (const fila of (data ?? []) as { etapa: string }[]) {
+    conteos.set(fila.etapa, (conteos.get(fila.etapa) ?? 0) + 1)
+  }
+
+  const resultado: ConteoEtapa[] = []
+  for (const etapa of ETAPAS_LEAD) {
+    const cuenta = conteos.get(etapa)
+    if (cuenta) {
+      resultado.push({ etapa, cuenta })
+      conteos.delete(etapa)
+    }
+  }
+  for (const [etapa, cuenta] of conteos) {
+    if (!(ETAPAS_LEAD as readonly string[]).includes(etapa)) {
+      resultado.push({ etapa, cuenta })
+    }
+  }
+  return resultado
+}
+
+/**
+ * Mediana (en MINUTOS) del tiempo entre la asignación de un lead
+ * (`lead_asignado` en los últimos 7 días) y su PRIMER contacto posterior
+ * (`whatsapp_enviado` o `seguimiento_registrado`). Mediana en JS: ordenar
+ * deltas y tomar el centro; con nº par, promedio de los dos centrales.
+ * `null` si ningún lead asignado en la ventana tiene contacto posterior.
+ *
+ * Los leads sin contacto posterior NO cuentan (no aportan delta) — es una
+ * métrica de velocidad de respuesta, no de cobertura.
+ */
+export async function medianaPrimeraRespuesta7d(
+  supabase: SupabaseClient,
+  ahora: Date = new Date()
+): Promise<number | null> {
+  const desde = new Date(ahora.getTime() - 7 * UN_DIA_MS)
+
+  const { data, error } = await supabase
+    .from('lead_eventos')
+    .select('lead_id, tipo, ocurrido_en')
+    .in('tipo', ['lead_asignado', ...TIPOS_CONTACTO])
+    .gte('ocurrido_en', desde.toISOString())
+    .order('ocurrido_en', { ascending: true })
+
+  if (error) {
+    throw new Error(`No se pudo obtener la mediana de primera respuesta: ${error.message}`)
+  }
+
+  // Primera asignación y primer contacto POSTERIOR a ella, por lead (las
+  // filas llegan ordenadas ascendente, así que "primero visto" = más viejo).
+  const asignadoEn = new Map<string, number>()
+  const primerContactoEn = new Map<string, number>()
+  for (const fila of (data ?? []) as { lead_id: string; tipo: string; ocurrido_en: string }[]) {
+    const instante = new Date(fila.ocurrido_en).getTime()
+    if (fila.tipo === 'lead_asignado') {
+      if (!asignadoEn.has(fila.lead_id)) asignadoEn.set(fila.lead_id, instante)
+      continue
+    }
+    const asignado = asignadoEn.get(fila.lead_id)
+    if (asignado === undefined || instante < asignado) continue // contacto previo o lead fuera de ventana
+    if (!primerContactoEn.has(fila.lead_id)) primerContactoEn.set(fila.lead_id, instante)
+  }
+
+  const deltasMin: number[] = []
+  for (const [leadId, asignado] of asignadoEn) {
+    const contacto = primerContactoEn.get(leadId)
+    if (contacto !== undefined) deltasMin.push((contacto - asignado) / 60_000)
+  }
+  if (deltasMin.length === 0) return null
+
+  deltasMin.sort((a, b) => a - b)
+  const centro = Math.floor(deltasMin.length / 2)
+  return deltasMin.length % 2 === 1
+    ? deltasMin[centro]
+    : (deltasMin[centro - 1] + deltasMin[centro]) / 2
+}
+
+export interface ConteoFuente {
+  fuente: string
+  cuenta: number
+}
+
+/**
+ * Conteo de leads llegados por fuente (`payload.fuente` de `lead_creado`) en
+ * los últimos 30 días, de mayor a menor. Un payload sin fuente (no debería
+ * pasar — el trigger la anota siempre) cae al bucket 'otro'.
+ */
+export async function leadsPorFuente30d(
+  supabase: SupabaseClient,
+  ahora: Date = new Date()
+): Promise<ConteoFuente[]> {
+  const desde = new Date(ahora.getTime() - DIAS_SERIE * UN_DIA_MS)
+
+  const { data, error } = await supabase
+    .from('lead_eventos')
+    .select('payload')
+    .eq('tipo', 'lead_creado')
+    .gte('ocurrido_en', desde.toISOString())
+
+  if (error) {
+    throw new Error(`No se pudieron obtener los leads por fuente: ${error.message}`)
+  }
+
+  const conteos = new Map<string, number>()
+  for (const fila of (data ?? []) as { payload: Record<string, unknown> }[]) {
+    const fuente = typeof fila.payload?.fuente === 'string' ? fila.payload.fuente : 'otro'
+    conteos.set(fuente, (conteos.get(fuente) ?? 0) + 1)
+  }
+
+  return [...conteos.entries()]
+    .map(([fuente, cuenta]) => ({ fuente, cuenta }))
+    .sort((a, b) => b.cuenta - a.cuenta)
+}
+
+const DIAS_ACTIVIDAD = 7
+
+/**
+ * Eventos de contacto (whatsapp_enviado + seguimiento_registrado) por día
+ * calendario de Monterrey, últimos 7 días (oldest→newest, exactamente 7
+ * posiciones). Patrón exacto de `serieLeads30Dias`, incluido el margen de un
+ * día en el rango pedido por el desfase medianoche UTC ↔ Monterrey.
+ */
+export async function actividadContacto7d(
+  supabase: SupabaseClient,
+  ahora: Date = new Date()
+): Promise<number[]> {
+  const claves: string[] = []
+  for (let i = DIAS_ACTIVIDAD - 1; i >= 0; i--) {
+    claves.push(diaMonterrey(new Date(ahora.getTime() - i * UN_DIA_MS)))
+  }
+  const indicePorClave = new Map(claves.map((clave, indice) => [clave, indice]))
+
+  const desde = new Date(ahora.getTime() - (DIAS_ACTIVIDAD + 1) * UN_DIA_MS)
+
+  const { data, error } = await supabase
+    .from('lead_eventos')
+    .select('lead_id, tipo, ocurrido_en')
+    .in('tipo', [...TIPOS_CONTACTO])
+    .gte('ocurrido_en', desde.toISOString())
+
+  if (error) {
+    throw new Error(`No se pudo obtener la actividad de contacto: ${error.message}`)
+  }
+
+  const conteos = new Array(DIAS_ACTIVIDAD).fill(0) as number[]
+  for (const fila of (data ?? []) as { ocurrido_en: string }[]) {
+    const indice = indicePorClave.get(diaMonterrey(new Date(fila.ocurrido_en)))
+    if (indice !== undefined) conteos[indice] += 1
+  }
+
+  return conteos
 }
