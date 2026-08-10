@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { Wordmark } from '@/components/marca/wordmark'
 
 export const metadata: Metadata = {
-  title: 'Klo-Ser — Un buen cierre se construye',
+  title: 'Klo-Ser · Un buen cierre se construye',
   description:
     'El sistema operativo de tu inmobiliaria: leads, equipo y dirección en una sola herramienta. Lo que no se mide, no progresa.',
 }
@@ -120,7 +120,7 @@ const PASOS = [
 const FAQ = [
   {
     q: '¿Solo sirve para dar seguimiento a prospectos?',
-    a: 'No. El seguimiento es el corazón —ahí vive cada cliente y su historia—, pero Klo-Ser también organiza al equipo: turnos de guardia, reparto de leads, escalamiento cuando alguien no responde, avisos al teléfono y un tablero de dirección. Una sola herramienta en lugar de una hoja de cálculo, un grupo de WhatsApp y la memoria de cada quien.',
+    a: 'No. El seguimiento es el corazón del sistema, ahí vive cada cliente y su historia, pero Klo-Ser también organiza al equipo: turnos de guardia, reparto de leads, escalamiento cuando alguien no responde, avisos al teléfono y un tablero de dirección. Una sola herramienta en lugar de una hoja de cálculo, un grupo de WhatsApp y la memoria de cada quien.',
   },
   {
     q: '¿Tengo que dejar mis portales o mi WhatsApp?',
@@ -136,7 +136,7 @@ const FAQ = [
   },
   {
     q: '¿Mis datos son míos?',
-    a: 'Sí. La historia de tus clientes es inmutable —nadie puede borrarla ni editarla, ni por error— y te pertenece. Cada inmobiliaria opera con su propia información, aislada y respaldada.',
+    a: 'Sí. La historia de tus clientes es inmutable: nadie puede borrarla ni editarla, ni por error, y te pertenece. Cada inmobiliaria opera con su propia información, aislada y respaldada.',
   },
   {
     q: '¿Cuánto cuesta?',
