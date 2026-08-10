@@ -4,6 +4,7 @@ import Link from 'next/link'
 
 import { Wordmark } from '@/components/marca/wordmark'
 import { MarqueePortales } from '@/components/landing/marquee-portales'
+import { GraficaTesis } from '@/components/landing/grafica-tesis'
 
 export const metadata: Metadata = {
   title: 'Klo-Ser · Un buen cierre se construye',
@@ -310,28 +311,7 @@ export default function PaginaLanding() {
                 equipo semana con semana.
               </p>
             </div>
-            <div>
-              <div className="flex items-baseline justify-between border-b border-[#26241F] pb-3 text-[10px] tracking-[0.2em] uppercase text-[#7A776E]">
-                <span>1.ª respuesta · mediana semanal</span>
-                <span>ejemplo · 8 semanas</span>
-              </div>
-              <svg viewBox="0 0 440 150" className="mt-4 w-full" fill="none" aria-hidden>
-                <path d="M0,120 H440" stroke="#26241F" strokeWidth="1" />
-                <path d="M0,70 H440" stroke="#26241F" strokeWidth="1" strokeDasharray="2 5" />
-                <path
-                  d="M10,28 L70,42 L130,38 L190,64 L250,78 L310,92 L370,104 L430,112"
-                  stroke="#F2F0EA"
-                  strokeWidth="1.6"
-                />
-                <circle cx="430" cy="112" r="3.5" fill="#F2F0EA" />
-                <text x="10" y="18" fill="#7A776E" fontSize="11">
-                  4 h 20 min
-                </text>
-                <text x="352" y="140" fill="#F2F0EA" fontSize="12" fontWeight="600">
-                  7 min ↓
-                </text>
-              </svg>
-            </div>
+            <GraficaTesis />
           </div>
         </section>
 

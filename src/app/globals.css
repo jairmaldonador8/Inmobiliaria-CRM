@@ -176,6 +176,106 @@
   }
 }
 
+/* Gráfica animada de «La tesis del sistema» (ver
+   src/components/landing/grafica-tesis.tsx). Estado inicial oculto; la clase
+   .tesis-go la dispara cuando la sección entra en pantalla. */
+.tesis-capa {
+  clip-path: inset(0 100% 0 0);
+}
+.tesis-pt,
+.tesis-luz,
+.tesis-halo,
+.tesis-lbl {
+  opacity: 0;
+}
+.tesis-pt {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.tesis-go .tesis-capa {
+  animation: tesis-revelar 1800ms linear forwards;
+}
+.tesis-go .tesis-luz {
+  animation: tesis-barrer 1800ms linear forwards;
+}
+.tesis-go .tesis-halo {
+  animation: tesis-halo 1800ms linear forwards;
+}
+.tesis-go .tesis-pt {
+  animation: tesis-depositar 520ms cubic-bezier(0.22, 1.2, 0.36, 1) forwards;
+}
+.tesis-go .tesis-lbl {
+  animation: tesis-subir 650ms ease-out 1900ms forwards;
+}
+
+@keyframes tesis-revelar {
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+@keyframes tesis-barrer {
+  0% {
+    opacity: 0.95;
+    transform: translateX(0);
+  }
+  88% {
+    opacity: 0.6;
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(440px);
+  }
+}
+@keyframes tesis-halo {
+  0% {
+    opacity: 0.18;
+    transform: translateX(0);
+  }
+  88% {
+    opacity: 0.1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(440px);
+  }
+}
+@keyframes tesis-depositar {
+  from {
+    opacity: 0;
+    transform: scale(0.2);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+@keyframes tesis-subir {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Sin JS o con movimiento reducido, la gráfica se muestra completa y quieta. */
+@media (prefers-reduced-motion: reduce), (scripting: none) {
+  .tesis-capa {
+    clip-path: none;
+  }
+  .tesis-pt,
+  .tesis-lbl {
+    opacity: 1;
+    animation: none !important;
+  }
+  .tesis-luz,
+  .tesis-halo {
+    display: none;
+  }
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
