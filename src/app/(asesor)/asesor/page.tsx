@@ -264,15 +264,15 @@ export default async function PaginaInicioAsesor({
           className="flex items-center justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 transition-colors active:bg-amber-100"
         >
           <span className="flex items-center gap-2.5">
-            <CalendarDays aria-hidden className="size-4 shrink-0 text-amber-600" />
-            <span className="text-sm font-medium text-amber-900">
+            <CalendarDays aria-hidden className="size-4 shrink-0 text-slate-500" />
+            <span className="text-sm font-medium text-slate-900">
               Estás de guardia hoy{' '}
               {(guardiasHoyData ?? [])
                 .map((g) => `${horaCorta(g.hora_inicio)}–${horaCorta(g.hora_fin)}`)
                 .join(' y ')}
             </span>
           </span>
-          <ChevronRight aria-hidden className="size-4 shrink-0 text-amber-600" />
+          <ChevronRight aria-hidden className="size-4 shrink-0 text-slate-500" />
         </Link>
       ) : (
         <Link
@@ -299,7 +299,7 @@ export default async function PaginaInicioAsesor({
 
         {atiendeAhora.length === 0 ? (
           <p className="rounded-xl border border-dashed border-slate-300 bg-white/60 px-4 py-6 text-center text-sm text-slate-500 lg:max-w-sm">
-            Sin leads nuevos pendientes. Todo al día 🎉
+            Sin leads nuevos pendientes. Todo al día
           </p>
         ) : (
           <ul className="flex flex-col gap-2 lg:grid lg:grid-cols-2 lg:gap-3 xl:grid-cols-3">
@@ -307,7 +307,7 @@ export default async function PaginaInicioAsesor({
               <li key={lead.id}>
                 <Link
                   href={`/asesor/leads/${lead.id}`}
-                  className="flex items-center justify-between gap-2 rounded-xl bg-white p-3 shadow-xs ring-1 ring-red-200 transition-colors active:bg-red-50"
+                  className="flex items-center justify-between gap-2 rounded-xl bg-white p-3 shadow-xs ring-1 ring-slate-200 transition-colors active:bg-slate-50"
                 >
                   <div className="min-w-0">
                     <p className="truncate text-sm font-medium text-slate-900">{lead.nombre}</p>
@@ -330,10 +330,10 @@ export default async function PaginaInicioAsesor({
       {/* Sin respuesta: les escribiste por WhatsApp y no han contestado */}
       <div className="flex flex-col gap-3">
         <div className="flex items-center gap-2">
-          <MessageCircle aria-hidden className="size-4 text-emerald-500" />
+          <MessageCircle aria-hidden className="size-4 text-slate-500" />
           <h2 className="text-sm font-semibold text-slate-900">Sin respuesta</h2>
           {sinRespuesta.length > 0 ? (
-            <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-700">
+            <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-700">
               {sinRespuesta.length}
             </span>
           ) : null}
@@ -341,7 +341,7 @@ export default async function PaginaInicioAsesor({
 
         {sinRespuesta.length === 0 ? (
           <p className="rounded-xl border border-dashed border-slate-300 bg-white/60 px-4 py-6 text-center text-sm text-slate-500 lg:max-w-sm">
-            Nadie te quedó a deber respuesta 🎉
+            Nadie te quedó a deber respuesta
           </p>
         ) : (
           <ul className="flex flex-col gap-2 lg:grid lg:grid-cols-2 lg:gap-3 xl:grid-cols-3">
@@ -349,7 +349,7 @@ export default async function PaginaInicioAsesor({
               <li key={lead.id}>
                 <Link
                   href={`/asesor/leads/${lead.id}`}
-                  className="flex items-center justify-between gap-2 rounded-xl bg-white p-3 shadow-xs ring-1 ring-emerald-200 transition-colors active:bg-emerald-50"
+                  className="flex items-center justify-between gap-2 rounded-xl bg-white p-3 shadow-xs ring-1 ring-slate-200 transition-colors active:bg-slate-50"
                 >
                   <div className="min-w-0">
                     <p className="truncate text-sm font-medium text-slate-900">{lead.nombre}</p>
@@ -383,7 +383,7 @@ export default async function PaginaInicioAsesor({
 
         {necesitanSeguimiento.length === 0 ? (
           <p className="rounded-xl border border-dashed border-slate-300 bg-white/60 px-4 py-6 text-center text-sm text-slate-500 lg:max-w-sm">
-            Ningún lead lleva más de 24 h sin seguimiento 🎉
+            Ningún lead lleva más de 24 h sin seguimiento
           </p>
         ) : (
           <ul className="flex flex-col gap-2 lg:grid lg:grid-cols-2 lg:gap-3 xl:grid-cols-3">
@@ -414,7 +414,7 @@ export default async function PaginaInicioAsesor({
       {/* Próximas visitas */}
       <div className="flex flex-col gap-3">
         <div className="flex items-center gap-2">
-          <CalendarDays aria-hidden className="size-4 text-sky-500" />
+          <CalendarDays aria-hidden className="size-4 text-slate-500" />
           <h2 className="text-sm font-semibold text-slate-900">Próximas visitas</h2>
           {visitasProximas.length > 0 ? (
             <span className="rounded-full bg-sky-100 px-2 py-0.5 text-xs font-semibold text-sky-700">
@@ -425,7 +425,7 @@ export default async function PaginaInicioAsesor({
 
         {visitasProximas.length === 0 ? (
           <p className="rounded-xl border border-dashed border-slate-300 bg-white/60 px-4 py-6 text-center text-sm text-slate-500 lg:max-w-sm">
-            Sin visitas agendadas 📅
+            Sin visitas agendadas
           </p>
         ) : (
           <ul className="flex flex-col gap-2 lg:grid lg:grid-cols-2 lg:gap-3 xl:grid-cols-3">
