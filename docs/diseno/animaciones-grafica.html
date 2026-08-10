@@ -1,0 +1,201 @@
+<title>Klo-Ser — propuestas de animación para la gráfica</title>
+<style>
+  * { box-sizing: border-box; margin: 0; }
+  body { background: #0E0D0B; color: #F2F0EA; font: 15px/1.6 "Segoe UI", system-ui, sans-serif; padding: 40px 0 80px; }
+  .w { max-width: 1080px; margin: 0 auto; padding: 0 28px; }
+  h1 { font-weight: 200; font-size: 26px; letter-spacing: -0.01em; }
+  .sub { color: #7A776E; font-size: 13.5px; margin-top: 8px; }
+  .barra { display: flex; gap: 12px; align-items: center; margin: 26px 0 8px; }
+  button { background: #F2F0EA; color: #0E0D0B; border: none; padding: 11px 22px; font: inherit; font-size: 10.5px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; cursor: pointer; }
+  button.ghost { background: transparent; color: #A5A29A; border: 1px solid #33312B; }
+  .variante { border-top: 1px solid #26241F; padding: 44px 0; display: grid; grid-template-columns: 300px 1fr; gap: 48px; align-items: center; }
+  @media (max-width: 880px) { .variante { grid-template-columns: 1fr; gap: 24px; } }
+  .meta .et { font-size: 10px; letter-spacing: 0.24em; text-transform: uppercase; color: #7A776E; }
+  .meta h2 { font-weight: 200; font-size: 27px; margin-top: 10px; letter-spacing: -0.01em; }
+  .meta p { color: #A5A29A; font-size: 13px; margin-top: 12px; }
+  .rec { display: inline-block; margin-top: 14px; font-size: 9.5px; letter-spacing: 0.16em; text-transform: uppercase; border: 1px solid #F2F0EA; padding: 4px 10px; }
+  .caja .cab { display: flex; justify-content: space-between; align-items: baseline; border-bottom: 1px solid #26241F; padding-bottom: 10px; font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: #7A776E; }
+  svg { width: 100%; margin-top: 16px; display: block; }
+  .grid-l { stroke: #26241F; stroke-width: 1; }
+  .linea { stroke: #F2F0EA; stroke-width: 1.6; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+  .pt { fill: #F2F0EA; }
+  .txt-g { fill: #7A776E; font-size: 11px; }
+  .txt-b { fill: #F2F0EA; font-size: 12px; font-weight: 600; }
+
+  /* ══ A · trazo continuo ══ */
+  .go .a-linea { animation: dibujar 1900ms cubic-bezier(.22,.61,.36,1) forwards; }
+  .go .a-pt { animation: aparecer 500ms ease-out 1750ms forwards; }
+  .go .a-lbl { animation: subir 700ms ease-out 2000ms forwards; }
+  .go .a-grid { animation: entrar 700ms ease-out forwards; }
+  .a-linea { stroke-dasharray: 1; stroke-dashoffset: 1; }
+  .a-pt, .a-lbl, .a-grid { opacity: 0; }
+
+  /* ══ B · barrido ══ */
+  .b-capa { clip-path: inset(0 100% 0 0); }
+  .go .b-capa { animation: revelar 1800ms cubic-bezier(.4,0,.2,1) forwards; }
+  .b-luz { opacity: 0; }
+  .go .b-luz { animation: barrer 1800ms cubic-bezier(.4,0,.2,1) forwards; }
+
+  /* ══ C · puntos ══ */
+  .c-pt { opacity: 0; }
+  .go .c-pt { animation: caer 620ms cubic-bezier(.22,.61,.36,1) forwards; }
+  .c-linea { stroke-dasharray: 1; stroke-dashoffset: 1; }
+  .go .c-linea { animation: dibujar 1000ms ease-out 780ms forwards; }
+  .go .c-lbl { animation: subir 600ms ease-out 1700ms forwards; }
+  .c-lbl { opacity: 0; }
+
+  /* ══ D · trazo + número + latido ══ */
+  .go .d-linea { animation: dibujar 2000ms cubic-bezier(.22,.61,.36,1) forwards; }
+  .d-linea { stroke-dasharray: 1; stroke-dashoffset: 1; }
+  .d-pt { opacity: 0; }
+  .go .d-pt { animation: aparecer 450ms ease-out 1900ms forwards; }
+  .go .d-halo { animation: aparecer 400ms ease-out 2100ms forwards, latir 2600ms ease-out 2300ms infinite; }
+  .d-halo { opacity: 0; transform-origin: 430px 112px; }
+  .d-num { opacity: 0; }
+  .go .d-num { animation: aparecer 500ms ease-out 1900ms forwards; }
+
+  @keyframes dibujar { to { stroke-dashoffset: 0; } }
+  @keyframes aparecer { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes entrar { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes subir { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes revelar { to { clip-path: inset(0 0 0 0); } }
+  @keyframes barrer { 0% { opacity: .9; transform: translateX(0); } 90% { opacity: .5; } 100% { opacity: 0; transform: translateX(440px); } }
+  @keyframes caer { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes latir { 0% { transform: scale(1); opacity: .55; } 70%, 100% { transform: scale(2.8); opacity: 0; } }
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
+</style>
+
+<div class="w">
+  <h1>Cuatro formas de animar la gráfica</h1>
+  <p class="sub">Misma gráfica de «La tesis del sistema». Se reinician solas cada 8 segundos.</p>
+  <div class="barra">
+    <button onclick="repetir()">Repetir ahora</button>
+    <button class="ghost" onclick="auto = !auto; this.textContent = auto ? 'Pausar bucle' : 'Reanudar bucle'">Pausar bucle</button>
+  </div>
+</div>
+
+<!-- ══════ A ══════ -->
+<div class="w"><div class="variante">
+  <div class="meta">
+    <p class="et">Propuesta A</p>
+    <h2>Trazo continuo</h2>
+    <p>La línea se dibuja de izquierda a derecha, el punto final aparece y la cifra sube al final. Es el gesto más sobrio y el más usado en editorial de datos.</p>
+  </div>
+  <div class="caja">
+    <div class="cab"><span>1.ª respuesta · mediana semanal</span><span>ejemplo · 8 semanas</span></div>
+    <svg viewBox="0 0 440 150" fill="none">
+      <g class="a-grid">
+        <path class="grid-l" d="M0,120 H440"/>
+        <path class="grid-l" d="M0,70 H440" stroke-dasharray="2 5"/>
+        <text class="txt-g" x="10" y="18">4 h 20 min</text>
+      </g>
+      <path class="linea a-linea" pathLength="1" d="M10,28 L70,42 L130,38 L190,64 L250,78 L310,92 L370,104 L430,112"/>
+      <circle class="pt a-pt" cx="430" cy="112" r="3.5"/>
+      <text class="txt-b a-lbl" x="352" y="140">7 min ↓</text>
+    </svg>
+  </div>
+</div></div>
+
+<!-- ══════ B ══════ -->
+<div class="w"><div class="variante">
+  <div class="meta">
+    <p class="et">Propuesta B</p>
+    <h2>Barrido de luz</h2>
+    <p>Una línea vertical de luz cruza la gráfica y va revelando todo a su paso: retícula, trazo y cifras. Cinematográfico, el más «producto tech».</p>
+  </div>
+  <div class="caja">
+    <div class="cab"><span>1.ª respuesta · mediana semanal</span><span>ejemplo · 8 semanas</span></div>
+    <svg viewBox="0 0 440 150" fill="none">
+      <g class="b-capa">
+        <path class="grid-l" d="M0,120 H440"/>
+        <path class="grid-l" d="M0,70 H440" stroke-dasharray="2 5"/>
+        <text class="txt-g" x="10" y="18">4 h 20 min</text>
+        <path class="linea" d="M10,28 L70,42 L130,38 L190,64 L250,78 L310,92 L370,104 L430,112"/>
+        <circle class="pt" cx="430" cy="112" r="3.5"/>
+        <text class="txt-b" x="352" y="140">7 min ↓</text>
+      </g>
+      <line class="b-luz" x1="0" y1="0" x2="0" y2="150" stroke="#F2F0EA" stroke-width="1"/>
+    </svg>
+  </div>
+</div></div>
+
+<!-- ══════ C ══════ -->
+<div class="w"><div class="variante">
+  <div class="meta">
+    <p class="et">Propuesta C</p>
+    <h2>Puntos que se conectan</h2>
+    <p>Cada semana cae como un punto, uno tras otro, y al final el trazo los une. Se siente «dato», no decoración: se lee que son ocho mediciones reales.</p>
+  </div>
+  <div class="caja">
+    <div class="cab"><span>1.ª respuesta · mediana semanal</span><span>ejemplo · 8 semanas</span></div>
+    <svg viewBox="0 0 440 150" fill="none">
+      <path class="grid-l" d="M0,120 H440"/>
+      <path class="grid-l" d="M0,70 H440" stroke-dasharray="2 5"/>
+      <text class="txt-g" x="10" y="18">4 h 20 min</text>
+      <path class="linea c-linea" pathLength="1" d="M10,28 L70,42 L130,38 L190,64 L250,78 L310,92 L370,104 L430,112"/>
+      <circle class="pt c-pt" cx="10" cy="28" r="2.6" style="animation-delay:0ms"/>
+      <circle class="pt c-pt" cx="70" cy="42" r="2.6" style="animation-delay:90ms"/>
+      <circle class="pt c-pt" cx="130" cy="38" r="2.6" style="animation-delay:180ms"/>
+      <circle class="pt c-pt" cx="190" cy="64" r="2.6" style="animation-delay:270ms"/>
+      <circle class="pt c-pt" cx="250" cy="78" r="2.6" style="animation-delay:360ms"/>
+      <circle class="pt c-pt" cx="310" cy="92" r="2.6" style="animation-delay:450ms"/>
+      <circle class="pt c-pt" cx="370" cy="104" r="2.6" style="animation-delay:540ms"/>
+      <circle class="pt c-pt" cx="430" cy="112" r="3.5" style="animation-delay:630ms"/>
+      <text class="txt-b c-lbl" x="352" y="140">7 min ↓</text>
+    </svg>
+  </div>
+</div></div>
+
+<!-- ══════ D ══════ -->
+<div class="w"><div class="variante">
+  <div class="meta">
+    <p class="et">Propuesta D</p>
+    <h2>El número baja con la línea</h2>
+    <p>Mientras el trazo avanza, la cifra desciende de 4 h 20 min a 7 min, y al terminar el punto final queda latiendo suave. Cuenta la historia sola: el número cae frente a los ojos.</p>
+    <span class="rec">Recomendada</span>
+  </div>
+  <div class="caja">
+    <div class="cab"><span>1.ª respuesta · mediana semanal</span><span>ejemplo · 8 semanas</span></div>
+    <svg viewBox="0 0 440 150" fill="none">
+      <path class="grid-l" d="M0,120 H440"/>
+      <path class="grid-l" d="M0,70 H440" stroke-dasharray="2 5"/>
+      <text class="txt-g" x="10" y="18">4 h 20 min</text>
+      <path class="linea d-linea" pathLength="1" d="M10,28 L70,42 L130,38 L190,64 L250,78 L310,92 L370,104 L430,112"/>
+      <circle class="d-halo" cx="430" cy="112" r="4" fill="#F2F0EA"/>
+      <circle class="pt d-pt" cx="430" cy="112" r="3.5"/>
+      <text class="txt-b d-num" id="numD" x="434" y="140" text-anchor="end">7 min ↓</text>
+    </svg>
+  </div>
+</div></div>
+
+<script>
+  let auto = true
+  const cajas = () => document.querySelectorAll('.caja')
+
+  function contar() {
+    const el = document.getElementById('numD')
+    const inicio = 260, fin = 7, dur = 2000, t0 = performance.now()
+    function paso(t) {
+      const p = Math.min((t - t0) / dur, 1)
+      const suave = 1 - Math.pow(1 - p, 3)
+      const v = Math.round(inicio + (fin - inicio) * suave)
+      el.textContent = v >= 60
+        ? `${Math.floor(v / 60)} h ${String(v % 60).padStart(2, '0')} min ↓`
+        : `${v} min ↓`
+      if (p < 1) requestAnimationFrame(paso)
+    }
+    requestAnimationFrame(paso)
+  }
+
+  function repetir() {
+    cajas().forEach((c) => {
+      c.classList.remove('go')
+      void c.offsetWidth
+      c.classList.add('go')
+    })
+    contar()
+  }
+
+  repetir()
+  setInterval(() => { if (auto) repetir() }, 8000)
+</script>
