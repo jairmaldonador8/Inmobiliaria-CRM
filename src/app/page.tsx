@@ -163,9 +163,6 @@ export default function PaginaLanding() {
               style={{ objectPosition: 'center 62%' }}
             />
           </div>
-          <p className="mt-3 text-[10px] tracking-[0.2em] uppercase text-[#A5A29A]">
-            Obra 01 · Monterrey, MX
-          </p>
         </section>
 
         {/* ───── Métricas gigantes (v2) ───── */}
@@ -271,9 +268,6 @@ export default function PaginaLanding() {
               style={{ objectPosition: 'center 38%' }}
             />
           </div>
-          <p className="mt-3 text-[10px] tracking-[0.2em] uppercase text-[#A5A29A]">
-            Obra 02 · Monterrey, MX
-          </p>
         </section>
 
         {/* ───── Preguntas (v2) ───── */}
