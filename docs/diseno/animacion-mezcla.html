@@ -1,0 +1,133 @@
+<title>Klo-Ser — mezcla: barrido de luz + puntos que se conectan</title>
+<style>
+  * { box-sizing: border-box; margin: 0; }
+  body { background: #0E0D0B; color: #F2F0EA; font: 15px/1.6 "Segoe UI", system-ui, sans-serif; padding: 44px 0 90px; }
+  .w { max-width: 1080px; margin: 0 auto; padding: 0 28px; }
+  h1 { font-weight: 200; font-size: 27px; letter-spacing: -0.01em; }
+  .sub { color: #7A776E; font-size: 13.5px; margin-top: 8px; max-width: 62ch; }
+  .barra { display: flex; gap: 12px; margin: 26px 0 6px; }
+  button { background: #F2F0EA; color: #0E0D0B; border: none; padding: 11px 22px; font: inherit; font-size: 10.5px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; cursor: pointer; }
+  button.ghost { background: transparent; color: #A5A29A; border: 1px solid #33312B; }
+  .variante { border-top: 1px solid #26241F; padding: 46px 0; display: grid; grid-template-columns: 290px 1fr; gap: 50px; align-items: center; }
+  @media (max-width: 880px) { .variante { grid-template-columns: 1fr; gap: 26px; } }
+  .meta .et { font-size: 10px; letter-spacing: 0.24em; text-transform: uppercase; color: #7A776E; }
+  .meta h2 { font-weight: 200; font-size: 27px; margin-top: 10px; letter-spacing: -0.01em; }
+  .meta p { color: #A5A29A; font-size: 13px; margin-top: 12px; }
+  .rec { display: inline-block; margin-top: 14px; font-size: 9.5px; letter-spacing: 0.16em; text-transform: uppercase; border: 1px solid #F2F0EA; padding: 4px 10px; }
+  .cab { display: flex; justify-content: space-between; align-items: baseline; border-bottom: 1px solid #26241F; padding-bottom: 10px; font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: #7A776E; }
+  svg { width: 100%; margin-top: 16px; display: block; }
+  .grid-l { stroke: #26241F; stroke-width: 1; }
+  .linea { stroke: #F2F0EA; stroke-width: 1.6; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+  .pt { fill: #F2F0EA; transform-box: fill-box; transform-origin: center; }
+  .txt-g { fill: #7A776E; font-size: 11px; }
+  .txt-b { fill: #F2F0EA; font-size: 12px; font-weight: 600; }
+
+  /* ── común: barrido de luz ── */
+  .capa { clip-path: inset(0 100% 0 0); }
+  .go .capa { animation: revelar 1800ms linear forwards; }
+  .luz, .luz-halo { opacity: 0; }
+  .go .luz { animation: barrer 1800ms linear forwards; }
+  .go .luz-halo { animation: barrer-halo 1800ms linear forwards; }
+  .pt { opacity: 0; }
+  .go .pt { animation: depositar 520ms cubic-bezier(.22,1.2,.36,1) forwards; }
+  .lbl { opacity: 0; }
+
+  /* ── E1: la luz revela también el trazo ── */
+  .go .e1-lbl { animation: subir 650ms ease-out 1900ms forwards; }
+
+  /* ── E2: el trazo se dibuja después ── */
+  .e2-linea { stroke-dasharray: 1; stroke-dashoffset: 1; }
+  .go .e2-linea { animation: dibujar 950ms cubic-bezier(.22,.61,.36,1) 1880ms forwards; }
+  .go .e2-lbl { animation: subir 650ms ease-out 2700ms forwards; }
+
+  @keyframes revelar { to { clip-path: inset(0 0 0 0); } }
+  @keyframes barrer { 0% { opacity: .95; transform: translateX(0); } 88% { opacity: .6; } 100% { opacity: 0; transform: translateX(440px); } }
+  @keyframes barrer-halo { 0% { opacity: .18; transform: translateX(0); } 88% { opacity: .1; } 100% { opacity: 0; transform: translateX(440px); } }
+  @keyframes depositar { from { opacity: 0; transform: scale(0.2); } to { opacity: 1; transform: scale(1); } }
+  @keyframes dibujar { to { stroke-dashoffset: 0; } }
+  @keyframes subir { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; } .capa { clip-path: none; } .pt, .lbl { opacity: 1; } .e2-linea { stroke-dashoffset: 0; } }
+</style>
+
+<div class="w">
+  <h1>La mezcla: barrido de luz + puntos que se conectan</h1>
+  <p class="sub">La luz cruza la gráfica y va dejando cada medición a su paso. Cambia solo el remate: en la primera el trazo viene con la luz; en la segunda aparece después, uniendo los puntos.</p>
+  <div class="barra">
+    <button onclick="repetir()">Repetir ahora</button>
+    <button class="ghost" onclick="auto = !auto; this.textContent = auto ? 'Pausar bucle' : 'Reanudar bucle'">Pausar bucle</button>
+  </div>
+</div>
+
+<!-- ══════ E1 ══════ -->
+<div class="w"><div class="variante">
+  <div class="meta">
+    <p class="et">Mezcla 1</p>
+    <h2>La luz trae el trazo</h2>
+    <p>Un solo movimiento: la luz revela retícula y línea mientras deposita cada punto. Más fluido y más corto, dos segundos en total.</p>
+  </div>
+  <div class="caja">
+    <div class="cab"><span>1.ª respuesta · mediana semanal</span><span>ejemplo · 8 semanas</span></div>
+    <svg viewBox="0 0 440 150" fill="none">
+      <g class="capa">
+        <path class="grid-l" d="M0,120 H440"/>
+        <path class="grid-l" d="M0,70 H440" stroke-dasharray="2 5"/>
+        <text class="txt-g" x="10" y="18">4 h 20 min</text>
+        <path class="linea" d="M10,28 L70,42 L130,38 L190,64 L250,78 L310,92 L370,104 L430,112"/>
+      </g>
+      <circle class="pt" cx="10" cy="28" r="2.8" style="animation-delay:41ms"/>
+      <circle class="pt" cx="70" cy="42" r="2.8" style="animation-delay:286ms"/>
+      <circle class="pt" cx="130" cy="38" r="2.8" style="animation-delay:532ms"/>
+      <circle class="pt" cx="190" cy="64" r="2.8" style="animation-delay:777ms"/>
+      <circle class="pt" cx="250" cy="78" r="2.8" style="animation-delay:1023ms"/>
+      <circle class="pt" cx="310" cy="92" r="2.8" style="animation-delay:1268ms"/>
+      <circle class="pt" cx="370" cy="104" r="2.8" style="animation-delay:1514ms"/>
+      <circle class="pt" cx="430" cy="112" r="4" style="animation-delay:1759ms"/>
+      <line class="luz-halo" x1="0" y1="4" x2="0" y2="146" stroke="#F2F0EA" stroke-width="7"/>
+      <line class="luz" x1="0" y1="4" x2="0" y2="146" stroke="#F2F0EA" stroke-width="1"/>
+      <text class="txt-b lbl e1-lbl" x="434" y="140" text-anchor="end">7 min ↓</text>
+    </svg>
+  </div>
+</div></div>
+
+<!-- ══════ E2 ══════ -->
+<div class="w"><div class="variante">
+  <div class="meta">
+    <p class="et">Mezcla 2</p>
+    <h2>La luz deja los puntos, el trazo los une</h2>
+    <p>Dos tiempos: primero la luz siembra las ocho mediciones, luego la línea las recorre y aparece la tendencia. Cuenta mejor la historia; dura casi un segundo más.</p>
+    <span class="rec">Recomendada</span>
+  </div>
+  <div class="caja">
+    <div class="cab"><span>1.ª respuesta · mediana semanal</span><span>ejemplo · 8 semanas</span></div>
+    <svg viewBox="0 0 440 150" fill="none">
+      <g class="capa">
+        <path class="grid-l" d="M0,120 H440"/>
+        <path class="grid-l" d="M0,70 H440" stroke-dasharray="2 5"/>
+        <text class="txt-g" x="10" y="18">4 h 20 min</text>
+      </g>
+      <path class="linea e2-linea" pathLength="1" d="M10,28 L70,42 L130,38 L190,64 L250,78 L310,92 L370,104 L430,112"/>
+      <circle class="pt" cx="10" cy="28" r="2.8" style="animation-delay:41ms"/>
+      <circle class="pt" cx="70" cy="42" r="2.8" style="animation-delay:286ms"/>
+      <circle class="pt" cx="130" cy="38" r="2.8" style="animation-delay:532ms"/>
+      <circle class="pt" cx="190" cy="64" r="2.8" style="animation-delay:777ms"/>
+      <circle class="pt" cx="250" cy="78" r="2.8" style="animation-delay:1023ms"/>
+      <circle class="pt" cx="310" cy="92" r="2.8" style="animation-delay:1268ms"/>
+      <circle class="pt" cx="370" cy="104" r="2.8" style="animation-delay:1514ms"/>
+      <circle class="pt" cx="430" cy="112" r="4" style="animation-delay:1759ms"/>
+      <line class="luz-halo" x1="0" y1="4" x2="0" y2="146" stroke="#F2F0EA" stroke-width="7"/>
+      <line class="luz" x1="0" y1="4" x2="0" y2="146" stroke="#F2F0EA" stroke-width="1"/>
+      <text class="txt-b lbl e2-lbl" x="434" y="140" text-anchor="end">7 min ↓</text>
+    </svg>
+  </div>
+</div></div>
+
+<script>
+  let auto = true
+  function repetir() {
+    document.querySelectorAll('.caja').forEach((c) => {
+      c.classList.remove('go'); void c.offsetWidth; c.classList.add('go')
+    })
+  }
+  repetir()
+  setInterval(() => { if (auto) repetir() }, 7000)
+</script>
