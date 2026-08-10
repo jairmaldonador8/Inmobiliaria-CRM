@@ -153,14 +153,22 @@
    -50% para que el ciclo no tenga costura. */
 @keyframes marquee-x {
   from {
-    transform: translateX(0);
+    transform: translate3d(0, 0, 0);
   }
   to {
-    transform: translateX(-50%);
+    transform: translate3d(-50%, 0, 0);
   }
 }
+/* translate3d + will-change promueven la pista a su propia capa de
+   composición: el navegador la desplaza en la GPU con precisión subpíxel en
+   vez de re-rasterizar el texto en cada cuadro (que es lo que se percibe
+   como tirones en marquees lentos). backface-visibility evita que Chrome
+   descarte la capa a mitad de la animación. */
 .marquee-pista {
   animation: marquee-x 42s linear infinite;
+  will-change: transform;
+  backface-visibility: hidden;
+  transform: translate3d(0, 0, 0);
 }
 @media (prefers-reduced-motion: reduce) {
   .marquee-pista {

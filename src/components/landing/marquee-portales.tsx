@@ -45,8 +45,8 @@ function Pista({ ocultarALectores }: { ocultarALectores?: boolean }) {
 
 export function MarqueePortales() {
   return (
-    <div className="relative overflow-hidden py-1 [mask-image:linear-gradient(to_right,transparent,black_10%,black_90%,transparent)]">
-      <div className="marquee-pista flex w-max">
+    <div className="relative overflow-hidden py-1 [contain:paint] [mask-image:linear-gradient(to_right,transparent,black_10%,black_90%,transparent)]">
+      <div className="marquee-pista flex w-max [transform-style:preserve-3d]">
         <Pista />
         <Pista ocultarALectores />
       </div>
