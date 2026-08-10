@@ -44,7 +44,7 @@ export function TimelineEventos({ eventos }: { eventos: EventoTimeline[] }) {
                 'flex size-8 shrink-0 items-center justify-center rounded-full ring-1',
                 esSistema
                   ? 'bg-slate-100 text-slate-500 ring-slate-200'
-                  : 'bg-emerald-50 text-emerald-700 ring-emerald-600/20'
+                  : 'bg-slate-900 text-white ring-slate-900'
               )}
             >
               <Icono className="size-4" />
@@ -60,6 +60,11 @@ export function TimelineEventos({ eventos }: { eventos: EventoTimeline[] }) {
                 </span>
               </div>
               <p className="mt-0.5 text-xs text-slate-500">{evento.actor_nombre ?? 'Sistema'}</p>
+              {evento.nota ? (
+                <p className="mt-1 text-sm leading-relaxed break-words whitespace-pre-line text-slate-600">
+                  {evento.nota}
+                </p>
+              ) : null}
             </div>
           </li>
         )

@@ -8,6 +8,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 
 import { etiquetaEvento } from '@/lib/eventos/formato'
+import { etiquetaTipoSeguimiento } from '@/lib/seguimientos/formato'
 
 /** Fila cruda de lead_eventos tal como la devuelve la consulta. */
 export type FilaEventoLead = {
@@ -27,6 +28,8 @@ export type EventoTimeline = {
   /** Nombre del actor; null = sistema (o nombre no legible por RLS). */
   actor_nombre: string | null
   ocurrido_en: string
+  /** Texto de la nota, solo en los ítems que vienen de `seguimientos`. */
+  nota?: string
 }
 
 const LIMITE_EVENTOS = 50
@@ -127,4 +130,51 @@ export async function eventosDeLead(
     actor_nombre: (evento.actor_id && nombres.get(evento.actor_id)) || null,
     ocurrido_en: evento.ocurrido_en,
   }))
+}
+
+/** Fila de `seguimientos` tal como la piden las páginas de detalle. */
+type FilaSeguimiento = {
+  id: string
+  tipo: string
+  nota: string
+  creado_en: string
+  autor: { nombre: string } | null
+}
+
+/**
+ * Historia completa del lead: los eventos de `lead_eventos` MÁS las notas de
+ * `seguimientos`, en una sola línea de tiempo.
+ *
+ * Por qué se mezclan aquí y no en la base: el evento `seguimiento_registrado`
+ * dice que hubo una nota pero no QUÉ decía, así que se descarta y en su lugar
+ * entra la fila real de `seguimientos`, que sí trae el texto. Resultado: una
+ * sola lista sin repeticiones, donde cada nota se lee completa.
+ *
+ * Las notas conservan su icono por clase de contacto vía el tipo `seg:<tipo>`
+ * (ver ICONOS_EVENTO en formato.ts).
+ */
+export function fusionarHistoria(
+  eventos: EventoTimeline[],
+  seguimientos: FilaSeguimiento[]
+): EventoTimeline[] {
+  const sinNotas = eventos.filter((evento) => evento.tipo !== 'seguimiento_registrado')
+
+  const notas: EventoTimeline[] = seguimientos.map((seguimiento) => {
+    // Las notas de sistema («Etapa movida a…», «Visita agendada para…») ya
+    // se explican solas: poner «Sistema» en negritas encima solo repite. El
+    // texto pasa a ser el titular y no se duplica abajo.
+    const esDeSistema = seguimiento.tipo === 'sistema'
+    return {
+      id: `seg-${seguimiento.id}`,
+      tipo: `seg:${seguimiento.tipo}`,
+      etiqueta: esDeSistema ? seguimiento.nota : etiquetaTipoSeguimiento(seguimiento.tipo),
+      actor_nombre: seguimiento.autor?.nombre ?? null,
+      ocurrido_en: seguimiento.creado_en,
+      nota: esDeSistema ? undefined : seguimiento.nota,
+    }
+  })
+
+  return [...sinNotas, ...notas]
+    .sort((a, b) => new Date(b.ocurrido_en).getTime() - new Date(a.ocurrido_en).getTime())
+    .slice(0, LIMITE_EVENTOS)
 }

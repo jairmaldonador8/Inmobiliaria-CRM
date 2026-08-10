@@ -31,11 +31,7 @@ import {
   type OpcionPropiedadVisita,
 } from '@/components/visitas/hoja-agendar-visita'
 import { ListaVisitasLead } from '@/components/visitas/lista-visitas-lead'
-import {
-  TimelineSeguimientos,
-  type SeguimientoTimeline,
-} from '@/components/seguimientos/timeline-seguimientos'
-import { eventosDeLead } from '@/lib/eventos/consultas'
+import { eventosDeLead, fusionarHistoria } from '@/lib/eventos/consultas'
 import { TimelineEventos } from '@/components/eventos/timeline-eventos'
 
 type FilaSeguimiento = {
@@ -115,15 +111,10 @@ export default async function PaginaDetalleLeadAdmin({
     eventosDeLead(supabase, id),
   ])
 
-  const itemsTimeline: SeguimientoTimeline[] = (
+  const historia = fusionarHistoria(
+    eventos,
     (seguimientos ?? []) as unknown as FilaSeguimiento[]
-  ).map((s) => ({
-    id: s.id,
-    tipo: s.tipo,
-    nota: s.nota,
-    creado_en: s.creado_en,
-    autor_nombre: s.autor?.nombre ?? null,
-  }))
+  )
 
   // {asesor} en las plantillas = el asesor asignado; sin asesor, el admin.
   // Mismo nombre para la confirmación de WhatsApp de la visita agendada.
@@ -255,13 +246,8 @@ export default async function PaginaDetalleLeadAdmin({
       </div>
 
       <div className="flex flex-col gap-3">
-        <h2 className="text-sm font-semibold text-slate-900">Seguimientos</h2>
-        <TimelineSeguimientos seguimientos={itemsTimeline} />
-      </div>
-
-      <div className="flex flex-col gap-3">
         <h2 className="text-sm font-semibold text-slate-900">Historia del lead</h2>
-        <TimelineEventos eventos={eventos} />
+        <TimelineEventos eventos={historia} />
       </div>
     </section>
   )

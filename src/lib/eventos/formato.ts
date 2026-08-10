@@ -15,6 +15,10 @@
  */
 import {
   Archive,
+  Bot,
+  Home,
+  Mail,
+  Phone,
   ArchiveRestore,
   ArrowRight,
   ArrowRightLeft,
@@ -147,6 +151,14 @@ export const ICONOS_EVENTO: Record<string, LucideIcon> = {
   tomado_de_bandeja: Hand,
   escalamiento_paso: Siren,
   push_recordatorio: Bell,
+  // Notas del asesor fusionadas al timeline: la clave es «seg:» + el tipo
+  // del seguimiento, para conservar el icono por clase de contacto.
+  'seg:llamada': Phone,
+  'seg:whatsapp': MessageCircle,
+  'seg:correo': Mail,
+  'seg:visita': Home,
+  'seg:sistema': Bot,
+  'seg:otro': NotebookPen,
 }
 
 /** Icono del tipo, con fallback (patrón del timeline de seguimientos). */
