@@ -13,6 +13,9 @@
  *
  * Server Component sin estado: puro render de datos.
  */
+import Link from 'next/link'
+import { ChevronRight } from 'lucide-react'
+
 import type { ConteoEtapa, ConteoFuente } from '@/lib/dashboard/consultas'
 import { etiquetaEtapa, etiquetaFuente } from '@/lib/leads/formato'
 import { ZONA_HORARIA } from '@/lib/fechas/monterrey'
@@ -160,6 +163,78 @@ function ListaFuentes({ fuentes, oscuro }: { fuentes: ConteoFuente[]; oscuro: bo
   )
 }
 
+/**
+ * Resumen compacto para el dashboard: en grandes rasgos cómo van los leads
+ * (mediana de 1.ª respuesta + actividad de la semana) con enlace a la
+ * sección de Leads, donde vive el panel completo.
+ */
+export function ResumenComoVanLeads({
+  medianaMin,
+  actividad,
+  variante,
+}: {
+  medianaMin: number | null
+  actividad: number[]
+  variante: 'movil' | 'escritorio'
+}) {
+  const totalContactos7d = actividad.reduce((total, valor) => total + valor, 0)
+  const resumenMediana =
+    medianaMin === null ? 'Sin datos aún' : formatearMediana(medianaMin)
+
+  if (variante === 'movil') {
+    return (
+      <Link href="/admin/leads" aria-label="Cómo van los leads — ver métricas completas">
+        <TarjetaGlass>
+          <div className="flex items-center justify-between">
+            <div className="text-[11px] uppercase tracking-wide text-slate-500">
+              Cómo van los leads
+            </div>
+            <ChevronRight aria-hidden className="size-4 text-slate-500" />
+          </div>
+          <div className="mt-2 flex items-end justify-between gap-3">
+            <div className="flex flex-col">
+              <span className="text-xl font-semibold tracking-tight text-[#221B14]">
+                {resumenMediana}
+              </span>
+              <span className="text-[11px] text-slate-500">
+                1.ª respuesta · {totalContactos7d} contactos esta semana
+              </span>
+            </div>
+            <div className="w-28 shrink-0">
+              <BarrasActividad actividad={actividad} oscuro={false} />
+            </div>
+          </div>
+        </TarjetaGlass>
+      </Link>
+    )
+  }
+
+  return (
+    <Link
+      href="/admin/leads"
+      aria-label="Cómo van los leads — ver métricas completas"
+      className="group flex items-center justify-between gap-6 rounded-xl bg-white p-4 ring-1 ring-slate-200 transition-colors hover:bg-slate-50 sm:p-5"
+    >
+      <div className="flex flex-col gap-1">
+        <h2 className="text-sm text-slate-500">Cómo van los leads</h2>
+        <p className="text-2xl font-semibold tracking-tight text-slate-900">{resumenMediana}</p>
+        <p className="text-xs text-slate-400">
+          1.ª respuesta (mediana 7 d) · {totalContactos7d} contactos esta semana
+        </p>
+      </div>
+      <div className="flex items-center gap-4">
+        <div className="w-40">
+          <BarrasActividad actividad={actividad} oscuro />
+        </div>
+        <span className="text-xs font-medium text-slate-500 group-hover:text-slate-700">
+          Ver métricas
+          <ChevronRight aria-hidden className="ml-0.5 inline size-3.5" />
+        </span>
+      </div>
+    </Link>
+  )
+}
+
 export function PanelComoVanLeads({
   metricas,
   variante,
@@ -233,7 +308,7 @@ export function PanelComoVanLeads({
     <section aria-label="Cómo van los leads" className="flex flex-col gap-3">
       <h2 className="text-base font-semibold text-slate-900">Cómo van los leads</h2>
 
-      <div className="grid grid-cols-2 gap-4 rounded-xl bg-white p-4 ring-1 ring-slate-200 sm:p-5 xl:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 rounded-xl bg-white p-4 ring-1 ring-slate-200 sm:grid-cols-2 sm:p-5 xl:grid-cols-4">
         <div className="flex flex-col gap-2">
           <h3 className="text-sm text-slate-500">1.ª respuesta (mediana 7 d)</h3>
           {medianaMin === null ? (

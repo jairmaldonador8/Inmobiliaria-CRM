@@ -15,15 +15,11 @@ import {
   actividadContacto7d,
   cierresGanadosMes,
   citasHoy,
-  embudoPorEtapa,
-  leadsPorFuente30d,
   medianaPrimeraRespuesta7d,
   serieLeads30Dias,
-  type ConteoEtapa,
-  type ConteoFuente,
 } from '@/lib/dashboard/consultas'
 import { agruparPorEtapa } from '@/lib/dashboard/pipeline'
-import { PanelComoVanLeads } from '@/components/dashboard/panel-como-van-leads'
+import { ResumenComoVanLeads } from '@/components/dashboard/panel-como-van-leads'
 import FondoFintech from '@/components/fintech/fondo-fintech'
 import TarjetaGlass from '@/components/fintech/tarjeta-glass'
 import TarjetaTinta from '@/components/fintech/tarjeta-tinta'
@@ -90,9 +86,7 @@ export default async function PaginaDashboardAdmin() {
     serieLeads,
     cierresGanados,
     citasDeHoy,
-    embudoLeads,
     medianaRespuesta,
-    fuentesLeads,
     actividadContacto,
   ] = await Promise.all([
     supabase
@@ -129,12 +123,10 @@ export default async function PaginaDashboardAdmin() {
     serieLeads30Dias(supabase),
     cierresGanadosMes(supabase),
     citasHoy(supabase),
-    // «Cómo van los leads»: best-effort — si lead_eventos no responde, el
-    // dashboard vive con el panel en su estado vacío (mismo criterio que
-    // leadsEnRiesgo más abajo).
-    embudoPorEtapa(supabase).catch((): ConteoEtapa[] => []),
+    // Resumen «Cómo van los leads»: best-effort — si lead_eventos no
+    // responde, el dashboard vive con el resumen vacío (mismo criterio que
+    // leadsEnRiesgo más abajo). El panel completo vive en /admin/leads.
     medianaPrimeraRespuesta7d(supabase).catch((): number | null => null),
-    leadsPorFuente30d(supabase).catch((): ConteoFuente[] => []),
     actividadContacto7d(supabase).catch((): number[] => new Array(7).fill(0) as number[]),
   ])
 
@@ -334,15 +326,11 @@ export default async function PaginaDashboardAdmin() {
               )}
             </TarjetaGlass>
 
-            {/* Cómo van los leads (historia de lead_eventos) */}
-            <PanelComoVanLeads
+            {/* Resumen «Cómo van los leads» → métricas completas en /admin/leads */}
+            <ResumenComoVanLeads
               variante="movil"
-              metricas={{
-                embudo: embudoLeads,
-                medianaMin: medianaRespuesta,
-                fuentes: fuentesLeads,
-                actividad: actividadContacto,
-              }}
+              medianaMin={medianaRespuesta}
+              actividad={actividadContacto}
             />
 
             {/* Sin atender >24h */}
@@ -473,15 +461,11 @@ export default async function PaginaDashboardAdmin() {
         })}
       </div>
 
-      {/* Cómo van los leads (historia de lead_eventos) */}
-      <PanelComoVanLeads
+      {/* Resumen «Cómo van los leads» → métricas completas en /admin/leads */}
+      <ResumenComoVanLeads
         variante="escritorio"
-        metricas={{
-          embudo: embudoLeads,
-          medianaMin: medianaRespuesta,
-          fuentes: fuentesLeads,
-          actividad: actividadContacto,
-        }}
+        medianaMin={medianaRespuesta}
+        actividad={actividadContacto}
       />
 
       {/* Leads sin atender >24h */}

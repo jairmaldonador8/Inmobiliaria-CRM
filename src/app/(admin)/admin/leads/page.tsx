@@ -6,6 +6,15 @@ import { requireAdmin } from '@/lib/auth/usuario-actual'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { leadsGlobal, type FiltrosLeads as Filtros } from '@/lib/leads/consultas'
 import {
+  actividadContacto7d,
+  embudoPorEtapa,
+  leadsPorFuente30d,
+  medianaPrimeraRespuesta7d,
+  type ConteoEtapa,
+  type ConteoFuente,
+} from '@/lib/dashboard/consultas'
+import { PanelComoVanLeads } from '@/components/dashboard/panel-como-van-leads'
+import {
   claseBadgeEtapa,
   etiquetaEtapa,
   etiquetaFuenteConDetalle,
@@ -31,13 +40,19 @@ export default async function PaginaLeadsAdmin({
   const filtros = await searchParams
   const supabase = createAdminClient()
 
-  const [leads, { data: asesores }] = await Promise.all([
+  const [leads, { data: asesores }, embudo, medianaMin, fuentes, actividad] = await Promise.all([
     leadsGlobal(filtros),
     supabase
       .from('usuarios')
       .select('user_id, nombre, activo')
       .eq('rol', 'asesor')
       .order('nombre', { ascending: true }),
+    // Métricas «Cómo van los leads»: best-effort, mismo criterio que el
+    // resumen del dashboard — la lista de leads nunca se cae por ellas.
+    embudoPorEtapa(supabase).catch((): ConteoEtapa[] => []),
+    medianaPrimeraRespuesta7d(supabase).catch((): number | null => null),
+    leadsPorFuente30d(supabase).catch((): ConteoFuente[] => []),
+    actividadContacto7d(supabase).catch((): number[] => new Array(7).fill(0) as number[]),
   ])
 
   const opcionesAsesor = (asesores ?? [])
@@ -52,6 +67,11 @@ export default async function PaginaLeadsAdmin({
           {leads.length} lead{leads.length === 1 ? '' : 's'}
         </p>
       </header>
+
+      <PanelComoVanLeads
+        variante="escritorio"
+        metricas={{ embudo, medianaMin, fuentes, actividad }}
+      />
 
       <FiltrosLeads asesores={opcionesAsesor} />
 
