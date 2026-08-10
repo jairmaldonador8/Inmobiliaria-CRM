@@ -113,7 +113,6 @@ export function BarraMovilAdmin({ campana }: { campana?: React.ReactNode }) {
       <span className="flex-1 truncate">
         <Wordmark
           className="text-[14px] text-[#EFE9DD]"
-          dashClassName="bg-[#C98A3B]"
         />
       </span>
       {campana}

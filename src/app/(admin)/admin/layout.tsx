@@ -23,7 +23,6 @@ export default async function AdminLayout({
           <div className="min-w-0">
             <Wordmark
               className="text-[15px] text-[#EFE9DD]"
-              dashClassName="bg-[#C98A3B]"
             />
             <p className="mt-1.5 text-[8.5px] font-semibold uppercase tracking-[0.22em] text-slate-400">
               Montana Realty
