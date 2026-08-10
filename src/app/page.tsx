@@ -139,10 +139,10 @@ export default function PaginaLanding() {
             se construye.
           </h1>
           <p className="mt-8 max-w-xl text-base leading-relaxed text-[#6E6C66]">
-            Klo-Ser centraliza la operación completa: los leads de todos tus
-            canales, los turnos y la respuesta de tu equipo, y las métricas que
-            la dirección necesita para decidir. Un solo lugar en vez de tres
-            sistemas y un grupo de WhatsApp.
+            Klo-Ser reúne en un solo lugar los leads de todos tus canales, el
+            trabajo diario de tu equipo y las métricas que la dirección
+            necesita para decidir. Un sistema en vez de tres herramientas y un
+            grupo de WhatsApp.
           </p>
           <div className="mt-10 flex items-center gap-8">
             <BotonTinta href="#contacto">Quiero una demo</BotonTinta>
