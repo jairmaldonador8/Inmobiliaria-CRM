@@ -1,0 +1,255 @@
+<title>Klo-Ser — propuesta landing v2 · métricas</title>
+<style>
+  * { box-sizing: border-box; margin: 0; }
+  :root { --tinta: #141414; --papel: #FCFCFA; --gris: #6E6C66; --gris2: #8C8A84; --pelo: #E3E1DB; --negro: #0E0D0B; --marfil: #F2F0EA; }
+  body { background: var(--papel); color: var(--tinta); font: 15px/1.6 "Segoe UI", system-ui, sans-serif; }
+  .w { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+  .kicker { font-size: 11px; font-weight: 600; letter-spacing: 0.26em; text-transform: uppercase; color: var(--gris2); }
+  .display { font-family: "Segoe UI Light", "Segoe UI", sans-serif; font-weight: 200; letter-spacing: -0.01em; }
+  .btn { display: inline-block; background: var(--tinta); color: var(--papel); padding: 16px 32px; font-size: 11px; font-weight: 600; letter-spacing: 0.18em; text-transform: uppercase; text-decoration: none; }
+  .btn.linea { background: transparent; color: var(--tinta); border: 1px solid var(--tinta); }
+  header.nav { display: flex; justify-content: space-between; align-items: center; padding: 28px 0; }
+  .logo { font-family: "Segoe UI Light", sans-serif; font-weight: 300; font-size: 16px; letter-spacing: 0.42em; text-transform: uppercase; display: inline-flex; align-items: center; gap: 0.3em; }
+  .logo i { font-style: normal; display: inline-block; width: 0.72em; height: 2px; background: currentColor; }
+  section { padding: 88px 0; }
+  .num-gigante { font-size: clamp(44px, 6vw, 76px); font-weight: 100; line-height: 1; font-variant-numeric: tabular-nums; }
+
+  /* Hero con panel de producto */
+  .hero { display: grid; gap: 56px; align-items: center; grid-template-columns: 1.05fr 0.95fr; padding-top: 40px; }
+  @media (max-width: 900px) { .hero { grid-template-columns: 1fr; } }
+  .hero h1 { font-size: clamp(42px, 5.5vw, 64px); line-height: 1.05; }
+  .panel { background: var(--negro); color: var(--marfil); padding: 28px 26px; box-shadow: 0 30px 80px rgba(14,13,11,0.35); }
+  .panel .pk { font-size: 9.5px; letter-spacing: 0.22em; text-transform: uppercase; color: #7A776E; }
+  .panel .hairline { border-bottom: 1px solid #26241F; }
+  .fila3 { display: grid; grid-template-columns: 1fr 1fr 1fr; }
+  .fila3 > div { padding: 12px 0; }
+  .fila3 > div + div { border-left: 1px solid #26241F; padding-left: 14px; }
+  .panel b.v { display: block; font-size: 24px; font-weight: 200; font-variant-numeric: tabular-nums; }
+  .embudo .f { display: flex; align-items: center; gap: 10px; font-size: 11px; color: #A5A29A; margin-top: 8px; }
+  .embudo .f i { font-style: normal; width: 84px; }
+  .embudo .f b { margin-left: auto; color: var(--marfil); font-weight: 600; font-size: 12px; }
+  .barra { height: 1.5px; background: var(--marfil); }
+
+  /* métricas grandes */
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); border-top: 1px solid var(--pelo); }
+  .stats > div { padding: 36px 28px 8px 0; }
+  .stats > div + div { border-left: 1px solid var(--pelo); padding-left: 32px; }
+  .stats p.l { margin-top: 10px; font-size: 13px; color: var(--gris); max-width: 26ch; }
+
+  /* cómo funciona */
+  .pasos { display: grid; grid-template-columns: repeat(4, 1fr); gap: 36px; margin-top: 56px; }
+  @media (max-width: 900px) { .pasos, .stats { grid-template-columns: 1fr; } .stats > div + div { border-left: none; border-top: 1px solid var(--pelo); padding-left: 0; } }
+  .paso .n { font-size: 11px; letter-spacing: 0.22em; color: var(--gris2); }
+  .paso h3 { font-weight: 400; font-size: 17px; margin: 10px 0 8px; }
+  .paso p { font-size: 13.5px; color: var(--gris); }
+  .paso svg { margin-top: 16px; }
+
+  /* banda negra métricas en vivo */
+  .banda { background: var(--negro); color: var(--marfil); }
+  .banda .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: center; }
+  @media (max-width: 900px) { .banda .grid2 { grid-template-columns: 1fr; } }
+
+  /* FAQ */
+  details { border-top: 1px solid var(--pelo); }
+  details:last-of-type { border-bottom: 1px solid var(--pelo); }
+  summary { cursor: pointer; list-style: none; display: flex; justify-content: space-between; align-items: center; padding: 22px 0; font-size: 16px; font-weight: 500; }
+  summary::after { content: '+'; font-weight: 200; font-size: 24px; color: var(--gris2); }
+  details[open] summary::after { content: '−'; }
+  details p { padding: 0 0 22px; color: var(--gris); max-width: 62ch; font-size: 14px; }
+
+  /* contacto */
+  .contacto { display: grid; grid-template-columns: 1fr 1fr; gap: 64px; }
+  @media (max-width: 900px) { .contacto { grid-template-columns: 1fr; } }
+  .campo { display: flex; flex-direction: column; gap: 6px; margin-bottom: 22px; }
+  .campo label { font-size: 10.5px; font-weight: 600; letter-spacing: 0.18em; text-transform: uppercase; color: var(--gris2); }
+  .campo input, .campo textarea { border: none; border-bottom: 1px solid #D0CEC7; background: transparent; padding: 8px 0; font: inherit; color: var(--tinta); }
+  footer { border-top: 1px solid var(--pelo); }
+  footer .w { display: flex; justify-content: space-between; padding-top: 28px; padding-bottom: 28px; font-size: 11px; color: var(--gris2); }
+</style>
+
+<div class="w">
+  <header class="nav">
+    <span class="logo">klo<i></i>ser</span>
+    <div style="display:flex; gap:28px; align-items:center; font-size:11px; font-weight:600; letter-spacing:0.16em; text-transform:uppercase">
+      <span>Cómo funciona</span><span>Preguntas</span><span>Contacto</span>
+      <a class="btn" style="padding:12px 22px" href="#">Iniciar sesión</a>
+    </div>
+  </header>
+</div>
+
+<!-- ═══ HERO con panel de producto vivo ═══ -->
+<div class="w">
+  <section class="hero" style="padding-top:48px">
+    <div>
+      <p class="kicker">CRM inmobiliario</p>
+      <h1 class="display" style="margin-top:22px">Cada lead atendido.<br>Cada cierre, medido.</h1>
+      <p style="margin-top:24px; max-width:46ch; color:var(--gris)">
+        Klo-Ser junta tus leads de portales, WhatsApp y referidos en una sola cola,
+        insiste hasta que alguien responde y convierte cada semana en números que
+        puedes dirigir.
+      </p>
+      <div style="margin-top:36px; display:flex; gap:16px; align-items:center">
+        <a class="btn" href="#contacto">Quiero una demo</a>
+        <a class="btn linea" href="#como">Ver cómo funciona</a>
+      </div>
+    </div>
+    <!-- Panel producto: réplica del dashboard real -->
+    <div class="panel">
+      <div style="display:flex; justify-content:space-between; align-items:baseline" class="hairline">
+        <span class="logo" style="font-size:11px; letter-spacing:0.36em; padding-bottom:12px">klo<i></i>ser</span>
+        <span class="pk">Dashboard · en vivo</span>
+      </div>
+      <div style="display:flex; justify-content:space-between; align-items:flex-end; padding:18px 0 8px">
+        <div><span class="pk">Leads · 30 días</span><span class="num-gigante" style="font-size:46px; display:block">128</span></div>
+        <svg width="150" height="46" fill="none"><path d="M0,42 L22,40 L44,41 L66,34 L88,28 L110,30 L128,14 L150,6" stroke="#F2F0EA" stroke-width="1.4"/><circle cx="150" cy="6" r="2.5" fill="#F2F0EA"/></svg>
+      </div>
+      <div class="fila3 hairline" style="border-top:1px solid #26241F">
+        <div><b class="v">7 min</b><span class="pk">1.ª respuesta</span></div>
+        <div><b class="v">0</b><span class="pk">Sin atender</span></div>
+        <div><b class="v">9</b><span class="pk">Cierres · mes</span></div>
+      </div>
+      <div class="embudo" style="padding-top:14px">
+        <div class="f"><i>Nuevo</i><span class="barra" style="width:110px"></span><b>31</b></div>
+        <div class="f"><i>Contactado</i><span class="barra" style="width:96px"></span><b>27</b></div>
+        <div class="f"><i>Cita</i><span class="barra" style="width:64px"></span><b>18</b></div>
+        <div class="f"><i>Negociación</i><span class="barra" style="width:42px"></span><b>12</b></div>
+        <div class="f"><i>Cerrado</i><span class="barra" style="width:32px; background:#8C8A84"></span><b>9</b></div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ═══ MÉTRICAS GRANDES ═══ -->
+<div class="w">
+  <section style="padding-top:40px">
+    <div class="stats">
+      <div><span class="num-gigante">15<span style="font-size:0.4em"> min</span></span><p class="l">y el sistema escala solo un lead sin respuesta — a otro asesor, a todos, al dueño.</p></div>
+      <div><span class="num-gigante">100<span style="font-size:0.4em"> %</span></span><p class="l">de la historia de cada cliente queda escrita: llamadas, mensajes, visitas, etapas. Nada vive en la memoria de nadie.</p></div>
+      <div><span class="num-gigante">1<span style="font-size:0.4em"> cola</span></span><p class="l">para portales, WhatsApp y referidos. Un solo lugar donde ningún prospecto se pierde.</p></div>
+    </div>
+  </section>
+</div>
+
+<!-- ═══ CÓMO FUNCIONA ═══ -->
+<div class="w">
+  <section id="como">
+    <p class="kicker">Cómo funciona</p>
+    <h2 class="display" style="font-size:clamp(30px,4vw,44px); margin-top:16px">Del primer mensaje<br>a la junta del lunes.</h2>
+    <div class="pasos">
+      <div class="paso">
+        <span class="n">01</span>
+        <h3>El lead entra</h3>
+        <p>Portal, WhatsApp o referido: cae a la cola con su propiedad, su fuente y su mensaje.</p>
+        <svg width="120" height="34" fill="none"><circle cx="8" cy="17" r="4" stroke="#141414" stroke-width="1.3"/><circle cx="8" cy="17" r="1.5" fill="#141414"/><path d="M14,17 H104" stroke="#D0CEC7" stroke-width="1.2" stroke-dasharray="3 4"/><path d="M100,13 L106,17 L100,21" stroke="#141414" stroke-width="1.3"/></svg>
+      </div>
+      <div class="paso">
+        <span class="n">02</span>
+        <h3>Alguien lo toma</h3>
+        <p>La guardia del turno lo recibe al instante, con aviso al teléfono del asesor.</p>
+        <svg width="120" height="34" fill="none"><circle cx="17" cy="17" r="9" stroke="#141414" stroke-width="1.3"/><path d="M13,17.5 L16,20.5 L22,13.5" stroke="#141414" stroke-width="1.3"/></svg>
+      </div>
+      <div class="paso">
+        <span class="n">03</span>
+        <h3>El sistema insiste</h3>
+        <p>¿Sin respuesta en 15 min? Recordatorio. ¿Sigue igual? Se abre a todos. ¿Nada? Aviso al dueño.</p>
+        <svg width="120" height="34" fill="none"><path d="M8,26 L28,26 L28,14 L48,14 L48,20 L68,20 L68,8 L88,8" stroke="#141414" stroke-width="1.3"/><circle cx="88" cy="8" r="2.5" fill="#141414"/></svg>
+      </div>
+      <div class="paso">
+        <span class="n">04</span>
+        <h3>Todo queda medido</h3>
+        <p>Velocidad de respuesta, embudo, fuentes: el tablero que la dirección lee cada lunes.</p>
+        <svg width="120" height="34" fill="none"><rect x="8" y="18" width="7" height="10" fill="#D0CEC7"/><rect x="20" y="12" width="7" height="16" fill="#8C8A84"/><rect x="32" y="20" width="7" height="8" fill="#D0CEC7"/><rect x="44" y="6" width="7" height="22" fill="#141414"/></svg>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ═══ BANDA NEGRA: métrica estrella ═══ -->
+<div class="banda">
+  <div class="w">
+    <section>
+      <div class="grid2">
+        <div>
+          <p class="kicker" style="color:#7A776E">La métrica que cambia el negocio</p>
+          <h2 class="display" style="font-size:clamp(30px,4vw,44px); margin-top:16px">¿Cuánto tardas hoy<br>en contestar un lead?</h2>
+          <p style="margin-top:20px; color:#A5A29A; max-width:44ch; font-size:14px">
+            El 78% de los compradores se queda con el primero que responde*. Klo-Ser mide
+            tu velocidad real de primera respuesta — y la baja, turno a turno, con guardias
+            y escalamiento automático.
+          </p>
+          <p style="margin-top:24px; font-size:10px; color:#55524A">*Lead Response Management Study</p>
+        </div>
+        <div>
+          <div style="display:flex; justify-content:space-between; align-items:baseline; border-bottom:1px solid #26241F; padding-bottom:10px">
+            <span class="pk">1.ª respuesta · mediana semanal</span><span class="pk">últimas 8 semanas</span>
+          </div>
+          <svg viewBox="0 0 440 150" width="100%" fill="none" style="margin-top:18px">
+            <path d="M0,120 H440" stroke="#26241F" stroke-width="1"/>
+            <path d="M0,70 H440" stroke="#26241F" stroke-width="1" stroke-dasharray="2 5"/>
+            <path d="M10,28 L70,42 L130,38 L190,64 L250,78 L310,92 L370,104 L430,112" stroke="#F2F0EA" stroke-width="1.6"/>
+            <circle cx="430" cy="112" r="3.5" fill="#F2F0EA"/>
+            <text x="10" y="18" fill="#7A776E" font-size="11">4 h 20 min</text>
+            <text x="352" y="140" fill="#F2F0EA" font-size="12" font-weight="600">7 min ↓</text>
+          </svg>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<!-- ═══ FAQ ═══ -->
+<div class="w">
+  <section id="faq">
+    <p class="kicker">Preguntas frecuentes</p>
+    <div style="margin-top:28px">
+      <details open>
+        <summary>¿Tengo que dejar mis portales o mi WhatsApp?</summary>
+        <p>No. Klo-Ser se conecta a lo que ya usas: los leads de portales entran solos y los de WhatsApp y referidos se capturan en segundos. El sistema ordena; tú sigues vendiendo donde siempre.</p>
+      </details>
+      <details>
+        <summary>¿Qué tan difícil es que mi equipo lo adopte?</summary>
+        <p>Se instala como app en el teléfono de cada asesor y las acciones del día a día toman un toque: tomar un lead, registrar una llamada, agendar una visita. Sin capacitaciones eternas.</p>
+      </details>
+      <details>
+        <summary>¿Qué pasa si un asesor no contesta?</summary>
+        <p>El sistema insiste solo: recordatorio al asesor, apertura del lead a todo el equipo y, si nadie responde, aviso directo al dueño. Ningún prospecto se queda esperando en silencio.</p>
+      </details>
+      <details>
+        <summary>¿Mis datos son míos?</summary>
+        <p>Sí. La historia de tus clientes es inmutable —nadie puede borrarla ni editarla, ni por error— y te pertenece. Cada inmobiliaria opera con su propia información, aislada y respaldada.</p>
+      </details>
+      <details>
+        <summary>¿Cuánto cuesta?</summary>
+        <p>Klo-Ser se implementa a la medida de cada inmobiliaria. Cuéntanos cómo trabaja tu equipo y te armamos una propuesta esta misma semana.</p>
+      </details>
+    </div>
+  </section>
+</div>
+
+<!-- ═══ CONTACTO ═══ -->
+<div class="w">
+  <section id="contacto" style="border-top:1px solid var(--pelo)">
+    <div class="contacto">
+      <div>
+        <p class="kicker">Contacto</p>
+        <h2 class="display" style="font-size:clamp(30px,4vw,44px); margin-top:16px">Hablemos de<br>tus cierres.</h2>
+        <p style="margin-top:20px; color:var(--gris); max-width:40ch">Cuéntanos cómo opera tu inmobiliaria y te enseñamos Klo-Ser funcionando con un caso como el tuyo.</p>
+        <p style="margin-top:32px; font-size:14px"><b>WhatsApp</b> · +52 81 0000 0000<br><b>Correo</b> · hola@klo-ser.com<br><span style="color:var(--gris2)">Monterrey, MX</span></p>
+      </div>
+      <form>
+        <div class="campo"><label>Nombre</label><input placeholder="Tu nombre"></div>
+        <div class="campo"><label>Inmobiliaria</label><input placeholder="Nombre de tu inmobiliaria"></div>
+        <div class="campo"><label>Teléfono o correo</label><input placeholder="Para responderte"></div>
+        <div class="campo"><label>Cuéntanos</label><textarea rows="3" placeholder="¿Cuántos asesores son? ¿Qué se les pierde hoy?"></textarea></div>
+        <button class="btn" type="button" style="border:none; cursor:pointer">Quiero una demo</button>
+      </form>
+    </div>
+  </section>
+</div>
+
+<footer>
+  <div class="w">
+    <span class="logo" style="font-size:12px">klo<i></i>ser</span>
+    <span>Un buen cierre se construye · © 2026 Klo-Ser</span>
+  </div>
+</footer>
