@@ -35,6 +35,8 @@ import {
   TimelineSeguimientos,
   type SeguimientoTimeline,
 } from '@/components/seguimientos/timeline-seguimientos'
+import { eventosDeLead } from '@/lib/eventos/consultas'
+import { TimelineEventos } from '@/components/eventos/timeline-eventos'
 
 type FilaSeguimiento = {
   id: string
@@ -82,6 +84,7 @@ export default async function PaginaDetalleLeadAdmin({
     { data: asesores },
     { data: propiedades },
     visitas,
+    eventos,
   ] = await Promise.all([
     supabase
       .from('seguimientos')
@@ -107,6 +110,9 @@ export default async function PaginaDetalleLeadAdmin({
           .eq('activa', true)
           .order('titulo', { ascending: true }),
     visitasDelLead(supabase, id),
+    // Mismo cliente de sesión: el admin pasa private.is_admin() y ve además
+    // los tipos de supervisión — la RLS decide, la UI no filtra.
+    eventosDeLead(supabase, id),
   ])
 
   const itemsTimeline: SeguimientoTimeline[] = (
@@ -251,6 +257,11 @@ export default async function PaginaDetalleLeadAdmin({
       <div className="flex flex-col gap-3">
         <h2 className="text-sm font-semibold text-slate-900">Seguimientos</h2>
         <TimelineSeguimientos seguimientos={itemsTimeline} />
+      </div>
+
+      <div className="flex flex-col gap-3">
+        <h2 className="text-sm font-semibold text-slate-900">Historia del lead</h2>
+        <TimelineEventos eventos={eventos} />
       </div>
     </section>
   )

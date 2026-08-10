@@ -32,6 +32,8 @@ import {
   TimelineSeguimientos,
   type SeguimientoTimeline,
 } from '@/components/seguimientos/timeline-seguimientos'
+import { eventosDeLead } from '@/lib/eventos/consultas'
+import { TimelineEventos } from '@/components/eventos/timeline-eventos'
 
 type FilaSeguimiento = {
   id: string
@@ -117,6 +119,7 @@ export default async function PaginaDetalleLeadAsesor({
     { data: propiedades },
     visitas,
     { data: ultimoContacto },
+    eventos,
   ] = await Promise.all([
       supabase
         .from('seguimientos')
@@ -146,6 +149,9 @@ export default async function PaginaDetalleLeadAsesor({
         .eq('lead_id', id)
         .order('creado_en', { ascending: false })
         .limit(1),
+      // Mismo cliente de sesión: la RLS ya oculta al asesor los tipos de
+      // supervisión (escalamiento_paso, push_recordatorio).
+      eventosDeLead(supabase, id),
     ])
 
   // El asesor solo puede leer SU fila de usuarios (RLS): un autor ajeno
@@ -267,6 +273,11 @@ export default async function PaginaDetalleLeadAsesor({
       <div className="flex flex-col gap-3">
         <h2 className="text-sm font-semibold text-slate-900">Seguimientos</h2>
         <TimelineSeguimientos seguimientos={itemsTimeline} />
+      </div>
+
+      <div className="flex flex-col gap-3">
+        <h2 className="text-sm font-semibold text-slate-900">Historia del lead</h2>
+        <TimelineEventos eventos={eventos} />
       </div>
     </section>
   )
