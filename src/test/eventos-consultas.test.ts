@@ -26,7 +26,32 @@ function fila(parcial: Partial<FilaEventoLead> & { id: string; tipo: string }): 
 }
 
 describe('colapsarEventos', () => {
-  it('descarta el lead_asignado (actor NULL, del trigger) si hay un tomado_de_bandeja en el mismo minuto', () => {
+  it('descarta el lead_reasignado gemelo (forma REAL de producción: tomarLead toma leads con asesor) en el mismo minuto', () => {
+    // tomarLead solo toma leads en escalamiento abierto, donde asesor_id es
+    // no-null → el trigger emite lead_reasignado {de: otro, a: tomador} con
+    // actor NULL (corre con cliente admin).
+    const eventos = [
+      fila({
+        id: 'e2',
+        tipo: 'tomado_de_bandeja',
+        actor_id: 'uid-ana',
+        ocurrido_en: '2026-08-10T12:00:01.000Z',
+      }),
+      fila({
+        id: 'e1',
+        tipo: 'lead_reasignado',
+        actor_id: null, // tomarLead corre con cliente admin → auth.uid() null
+        payload: { de: 'uid-luis', a: 'uid-ana' },
+        ocurrido_en: '2026-08-10T12:00:00.500Z',
+      }),
+    ]
+
+    const resultado = colapsarEventos(eventos)
+
+    expect(resultado.map((e) => e.id)).toEqual(['e2'])
+  })
+
+  it('descarta también un lead_asignado gemelo (camino hipotético: toma desde bandeja, asesor_id null)', () => {
     const eventos = [
       fila({
         id: 'e2',
@@ -37,7 +62,7 @@ describe('colapsarEventos', () => {
       fila({
         id: 'e1',
         tipo: 'lead_asignado',
-        actor_id: null, // tomarLead corre con cliente admin → auth.uid() null
+        actor_id: null,
         payload: { de: null, a: 'uid-ana' },
         ocurrido_en: '2026-08-10T12:00:00.500Z',
       }),
@@ -48,7 +73,7 @@ describe('colapsarEventos', () => {
     expect(resultado.map((e) => e.id)).toEqual(['e2'])
   })
 
-  it('NO descarta un lead_asignado lejano en el tiempo (asignación manual del admin)', () => {
+  it('NO descarta una reasignación manual lejana en el tiempo', () => {
     const eventos = [
       fila({
         id: 'e2',
@@ -58,8 +83,9 @@ describe('colapsarEventos', () => {
       }),
       fila({
         id: 'e1',
-        tipo: 'lead_asignado',
-        payload: { de: null, a: 'uid-ana' },
+        tipo: 'lead_reasignado',
+        actor_id: 'uid-admin',
+        payload: { de: 'uid-luis', a: 'uid-ana' },
         ocurrido_en: '2026-08-10T11:30:00.000Z',
       }),
     ]
@@ -69,7 +95,7 @@ describe('colapsarEventos', () => {
     expect(resultado.map((e) => e.id)).toEqual(['e2', 'e1'])
   })
 
-  it('NO descarta un lead_asignado hacia OTRO asesor aunque coincida el minuto (cross-check payload.a)', () => {
+  it('NO descarta una reasignación hacia OTRO asesor aunque coincida el minuto (cross-check payload.a)', () => {
     const eventos = [
       fila({
         id: 'e2',
@@ -79,8 +105,9 @@ describe('colapsarEventos', () => {
       }),
       fila({
         id: 'e1',
-        tipo: 'lead_asignado',
-        payload: { de: null, a: 'uid-luis' },
+        tipo: 'lead_reasignado',
+        actor_id: 'uid-admin',
+        payload: { de: 'uid-ana', a: 'uid-luis' },
         ocurrido_en: '2026-08-10T12:00:00.000Z',
       }),
     ]
@@ -251,7 +278,7 @@ describe('eventosDeLead', () => {
     expect(resultado[0].etiqueta).toBe('Se le envió WhatsApp')
   })
 
-  it('aplica el colapso tomado_de_bandeja/lead_asignado', async () => {
+  it('aplica el colapso tomado_de_bandeja/gemelo de asignación (forma de producción)', async () => {
     const eventos = [
       fila({
         id: 'e2',
@@ -261,8 +288,9 @@ describe('eventosDeLead', () => {
       }),
       fila({
         id: 'e1',
-        tipo: 'lead_asignado',
-        payload: { de: null, a: 'uid-ana' },
+        tipo: 'lead_reasignado',
+        actor_id: null,
+        payload: { de: 'uid-luis', a: 'uid-ana' },
         ocurrido_en: '2026-08-10T12:00:00.000Z',
       }),
     ]

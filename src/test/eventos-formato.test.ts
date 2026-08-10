@@ -101,8 +101,8 @@ describe('etiquetaEvento', () => {
     expect(etiquetaEvento('visita_cancelada', {}, NOMBRES)).toBe('Visita cancelada')
   })
 
-  it('tomado_de_bandeja', () => {
-    expect(etiquetaEvento('tomado_de_bandeja', {}, NOMBRES)).toBe('Tomó el lead de la bandeja')
+  it('tomado_de_bandeja no afirma «de la bandeja» (el flujo real es escalamiento abierto)', () => {
+    expect(etiquetaEvento('tomado_de_bandeja', {}, NOMBRES)).toBe('Tomó el lead')
   })
 
   it('supervisión: escalamiento_paso traduce el paso a prosa y push_recordatorio es fijo', () => {

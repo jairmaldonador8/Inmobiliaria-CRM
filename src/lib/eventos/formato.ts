@@ -112,8 +112,11 @@ export function etiquetaEvento(tipo: string, payload: PayloadEvento, nombres: No
       return 'Visita realizada'
     case 'visita_cancelada':
       return 'Visita cancelada'
+    // El tipo se llama tomado_de_bandeja en la BD, pero el flujo real es el
+    // escalamiento abierto (el lead YA tenía asesor) — la etiqueta no debe
+    // afirmar «de la bandeja».
     case 'tomado_de_bandeja':
-      return 'Tomó el lead de la bandeja'
+      return 'Tomó el lead'
     // Tipos de supervisión: solo el admin los recibe (la RLS de lead_eventos
     // los filtra para el asesor — la UI no necesita filtrar nada).
     case 'escalamiento_paso': {

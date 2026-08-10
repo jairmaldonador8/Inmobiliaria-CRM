@@ -35,13 +35,20 @@ const LIMITE_EVENTOS = 50
 const VENTANA_COLAPSO_MS = 60_000
 
 /**
- * Descarta el `lead_asignado` gemelo de un `tomado_de_bandeja` (tomar un
- * lead de la bandeja dispara AMBOS: la acción emite `tomado_de_bandeja` y el
- * trigger de leads anota `lead_asignado` — un solo hecho, dos filas).
+ * Descarta el gemelo de asignación de un `tomado_de_bandeja` (tomar un lead
+ * dispara AMBOS: la acción emite `tomado_de_bandeja` y el trigger de leads
+ * anota el cambio de asesor_id — un solo hecho, dos filas).
+ *
+ * El gemelo real de producción es `lead_reasignado`, NO `lead_asignado`:
+ * `tomarLead` (src/lib/leads/acciones.ts) toma leads en escalamiento
+ * abierto, donde asesor_id SIEMPRE es no-null (el CAS hace
+ * `.eq('asesor_id', …)`), así que el trigger 0016 cae en la rama
+ * `lead_reasignado`. Se colapsan ambos tipos por si algún camino futuro
+ * tomara desde bandeja (asesor_id null → `lead_asignado`).
  *
  * OJO: NO se compara por igualdad de actor — `tomarLead` corre con el
- * cliente admin, así que el `lead_asignado` del trigger llega con actor_id
- * NULL mientras el `tomado_de_bandeja` trae el uid del asesor. La regla es:
+ * cliente admin, así que el gemelo del trigger llega con actor_id NULL
+ * mientras el `tomado_de_bandeja` trae el uid del asesor. La regla es:
  * mismo lead (la consulta ya es de un solo lead) + mismo minuto, con
  * cross-check `payload.a === actor del tomado` cuando ambos existen.
  */
@@ -50,7 +57,7 @@ export function colapsarEventos(eventos: FilaEventoLead[]): FilaEventoLead[] {
   if (tomados.length === 0) return eventos
 
   return eventos.filter((evento) => {
-    if (evento.tipo !== 'lead_asignado') return true
+    if (evento.tipo !== 'lead_asignado' && evento.tipo !== 'lead_reasignado') return true
     const instante = new Date(evento.ocurrido_en).getTime()
     const destino = typeof evento.payload?.a === 'string' ? evento.payload.a : null
     return !tomados.some((tomado) => {
