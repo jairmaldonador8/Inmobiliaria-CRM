@@ -105,9 +105,22 @@ describe('etiquetaEvento', () => {
     expect(etiquetaEvento('tomado_de_bandeja', {}, NOMBRES)).toBe('Tomó el lead de la bandeja')
   })
 
-  it('supervisión: escalamiento_paso incluye el paso y push_recordatorio es fijo', () => {
+  it('supervisión: escalamiento_paso traduce el paso a prosa y push_recordatorio es fijo', () => {
     expect(etiquetaEvento('escalamiento_paso', { paso: 'recordatorio_r1' }, NOMBRES)).toBe(
-      'Escalamiento: recordatorio_r1'
+      'Escalamiento: recordatorio al asesor (ronda 1)'
+    )
+    expect(etiquetaEvento('escalamiento_paso', { paso: 'abierto_r2' }, NOMBRES)).toBe(
+      'Escalamiento: abierto a todos (ronda 2)'
+    )
+    expect(etiquetaEvento('escalamiento_paso', { paso: 'dueno_120' }, NOMBRES)).toBe(
+      'Escalamiento: aviso al dueño'
+    )
+    expect(etiquetaEvento('escalamiento_paso', { paso: 'recordatorio_vip' }, NOMBRES)).toBe(
+      'Escalamiento: recordatorio VIP'
+    )
+    // Un paso desconocido se muestra tal cual (tolerante, sin inventar prosa).
+    expect(etiquetaEvento('escalamiento_paso', { paso: 'paso_nuevo' }, NOMBRES)).toBe(
+      'Escalamiento: paso_nuevo'
     )
     expect(etiquetaEvento('escalamiento_paso', {}, NOMBRES)).toBe('Escalamiento')
     expect(etiquetaEvento('push_recordatorio', { paso: 'recordatorio_vip' }, NOMBRES)).toBe(

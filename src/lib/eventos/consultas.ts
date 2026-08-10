@@ -89,6 +89,11 @@ export async function eventosDeLead(
   const ids = new Set<string>()
   for (const evento of eventos) {
     if (evento.actor_id) ids.add(evento.actor_id)
+    // payload.a/de solo son uuids en los eventos de asignación —
+    // `etapa_cambiada` lleva NOMBRES DE ETAPA en esas mismas claves, y
+    // colarlos al `.in('user_id', …)` revienta la consulta con 22P02 y deja
+    // TODO el timeline sin nombres (el best-effort de abajo se lo traga).
+    if (evento.tipo !== 'lead_asignado' && evento.tipo !== 'lead_reasignado') continue
     for (const clave of ['a', 'de'] as const) {
       const valor = evento.payload?.[clave]
       if (typeof valor === 'string' && valor.length > 0) ids.add(valor)

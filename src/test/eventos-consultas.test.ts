@@ -162,7 +162,7 @@ describe('eventosDeLead', () => {
     expect(limit).toHaveBeenCalledWith(50)
   })
 
-  it('resuelve nombres de actor_id ∪ payload.a/de y arma etiqueta + actor_nombre', async () => {
+  it('resuelve nombres de actor_id ∪ payload.a/de de asignaciones y arma etiqueta + actor_nombre', async () => {
     const eventos = [
       fila({
         id: 'e1',
@@ -189,6 +189,44 @@ describe('eventosDeLead', () => {
         ocurrido_en: '2026-08-10T12:00:00.000Z',
       },
     ])
+  })
+
+  it('NO cuela los payload.a/de de etapa_cambiada (son etapas, no uuids) a la consulta de usuarios', async () => {
+    // Regresión: si 'contactado'/'nuevo' llegan al .in('user_id', …),
+    // PostgREST truena con 22P02, el best-effort deja `nombres` vacío y TODO
+    // el timeline cae a fallbacks («Se asignó a un asesor», «Sistema»).
+    const eventos = [
+      fila({
+        id: 'e2',
+        tipo: 'etapa_cambiada',
+        actor_id: 'uid-ana',
+        payload: { de: 'nuevo', a: 'contactado' },
+        ocurrido_en: '2026-08-10T12:05:00.000Z',
+      }),
+      fila({
+        id: 'e1',
+        tipo: 'lead_reasignado',
+        actor_id: 'uid-admin',
+        payload: { de: 'uid-luis', a: 'uid-ana' },
+      }),
+    ]
+    const { supabase, inUsuarios } = crearSupabaseFake(eventos, [
+      { user_id: 'uid-admin', nombre: 'Jair' },
+      { user_id: 'uid-ana', nombre: 'Ana Pérez' },
+      { user_id: 'uid-luis', nombre: 'Luis Garza' },
+    ])
+
+    const resultado = await eventosDeLead(supabase, 'lead-1')
+
+    // Aserción central: la lista de ids es EXACTAMENTE la de uuids — un id
+    // envenenado con nombres de etapa hace fallar este toEqual.
+    const idsPedidos = inUsuarios.mock.calls[0][1] as string[]
+    expect([...idsPedidos].sort()).toEqual(['uid-admin', 'uid-ana', 'uid-luis'])
+    expect(resultado.map((e) => e.etiqueta)).toEqual([
+      'Pasó a Contactado',
+      'Se reasignó a Ana Pérez',
+    ])
+    expect(resultado.map((e) => e.actor_nombre)).toEqual(['Ana Pérez', 'Jair'])
   })
 
   it('sin uuids que resolver NO consulta usuarios', async () => {

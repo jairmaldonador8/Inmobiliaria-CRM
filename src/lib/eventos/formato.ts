@@ -47,6 +47,21 @@ function comoTexto(valor: unknown): string | null {
 }
 
 /**
+ * Pasos del escalamiento (src/lib/guardias/escalamiento.ts) en prosa:
+ * recordatorio_rN / abierto_rN (rondas del digest v2), dueno_120 y
+ * recordatorio_vip. Un código desconocido se muestra tal cual.
+ */
+function etiquetaPaso(paso: string): string {
+  const recordatorio = paso.match(/^recordatorio_r(\d+)$/)
+  if (recordatorio) return `recordatorio al asesor (ronda ${recordatorio[1]})`
+  const abierto = paso.match(/^abierto_r(\d+)$/)
+  if (abierto) return `abierto a todos (ronda ${abierto[1]})`
+  if (paso === 'dueno_120') return 'aviso al dueño'
+  if (paso === 'recordatorio_vip') return 'recordatorio VIP'
+  return paso
+}
+
+/**
  * Etiqueta en español del evento. Tolerante a payloads incompletos y a
  * tipos desconocidos (devuelve el propio tipo, patrón `etiquetaEtapa`).
  */
@@ -103,7 +118,7 @@ export function etiquetaEvento(tipo: string, payload: PayloadEvento, nombres: No
     // los filtra para el asesor — la UI no necesita filtrar nada).
     case 'escalamiento_paso': {
       const paso = comoTexto(payload.paso)
-      return paso ? `Escalamiento: ${paso}` : 'Escalamiento'
+      return paso ? `Escalamiento: ${etiquetaPaso(paso)}` : 'Escalamiento'
     }
     case 'push_recordatorio':
       return 'Recordatorio enviado'
