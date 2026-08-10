@@ -27,6 +27,7 @@ import { revalidatePath } from 'next/cache'
 
 import { usuarioActual } from '@/lib/auth/usuario-actual'
 import { createClient } from '@/lib/supabase/server'
+import { registrarEvento } from '@/lib/eventos/registrar'
 import { avanzarEtapaPorEvento } from '@/lib/leads/avance-automatico'
 import { validarDatosVisita } from '@/lib/visitas/validacion'
 import { formatearFechaHoraMonterrey } from '@/lib/fechas/monterrey'
@@ -120,6 +121,8 @@ export async function agendarVisita(
     return { error: 'No se pudo agendar la visita' }
   }
 
+  await registrarEvento(supabase, lead.id, 'visita_agendada', { visita_id: visita.id }, usuario.user_id)
+
   // Seguimiento de sistema, best-effort: si falla, NO revertimos la visita
   // que ya se agendó con éxito (mismo patrón que `cambiarEtapa`).
   const { error: errorSeguimiento } = await supabase.from('seguimientos').insert({
@@ -178,6 +181,14 @@ export async function reagendarVisita(
     return { error: 'No se pudo reagendar la visita' }
   }
 
+  await registrarEvento(
+    supabase,
+    data[0].lead_id,
+    'visita_agendada',
+    { visita_id: visitaId, reagendada: true },
+    usuario.user_id
+  )
+
   await sincronizarConGoogleCalendar(visitaId)
 
   revalidarRutasVisita(data[0].lead_id)
@@ -217,6 +228,8 @@ export async function marcarVisitaRealizada(visitaId: string): Promise<Resultado
   }
 
   const leadId = data[0].lead_id
+
+  await registrarEvento(supabase, leadId, 'visita_realizada', { visita_id: visitaId }, usuario.user_id)
 
   // La etapa actual no la teníamos a mano (a diferencia de agendarVisita,
   // que ya lee el lead): un viaje extra, y con RLS de por medio — si el
@@ -266,6 +279,14 @@ export async function cancelarVisita(visitaId: string): Promise<ResultadoVisita>
   if (error || !data || data.length === 0) {
     return { error: 'No se pudo cancelar la visita' }
   }
+
+  await registrarEvento(
+    supabase,
+    data[0].lead_id,
+    'visita_cancelada',
+    { visita_id: visitaId },
+    usuario.user_id
+  )
 
   await sincronizarConGoogleCalendar(visitaId)
 

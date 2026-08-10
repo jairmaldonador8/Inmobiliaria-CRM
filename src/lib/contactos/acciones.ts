@@ -15,6 +15,7 @@ import { revalidatePath } from 'next/cache'
 
 import { usuarioActual } from '@/lib/auth/usuario-actual'
 import { createClient } from '@/lib/supabase/server'
+import { registrarEvento } from '@/lib/eventos/registrar'
 import { avanzarEtapaPorEvento } from '@/lib/leads/avance-automatico'
 import { cambiarEtapa } from '@/lib/leads/acciones-asesor'
 import { DESENLACES_ELEGIBLES, type DesenlaceElegible } from '@/lib/contactos/formato'
@@ -85,22 +86,42 @@ export async function registrarSalidaWhatsapp(
     // Los pendientes viejos se degradan (en plural: pueden ser varios). Es
     // el registro honesto de que ese intento nunca se reportó.
     if ((pendientes ?? []).length > 0) {
-      await supabase
+      const { data: degradados } = await supabase
         .from('contactos_whatsapp')
         .update({ resultado: 'sin_reporte', resuelto_en: new Date().toISOString() })
         .eq('lead_id', leadId)
         .eq('resultado', 'pendiente')
+        .select('id')
+      for (const contacto of degradados ?? []) {
+        await registrarEvento(
+          supabase,
+          leadId,
+          'whatsapp_desenlace',
+          { contacto_id: contacto.id, desenlace: 'sin_reporte' },
+          usuario.user_id
+        )
+      }
     }
 
     // OJO: el insert lleva SOLO (lead_id, autor_id). El grant de la tabla no
     // incluye `resultado` — mandarlo explícito, aunque fuera 'pendiente',
     // truena con «permission denied for column resultado». El default de la
     // columna es quien lo pone.
-    const { error: errorContacto } = await supabase
+    const { data: contacto, error: errorContacto } = await supabase
       .from('contactos_whatsapp')
       .insert({ lead_id: leadId, autor_id: usuario.user_id })
-    if (errorContacto) {
-      console.error('No se pudo registrar el contacto:', errorContacto.message)
+      .select('id')
+      .single()
+    if (errorContacto || !contacto) {
+      console.error('No se pudo registrar el contacto:', errorContacto?.message)
+    } else {
+      await registrarEvento(
+        supabase,
+        leadId,
+        'whatsapp_enviado',
+        { contacto_id: contacto.id },
+        usuario.user_id
+      )
     }
   }
 
@@ -149,13 +170,24 @@ export async function resolverContacto(
   // POR LEAD, no por contacto: el dedupe acepta una carrera que puede dejar
   // dos filas pendientes. Si se resolviera solo una, la hoja reaparecería
   // con la otra.
-  const { error } = await supabase
+  const { data: resueltos, error } = await supabase
     .from('contactos_whatsapp')
     .update({ resultado: valor, resuelto_en: new Date().toISOString() })
     .eq('lead_id', leadId)
     .eq('resultado', 'pendiente')
+    .select('id')
 
   if (error) return { error: 'No se pudo registrar cómo te fue' }
+
+  for (const contacto of resueltos ?? []) {
+    await registrarEvento(
+      supabase,
+      leadId,
+      'whatsapp_desenlace',
+      { contacto_id: contacto.id, desenlace: valor },
+      usuario.user_id
+    )
+  }
 
   // «No le interesa» NO puede ir por el avance automático: 'cerrado_perdido'
   // no es columna del kanban, así que etapaTrasEvento devolvería null y el

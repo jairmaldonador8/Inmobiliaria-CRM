@@ -123,6 +123,8 @@ function crearSupabaseAgendarFake(opts: {
 
   const insertSeguimiento = vi.fn().mockResolvedValue({ error: opts.seguimientoError ?? null })
 
+  const insertEvento = vi.fn().mockResolvedValue({ error: null })
+
   // Avance automático de etapa:
   //   leads: update({etapa}).eq('id').eq('archivado').eq('etapa').select('id')
   const selectAvance = vi
@@ -139,6 +141,7 @@ function crearSupabaseAgendarFake(opts: {
     if (table === 'leads') return { select: selectLead, update: updateLead }
     if (table === 'visitas') return { insert: insertVisita }
     if (table === 'seguimientos') return { insert: insertSeguimiento }
+    if (table === 'lead_eventos') return { insert: insertEvento }
     throw new Error(`tabla inesperada en el stub: ${table}`)
   })
 
@@ -153,6 +156,7 @@ function crearSupabaseAgendarFake(opts: {
     selectVisita,
     singleVisita,
     insertSeguimiento,
+    insertEvento,
     updateLead,
     eqAvanceEtapa,
   }
@@ -197,10 +201,13 @@ function crearSupabaseRealizadaFake(opts: {
 
   const insertSeguimiento = vi.fn().mockResolvedValue({ error: null })
 
+  const insertEvento = vi.fn().mockResolvedValue({ error: null })
+
   const from = vi.fn((table: string) => {
     if (table === 'visitas') return { update: updateVisita }
     if (table === 'leads') return { select: selectLead, update: updateLead }
     if (table === 'seguimientos') return { insert: insertSeguimiento }
+    if (table === 'lead_eventos') return { insert: insertEvento }
     throw new Error(`tabla inesperada en el stub: ${table}`)
   })
 
@@ -212,6 +219,7 @@ function crearSupabaseRealizadaFake(opts: {
     updateLead,
     eqAvanceEtapa,
     insertSeguimiento,
+    insertEvento,
   }
 }
 
@@ -229,7 +237,11 @@ function crearSupabaseUpdateVisitaFake(opts: {
   const eqEstado = vi.fn(() => ({ select: selectDespuesDeUpdate }))
   const eqId = vi.fn(() => ({ eq: eqEstado }))
   const update = vi.fn(() => ({ eq: eqId }))
-  const from = vi.fn(() => ({ update }))
+  const insertEvento = vi.fn().mockResolvedValue({ error: null })
+  const from = vi.fn((table: string) => {
+    if (table === 'lead_eventos') return { insert: insertEvento }
+    return { update }
+  })
 
   return {
     supabase: { from } as unknown as SupabaseClient,
@@ -238,6 +250,7 @@ function crearSupabaseUpdateVisitaFake(opts: {
     eqId,
     eqEstado,
     selectDespuesDeUpdate,
+    insertEvento,
   }
 }
 
@@ -301,6 +314,13 @@ describe('agendarVisita', () => {
     expect(argumentoInsert.asesor_id).not.toBe(USUARIO_ADMIN.user_id)
     // Hook de espejo de Google Calendar (Task 8): se dispara con el id de la visita recién creada.
     expect(sincronizarVisitaMock).toHaveBeenCalledWith('visita-1')
+    // Evento semántico en lead_eventos, con el actor real (quien agenda).
+    expect(fake.insertEvento).toHaveBeenCalledWith({
+      lead_id: 'lead-1',
+      tipo: 'visita_agendada',
+      actor_id: USUARIO_ADMIN.user_id,
+      payload: { visita_id: 'visita-1' },
+    })
   })
 
   it('si sincronizarVisita (Google Calendar) falla, la visita ya agendada igual se reporta ok (best-effort)', async () => {
@@ -455,6 +475,12 @@ describe('marcarVisitaRealizada', () => {
 
     expect(resultado).toEqual({ ok: true })
     expect(fake.updateVisita).toHaveBeenCalledWith({ estado: 'realizada' })
+    expect(fake.insertEvento).toHaveBeenCalledWith({
+      lead_id: 'lead-1',
+      tipo: 'visita_realizada',
+      actor_id: USUARIO_ADMIN.user_id,
+      payload: { visita_id: 'visita-1' },
+    })
     expect(fake.updateLead).toHaveBeenCalledWith({ etapa: 'visita_realizada' })
     expect(fake.insertSeguimiento).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -529,6 +555,12 @@ describe('reagendarVisita', () => {
       duracion_min: DATOS_REAGENDAR.duracionMin,
     })
     expect(sincronizarVisitaMock).toHaveBeenCalledWith('visita-1')
+    expect(fake.insertEvento).toHaveBeenCalledWith({
+      lead_id: 'lead-1',
+      tipo: 'visita_agendada',
+      actor_id: USUARIO_ADMIN.user_id,
+      payload: { visita_id: 'visita-1', reagendada: true },
+    })
   })
 })
 
@@ -552,5 +584,11 @@ describe('cancelarVisita', () => {
     expect(resultado).toEqual({ ok: true })
     expect(fake.update).toHaveBeenCalledWith({ estado: 'cancelada' })
     expect(sincronizarVisitaMock).toHaveBeenCalledWith('visita-1')
+    expect(fake.insertEvento).toHaveBeenCalledWith({
+      lead_id: 'lead-1',
+      tipo: 'visita_cancelada',
+      actor_id: USUARIO_ADMIN.user_id,
+      payload: { visita_id: 'visita-1' },
+    })
   })
 })

@@ -45,6 +45,7 @@ function fakeAdmin(opciones: { casGana?: boolean } = {}) {
   const filtrosUpdate: unknown[][] = []
   let payloadUpdate: Record<string, unknown> = {}
   const insertsSeguimientos: Record<string, unknown>[] = []
+  const insertsEventos: Record<string, unknown>[] = []
 
   const cadenaUpdate: Record<string, unknown> = {
     select: vi.fn(() =>
@@ -79,12 +80,26 @@ function fakeAdmin(opciones: { casGana?: boolean } = {}) {
         }),
       }
     }
+    if (tabla === 'lead_eventos') {
+      return {
+        insert: vi.fn((p: Record<string, unknown>) => {
+          insertsEventos.push(p)
+          return Promise.resolve({ error: null })
+        }),
+      }
+    }
     throw new Error(`tabla inesperada: ${tabla}`)
   })
 
   const cliente = { from }
   createAdminClientMock.mockReturnValue(cliente)
-  return { cliente, filtrosUpdate, insertsSeguimientos, payloadUpdate: () => payloadUpdate }
+  return {
+    cliente,
+    filtrosUpdate,
+    insertsSeguimientos,
+    insertsEventos,
+    payloadUpdate: () => payloadUpdate,
+  }
 }
 
 beforeEach(() => {
@@ -101,7 +116,8 @@ beforeEach(() => {
 
 describe('tomarLead', () => {
   it('el primero que lo toma gana: CAS sobre el asesor VIGENTE + seguimiento + aviso al original', async () => {
-    const { cliente, filtrosUpdate, insertsSeguimientos, payloadUpdate } = fakeAdmin()
+    const { cliente, filtrosUpdate, insertsSeguimientos, insertsEventos, payloadUpdate } =
+      fakeAdmin()
 
     const r = await tomarLead('lead-1')
 
@@ -111,6 +127,13 @@ describe('tomarLead', () => {
     expect(filtrosUpdate).toContainEqual(['eq', 'asesor_id', 'asesor-original'])
     expect(filtrosUpdate).toContainEqual(['eq', 'etapa', 'nuevo'])
     expect(String(insertsSeguimientos[0].nota)).toContain('tomó el lead')
+    // Evento semántico con el asesor que toma como actor.
+    expect(insertsEventos).toContainEqual({
+      lead_id: 'lead-1',
+      tipo: 'tomado_de_bandeja',
+      actor_id: 'asesor-yo',
+      payload: {},
+    })
     expect(crearNotificacionMock).toHaveBeenCalledWith(
       cliente,
       expect.objectContaining({ destinatarioId: 'asesor-original' })
@@ -118,12 +141,13 @@ describe('tomarLead', () => {
   })
 
   it('el segundo pierde el CAS → «ya fue tomado», sin side effects', async () => {
-    const { insertsSeguimientos } = fakeAdmin({ casGana: false })
+    const { insertsSeguimientos, insertsEventos } = fakeAdmin({ casGana: false })
 
     const r = await tomarLead('lead-1')
 
     expect(r).toEqual({ error: 'Este lead ya fue tomado' })
     expect(insertsSeguimientos).toHaveLength(0)
+    expect(insertsEventos).toHaveLength(0)
     expect(crearNotificacionMock).not.toHaveBeenCalled()
   })
 

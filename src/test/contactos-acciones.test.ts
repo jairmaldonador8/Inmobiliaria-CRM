@@ -98,6 +98,8 @@ function crearSupabaseFake(opts: {
   contactoError?: ErrorFake | null
   updateContactoError?: ErrorFake | null
   filasAvance?: { id: string }[]
+  /** Filas que devuelve el UPDATE de contactos con .select('id'). */
+  filasUpdateContactos?: { id: string }[]
 }) {
   const insertSeguimiento = vi
     .fn<(valores: Record<string, unknown>) => Promise<{ error: ErrorFake | null }>>()
@@ -110,18 +112,28 @@ function crearSupabaseFake(opts: {
   const eqSelectLead = vi.fn(() => ({ eq: eqSelectResultado }))
   const selectContactos = vi.fn(() => ({ eq: eqSelectLead }))
 
-  // update de pendientes viejos: .update().eq().eq() → resuelve
-  const eqUpdateResultado = vi
-    .fn()
-    .mockResolvedValue({ data: null, error: opts.updateContactoError ?? null })
+  // update de pendientes viejos: .update().eq().eq().select('id') → resuelve
+  const selectUpdateContactos = vi.fn().mockResolvedValue({
+    data: opts.updateContactoError ? null : (opts.filasUpdateContactos ?? [{ id: 'contacto-1' }]),
+    error: opts.updateContactoError ?? null,
+  })
+  const eqUpdateResultado = vi.fn(() => ({ select: selectUpdateContactos }))
   const eqUpdateLead = vi.fn(() => ({ eq: eqUpdateResultado }))
   const updateContactos = vi.fn<
     (valores: Record<string, unknown>) => { eq: typeof eqUpdateLead }
   >(() => ({ eq: eqUpdateLead }))
 
-  const insertContacto = vi
-    .fn<(valores: Record<string, unknown>) => Promise<{ error: ErrorFake | null }>>()
-    .mockResolvedValue({ error: opts.contactoError ?? null })
+  // insert del contacto: .insert().select('id').single() → resuelve
+  const singleContacto = vi.fn().mockResolvedValue({
+    data: opts.contactoError ? null : { id: 'contacto-nuevo' },
+    error: opts.contactoError ?? null,
+  })
+  const selectInsertContacto = vi.fn(() => ({ single: singleContacto }))
+  const insertContacto = vi.fn<
+    (valores: Record<string, unknown>) => { select: typeof selectInsertContacto }
+  >(() => ({ select: selectInsertContacto }))
+
+  const insertEvento = vi.fn().mockResolvedValue({ error: null })
 
   // leads: select('etapa').eq('id').maybeSingle()
   const maybeSingleLead = vi.fn().mockResolvedValue({
@@ -148,6 +160,7 @@ function crearSupabaseFake(opts: {
     if (table === 'contactos_whatsapp')
       return { select: selectContactos, update: updateContactos, insert: insertContacto }
     if (table === 'leads') return { select: selectLead, update: updateLead }
+    if (table === 'lead_eventos') return { insert: insertEvento }
     throw new Error(`tabla inesperada en el stub: ${table}`)
   })
 
@@ -162,6 +175,7 @@ function crearSupabaseFake(opts: {
     eqUpdateLead,
     eqUpdateResultado,
     insertContacto,
+    insertEvento,
     selectLead,
     updateLead,
     eqAvanceEtapa,
@@ -197,6 +211,7 @@ describe('registrarSalidaWhatsapp — dedupe de contactos', () => {
     const fake = crearSupabaseFake({
       pendientes: [{ id: 'contacto-viejo', creado_en: HACE_2_HORAS }],
       etapaLead: 'contactado',
+      filasUpdateContactos: [{ id: 'contacto-viejo' }],
     })
     createClientMock.mockResolvedValue(fake.supabase)
 
@@ -229,6 +244,20 @@ describe('registrarSalidaWhatsapp — dedupe de contactos', () => {
     expect(argumentoInsert).not.toHaveProperty('resultado')
     expect(argumentoInsert).not.toHaveProperty('id')
     expect(argumentoInsert).not.toHaveProperty('creado_en')
+
+    // Eventos semánticos: el desenlace del degradado y el envío nuevo.
+    expect(fake.insertEvento).toHaveBeenCalledWith({
+      lead_id: 'lead-1',
+      tipo: 'whatsapp_desenlace',
+      actor_id: 'asesor-1',
+      payload: { contacto_id: 'contacto-viejo', desenlace: 'sin_reporte' },
+    })
+    expect(fake.insertEvento).toHaveBeenCalledWith({
+      lead_id: 'lead-1',
+      tipo: 'whatsapp_enviado',
+      actor_id: 'asesor-1',
+      payload: { contacto_id: 'contacto-nuevo' },
+    })
   })
 
   it('sin ningún pendiente inserta el contacto y no intenta degradar nada', async () => {
@@ -457,6 +486,13 @@ describe('resolverContacto — desenlaces', () => {
     // dejar dos filas y las dos tienen que quedar resueltas.
     expect(fake.eqUpdateLead).toHaveBeenCalledWith('lead_id', 'lead-1')
     expect(fake.eqUpdateResultado).toHaveBeenCalledWith('resultado', 'pendiente')
+    // Evento semántico por cada contacto resuelto.
+    expect(fake.insertEvento).toHaveBeenCalledWith({
+      lead_id: 'lead-1',
+      tipo: 'whatsapp_desenlace',
+      actor_id: 'asesor-1',
+      payload: { contacto_id: 'contacto-1', desenlace: 'contesto' },
+    })
     expect(cambiarEtapaMock).not.toHaveBeenCalled()
     expect(fake.updateLead).not.toHaveBeenCalled()
   })

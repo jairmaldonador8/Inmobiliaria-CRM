@@ -16,6 +16,7 @@ import { revalidatePath } from 'next/cache'
 
 import { usuarioActual } from '@/lib/auth/usuario-actual'
 import { createClient } from '@/lib/supabase/server'
+import { registrarEvento } from '@/lib/eventos/registrar'
 import {
   MAX_NOTA_SEGUIMIENTO,
   TIPOS_SEGUIMIENTO,
@@ -62,6 +63,8 @@ export async function registrarSeguimiento(
   if (error) {
     return { error: 'No se pudo registrar el seguimiento' }
   }
+
+  await registrarEvento(supabase, leadId, 'seguimiento_registrado', { tipo: datos.tipo }, usuario.user_id)
 
   revalidatePath(`/asesor/leads/${leadId}`)
   revalidatePath(`/admin/leads/${leadId}`)

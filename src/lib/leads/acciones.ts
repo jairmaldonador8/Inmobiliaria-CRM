@@ -5,6 +5,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 
 import { requireAdmin, requireAsesor, type UsuarioActual } from '@/lib/auth/usuario-actual'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { registrarEvento } from '@/lib/eventos/registrar'
 import { crearNotificacion } from '@/lib/notificaciones/crear'
 import { leadEnEscalamientoAbierto } from '@/lib/guardias/consultas'
 import { normalizarTelefono } from '@/lib/easybroker/mapeo'
@@ -154,6 +155,10 @@ export async function tomarLead(leadId: string): Promise<ResultadoAccion> {
 
   if (error) return { error: `No se pudo tomar el lead: ${error.message}` }
   if (!actualizados?.[0]) return { error: 'Este lead ya fue tomado' }
+
+  // El trigger de leads emitirá además 'lead_asignado' por el cambio de
+  // asesor_id — intencional: la UI colapsa ambos en una sola línea.
+  await registrarEvento(supabase, leadId, 'tomado_de_bandeja', {}, usuario.user_id)
 
   // Best-effort documentado: la toma ya quedó persistida; si el registro
   // falla se reporta sin deshacerla (mismo criterio que registrarAsignacion).
