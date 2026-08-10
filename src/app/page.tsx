@@ -7,7 +7,7 @@ import { Wordmark } from '@/components/marca/wordmark'
 export const metadata: Metadata = {
   title: 'Klo-Ser — Un buen cierre se construye',
   description:
-    'CRM inmobiliario: todos tus leads en una sola cola, guardias con escalamiento y la historia completa de cada cliente.',
+    'El sistema operativo de tu inmobiliaria: leads, equipo y dirección en una sola herramienta. Lo que no se mide, no progresa.',
 }
 
 /** CTA negro reutilizable de la landing. */
@@ -21,6 +21,50 @@ function BotonTinta({ href, children }: { href: string; children: React.ReactNod
     </Link>
   )
 }
+
+/**
+ * Los tres pilares del sistema. Cada capacidad listada existe hoy en el
+ * producto (bandeja, guardias, escalamiento, historia de eventos, tablero,
+ * sugerencias): la landing no promete nada que no esté construido.
+ */
+const PILARES = [
+  {
+    n: '01',
+    t: 'Captación y seguimiento',
+    d: 'El CRM: cada prospecto entra a una sola cola y nadie se queda sin respuesta.',
+    puntos: [
+      'Portales, WhatsApp y referidos en una bandeja',
+      'Etapas del lead en un toque',
+      'Plantillas de WhatsApp y registro del desenlace',
+      'Visitas agendadas desde el expediente',
+      'Historia completa e inmutable de cada cliente',
+    ],
+  },
+  {
+    n: '02',
+    t: 'Operación y equipo',
+    d: 'La estructura de trabajo: quién responde, cuándo, y qué pasa si nadie lo hace.',
+    puntos: [
+      'Guardias por turno con rol mensual',
+      'Escalamiento automático en tres niveles',
+      'Avisos al teléfono de cada asesor',
+      'Roles y permisos de dirección y asesor',
+      'Catálogo de propiedades sincronizado',
+    ],
+  },
+  {
+    n: '03',
+    t: 'Dirección y medición',
+    d: 'El tablero: la operación deja de contarse de memoria y empieza a leerse.',
+    puntos: [
+      'Velocidad real de primera respuesta',
+      'Embudo por etapa y fuentes de leads',
+      'Leads en riesgo, antes de perderlos',
+      'Actividad del equipo semana a semana',
+      'Buzón de sugerencias del piso de ventas',
+    ],
+  },
+]
 
 const PASOS = [
   {
@@ -38,8 +82,8 @@ const PASOS = [
   },
   {
     n: '02',
-    t: 'Alguien lo toma',
-    d: 'La guardia del turno lo recibe al instante, con aviso al teléfono del asesor.',
+    t: 'La guardia lo toma',
+    d: 'El asesor de turno lo recibe al instante, con aviso en su teléfono.',
     svg: (
       <svg width="120" height="34" fill="none" aria-hidden>
         <circle cx="17" cy="17" r="9" stroke="#141414" strokeWidth="1.3" />
@@ -61,7 +105,7 @@ const PASOS = [
   {
     n: '04',
     t: 'Todo queda medido',
-    d: 'Velocidad de respuesta, embudo y fuentes: el tablero que la dirección lee cada lunes.',
+    d: 'Velocidad, embudo, fuentes y actividad: el tablero que la dirección lee cada lunes.',
     svg: (
       <svg width="120" height="34" fill="none" aria-hidden>
         <rect x="8" y="18" width="7" height="10" fill="#D0CEC7" />
@@ -74,6 +118,10 @@ const PASOS = [
 ]
 
 const FAQ = [
+  {
+    q: '¿Es solo un CRM?',
+    a: 'No. El CRM es el corazón —ahí vive cada prospecto y su historia—, pero Klo-Ser también organiza al equipo: turnos de guardia, reparto de leads, escalamiento cuando alguien no responde, avisos al teléfono y un tablero de dirección. Una sola herramienta en lugar de un CRM, un grupo de WhatsApp y una hoja de cálculo.',
+  },
   {
     q: '¿Tengo que dejar mis portales o mi WhatsApp?',
     a: 'No. Klo-Ser se conecta a lo que ya usas: los leads de portales entran solos y los de WhatsApp y referidos se capturan en segundos. El sistema ordena; tú sigues vendiendo donde siempre.',
@@ -97,9 +145,9 @@ const FAQ = [
 ]
 
 /**
- * Landing pública «galería» (rebranding B&N): intro editorial de la v1 +
- * secciones comerciales de la v2 (métricas, cómo funciona, FAQ, contacto).
- * Fusión aprobada 2026-08-10; mockups fuente en docs/diseno/.
+ * Landing pública «galería» (rebranding B&N). Narrativa 2026-08-10: Klo-Ser
+ * no se vende como CRM a secas, sino como el sistema operativo de la
+ * inmobiliaria — captación, operación del equipo y dirección medida.
  */
 export default function PaginaLanding() {
   return (
@@ -108,6 +156,9 @@ export default function PaginaLanding() {
       <header className="mx-auto flex max-w-6xl items-center justify-between gap-6 px-6 py-7">
         <Wordmark className="text-[16px]" />
         <nav className="flex items-center gap-7 text-[11px] font-semibold tracking-[0.16em] uppercase">
+          <a href="#sistema" className="hidden underline-offset-8 hover:underline sm:inline">
+            El sistema
+          </a>
           <a href="#como" className="hidden underline-offset-8 hover:underline sm:inline">
             Cómo funciona
           </a>
@@ -124,10 +175,10 @@ export default function PaginaLanding() {
       </header>
 
       <main>
-        {/* ───── Hero (intro v1, intacta) ───── */}
+        {/* ───── Hero ───── */}
         <section className="mx-auto max-w-6xl px-6 pt-16 pb-20 sm:pt-24">
           <p className="text-[11px] font-semibold tracking-[0.26em] uppercase text-[#8C8A84]">
-            CRM inmobiliario
+            El sistema operativo de tu inmobiliaria
           </p>
           <h1 className="font-logo mt-6 max-w-4xl text-5xl leading-[1.04] font-extralight tracking-tight text-balance sm:text-7xl">
             Un buen cierre
@@ -135,9 +186,10 @@ export default function PaginaLanding() {
             se construye.
           </h1>
           <p className="mt-8 max-w-xl text-base leading-relaxed text-[#6E6C66]">
-            Klo-Ser junta tus leads de EasyBroker, WhatsApp y referidos en una
-            sola cola, cuida que nadie se quede sin respuesta y guarda la
-            historia completa de cada cliente — para siempre.
+            Klo-Ser centraliza la operación completa: los leads de todos tus
+            canales, los turnos y la respuesta de tu equipo, y las métricas que
+            la dirección necesita para decidir. Un solo lugar en vez de tres
+            sistemas y un grupo de WhatsApp.
           </p>
           <div className="mt-10 flex items-center gap-8">
             <BotonTinta href="#contacto">Quiero una demo</BotonTinta>
@@ -150,7 +202,7 @@ export default function PaginaLanding() {
           </div>
         </section>
 
-        {/* ───── Foto editorial (v1, intacta) ───── */}
+        {/* ───── Foto editorial ───── */}
         <section className="mx-auto max-w-6xl px-6">
           <div className="relative aspect-[21/9] w-full overflow-hidden">
             <Image
@@ -165,20 +217,57 @@ export default function PaginaLanding() {
           </div>
         </section>
 
-        {/* ───── Métricas gigantes (v2) ───── */}
-        <section className="mx-auto max-w-6xl px-6 pt-24">
+        {/* ───── Los tres pilares ───── */}
+        <section id="sistema" className="mx-auto max-w-6xl scroll-mt-8 px-6 py-24">
+          <p className="text-[11px] font-semibold tracking-[0.26em] uppercase text-[#8C8A84]">
+            El sistema
+          </p>
+          <h2 className="font-logo mt-5 max-w-3xl text-4xl leading-tight font-extralight text-balance sm:text-5xl">
+            Más que un CRM: la forma
+            <br />
+            en que trabaja tu inmobiliaria.
+          </h2>
+          <p className="mt-6 max-w-xl text-sm leading-relaxed text-[#6E6C66]">
+            Un CRM guarda contactos. Klo-Ser ordena el trabajo alrededor de
+            ellos: quién atiende, con qué prioridad, en cuánto tiempo y con qué
+            resultado.
+          </p>
+
+          <div className="mt-16 grid gap-x-10 gap-y-14 border-t border-[#E3E1DB] pt-14 lg:grid-cols-3">
+            {PILARES.map((p) => (
+              <div key={p.n} className="flex flex-col gap-4">
+                <span className="text-[10px] tracking-[0.22em] text-[#A5A29A]">{p.n}</span>
+                <h3 className="font-logo text-2xl font-light">{p.t}</h3>
+                <p className="text-sm leading-relaxed text-[#6E6C66]">{p.d}</p>
+                <ul className="mt-2 flex flex-col gap-2.5">
+                  {p.puntos.map((punto) => (
+                    <li
+                      key={punto}
+                      className="border-t border-[#EEECE6] pt-2.5 text-[13.5px] leading-snug text-[#4A4843]"
+                    >
+                      {punto}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* ───── Métricas gigantes ───── */}
+        <section className="mx-auto max-w-6xl px-6 pb-8">
           <div className="grid border-t border-[#E3E1DB] sm:grid-cols-3">
             {[
               ['15', 'min', 'y el sistema escala solo un lead sin respuesta — a otro asesor, a todos, al dueño.'],
               ['100', '%', 'de la historia de cada cliente queda escrita: llamadas, mensajes, visitas, etapas. Nada vive en la memoria de nadie.'],
-              ['1', 'cola', 'para portales, WhatsApp y referidos. Un solo lugar donde ningún prospecto se pierde.'],
+              ['1', 'sistema', 'para leads, turnos, propiedades, equipo y tablero de dirección. Se acabaron las hojas sueltas.'],
             ].map(([v, u, d], i) => (
               <div
                 key={u}
                 className={
                   i === 0
                     ? 'py-9 pr-8'
-                    : 'border-t border-[#E3E1DB] py-9 sm:border-t-0 sm:border-l sm:pl-8 sm:pr-8'
+                    : 'border-t border-[#E3E1DB] py-9 sm:border-t-0 sm:border-l sm:pr-8 sm:pl-8'
                 }
               >
                 <p className="font-logo text-6xl font-extralight tabular-nums">
@@ -191,7 +280,7 @@ export default function PaginaLanding() {
           </div>
         </section>
 
-        {/* ───── Cómo funciona (v2) ───── */}
+        {/* ───── Cómo funciona ───── */}
         <section id="como" className="mx-auto max-w-6xl scroll-mt-8 px-6 py-24">
           <p className="text-[11px] font-semibold tracking-[0.26em] uppercase text-[#8C8A84]">
             Cómo funciona
@@ -212,23 +301,23 @@ export default function PaginaLanding() {
           </div>
         </section>
 
-        {/* ───── Banda negra: la métrica estrella (v2) ───── */}
+        {/* ───── Banda negra: la tesis ───── */}
         <section className="bg-[#0E0D0B] text-[#F2F0EA]">
           <div className="mx-auto grid max-w-6xl items-center gap-14 px-6 py-24 lg:grid-cols-2">
             <div>
               <p className="text-[11px] font-semibold tracking-[0.26em] uppercase text-[#8C8A84]">
-                La métrica que cambia el negocio
+                La tesis del sistema
               </p>
               <h2 className="font-logo mt-5 text-4xl leading-tight font-extralight text-balance sm:text-5xl">
-                ¿Cuánto tardas hoy
+                Lo que no se mide,
                 <br />
-                en contestar un lead?
+                no progresa.
               </h2>
               <p className="mt-6 max-w-md text-sm leading-relaxed text-[#A5A29A]">
-                La mayoría de los compradores se queda con el primero que
-                responde. Klo-Ser mide tu velocidad real de primera respuesta —
-                y la baja, turno a turno, con guardias y escalamiento
-                automático.
+                La velocidad con la que tu equipo contesta decide cuántos leads
+                se vuelven citas. Klo-Ser la mide sin que nadie llene un
+                reporte: la operación misma genera el dato, y el dato empuja al
+                equipo semana con semana.
               </p>
             </div>
             <div>
@@ -270,7 +359,7 @@ export default function PaginaLanding() {
           </div>
         </section>
 
-        {/* ───── Preguntas (v2) ───── */}
+        {/* ───── Preguntas ───── */}
         <section id="preguntas" className="mx-auto max-w-6xl scroll-mt-8 px-6 py-24">
           <p className="text-[11px] font-semibold tracking-[0.26em] uppercase text-[#8C8A84]">
             Preguntas frecuentes
@@ -297,7 +386,7 @@ export default function PaginaLanding() {
           </div>
         </section>
 
-        {/* ───── Contacto (v2) ───── */}
+        {/* ───── Contacto ───── */}
         <section id="contacto" className="border-t border-[#E3E1DB]">
           <div className="mx-auto grid max-w-6xl gap-14 px-6 py-24 lg:grid-cols-2">
             <div>
@@ -369,7 +458,7 @@ export default function PaginaLanding() {
           </div>
         </section>
 
-        {/* ───── Cierre (v1) ───── */}
+        {/* ───── Cierre ───── */}
         <section className="border-t border-[#E3E1DB] px-6 py-24 text-center">
           <Wordmark className="justify-center text-[clamp(28px,5vw,46px)]" />
           <p className="mt-6 text-sm text-[#6E6C66]">Un buen cierre se construye.</p>
