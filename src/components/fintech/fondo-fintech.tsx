@@ -13,7 +13,7 @@ interface FondoFintechProps {
   className?: string
 }
 
-const GRADIENTE_MURO = 'linear-gradient(150deg,#F5F1E8 0%,#F3DCC2 32%,#EBBF9A 62%,#DFA987 100%)'
+const GRADIENTE_MURO = 'linear-gradient(150deg,#FCFCFA 0%,#F1F0EC 38%,#E3E1DB 72%,#D6D4CD 100%)'
 
 export default function FondoFintech({ children, className }: FondoFintechProps) {
   return (

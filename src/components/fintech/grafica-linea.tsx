@@ -71,7 +71,7 @@ function idSvgValido(id: string): string {
 
 export default function GraficaLinea({
   datos,
-  color = '#C98A3B',
+  color = '#141414',
   alto = 72,
   etiquetaAccesible,
   className,

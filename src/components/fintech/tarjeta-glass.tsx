@@ -9,7 +9,7 @@ import { cva, type VariantProps } from 'class-variance-authority'
 
 import { cn } from '@/lib/utils'
 
-const tarjetaGlassVariants = cva('border border-white/80 bg-[#FAF7F1]/65', {
+const tarjetaGlassVariants = cva('border border-white/80 bg-[#FCFCFA]/70', {
   variants: {
     variant: {
       default: 'rounded-2xl shadow-glass-sm p-3',

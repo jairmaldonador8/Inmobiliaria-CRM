@@ -100,7 +100,7 @@ export function TabBarAdmin({ nombre }: { nombre: string }) {
               aria-current={activa ? 'page' : undefined}
               className={cn(
                 'flex min-h-12 min-w-14 flex-1 flex-col items-center justify-center gap-0.5 rounded-full px-1.5 py-1.5 text-[10px] leading-none font-medium transition-colors',
-                activa ? 'bg-[#6B4A33]/10 font-semibold text-[#6B4A33]' : 'text-slate-500'
+                activa ? 'bg-[#141414]/8 font-semibold text-[#141414]' : 'text-slate-500'
               )}
             >
               <Icono className="size-5" aria-hidden strokeWidth={activa ? 2.25 : 2} />
@@ -115,7 +115,7 @@ export function TabBarAdmin({ nombre }: { nombre: string }) {
             aria-current={masActiva ? 'page' : undefined}
             className={cn(
               'flex min-h-12 min-w-14 flex-1 flex-col items-center justify-center gap-0.5 rounded-full px-1.5 py-1.5 text-[10px] leading-none font-medium transition-colors',
-              masActiva ? 'bg-[#6B4A33]/10 font-semibold text-[#6B4A33]' : 'text-slate-500'
+              masActiva ? 'bg-[#141414]/8 font-semibold text-[#141414]' : 'text-slate-500'
             )}
           >
             <Ellipsis className="size-5" aria-hidden strokeWidth={masActiva ? 2.25 : 2} />

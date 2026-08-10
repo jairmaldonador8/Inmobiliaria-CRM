@@ -29,14 +29,14 @@ export default function TarjetaTinta({
   ...props
 }: TarjetaTintaProps) {
   return (
-    <div className={cn('rounded-2xl bg-[#221B14]/90 p-4 text-[#F2EDE4]', className)} {...props}>
-      <div className="text-[11px] uppercase tracking-wide text-[#C9B896]">{etiqueta}</div>
+    <div className={cn('rounded-2xl bg-[#141414]/95 p-4 text-[#F2F0EA]', className)} {...props}>
+      <div className="text-[11px] uppercase tracking-wide text-[#A5A29A]">{etiqueta}</div>
       <div className="flex items-center justify-between">
         <div className="text-2xl font-bold">{children}</div>
         {cta && (
           <Link
             href={cta.href}
-            className="rounded-full bg-[#C98A3B] px-3 py-1.5 text-xs font-bold text-[#221B14]"
+            className="rounded-full bg-[#F2F0EA] px-3 py-1.5 text-xs font-bold text-[#141414]"
           >
             {cta.texto}
           </Link>

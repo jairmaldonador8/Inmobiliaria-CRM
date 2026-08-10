@@ -19,28 +19,28 @@ export default function CargandoAdmin() {
       <div className="-mx-4 -mt-6 -mb-28 lg:hidden">
         <FondoFintech className="px-4 pt-6 pb-32">
           <div className="flex animate-pulse flex-col gap-4" aria-hidden>
-            <div className="h-6 w-40 rounded-md bg-[#221B14]/10" />
+            <div className="h-6 w-40 rounded-md bg-[#141414]/10" />
 
             <TarjetaGlass variant="hero" className="flex flex-col gap-3">
-              <div className="h-3 w-24 rounded-md bg-[#221B14]/10" />
-              <div className="h-8 w-16 rounded-md bg-[#221B14]/10" />
-              <div className="h-16 w-full rounded-md bg-[#221B14]/10" />
+              <div className="h-3 w-24 rounded-md bg-[#141414]/10" />
+              <div className="h-8 w-16 rounded-md bg-[#141414]/10" />
+              <div className="h-16 w-full rounded-md bg-[#141414]/10" />
             </TarjetaGlass>
 
             <div className="grid grid-cols-3 gap-2">
               {Array.from({ length: 3 }).map((_, i) => (
                 <TarjetaGlass key={i} className="flex flex-col gap-2">
-                  <div className="h-3 w-12 rounded-md bg-[#221B14]/10" />
-                  <div className="h-6 w-8 rounded-md bg-[#221B14]/10" />
+                  <div className="h-3 w-12 rounded-md bg-[#141414]/10" />
+                  <div className="h-6 w-8 rounded-md bg-[#141414]/10" />
                 </TarjetaGlass>
               ))}
             </div>
 
-            <div className="h-20 rounded-2xl bg-[#221B14]/15" />
+            <div className="h-20 rounded-2xl bg-[#141414]/15" />
 
             <TarjetaGlass className="flex flex-col gap-3">
-              <div className="h-3 w-28 rounded-md bg-[#221B14]/10" />
-              <div className="h-3 w-full rounded-full bg-[#221B14]/10" />
+              <div className="h-3 w-28 rounded-md bg-[#141414]/10" />
+              <div className="h-3 w-full rounded-full bg-[#141414]/10" />
             </TarjetaGlass>
 
             <div className="flex flex-col gap-2">

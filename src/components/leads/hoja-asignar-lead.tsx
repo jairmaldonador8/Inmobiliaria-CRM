@@ -63,7 +63,7 @@ export function HojaAsignarLead({ leadId, leadNombre, asesores }: Props) {
     <Sheet open={abierto} onOpenChange={setAbierto}>
       <SheetTrigger
         aria-label={`Asignar ${leadNombre}`}
-        className="inline-flex min-h-11 items-center justify-center rounded-full bg-[#6B4A33] px-5 text-sm font-semibold text-white shadow-glass-sm transition-opacity active:opacity-90 disabled:opacity-50"
+        className="inline-flex min-h-11 items-center justify-center rounded-full bg-[#141414] px-5 text-sm font-semibold text-white shadow-glass-sm transition-opacity active:opacity-90 disabled:opacity-50"
       >
         Asignar
       </SheetTrigger>
@@ -87,7 +87,7 @@ export function HojaAsignarLead({ leadId, leadNombre, asesores }: Props) {
                 >
                   <span
                     aria-hidden
-                    className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[#6B4A33]/10 text-sm font-semibold text-[#6B4A33]"
+                    className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[#141414]/8 text-sm font-semibold text-[#141414]"
                   >
                     {iniciales(asesor.nombre)}
                   </span>

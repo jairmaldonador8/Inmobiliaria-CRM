@@ -11,21 +11,23 @@
   --font-mono: var(--font-geist-mono);
   --font-heading: var(--font-sans);
   --font-logo: var(--font-logo);
-  /* Escala «piedra»: slate y white remapeados a la rampa cálida del sistema
-     Muro (Klo-Ser). Los componentes existentes usan clases slate y white;
-     este remap adopta la paleta en toda la app desde un solo lugar. */
-  --color-white: #FAF7F1;
-  --color-slate-50: #E5DAC4;
-  --color-slate-100: #F0E8D8;
-  --color-slate-200: #DCCFB4;
-  --color-slate-300: #C9B896;
-  --color-slate-400: #8E7F68;
-  --color-slate-500: #6B5D4E;
-  --color-slate-600: #5A4B3C;
-  --color-slate-700: #453A2D;
-  --color-slate-800: #2E261B;
-  --color-slate-900: #221B14;
-  --color-slate-950: #171209;
+  /* Escala «galería»: slate y white remapeados a la rampa neutra cálida del
+     rebranding B&N (negro editorial / blanco galería, docs/diseno/). Los
+     componentes existentes usan clases slate y white; este remap adopta la
+     paleta en toda la app desde un solo lugar. El único color de marca que
+     sobrevive es el ámbar #C98A3B del guion del logo y micro-acentos. */
+  --color-white: #FCFCFA;
+  --color-slate-50: #F7F6F3;
+  --color-slate-100: #F1F0EC;
+  --color-slate-200: #E3E1DB;
+  --color-slate-300: #D0CEC7;
+  --color-slate-400: #A5A29A;
+  --color-slate-500: #8C8A84;
+  --color-slate-600: #6E6C66;
+  --color-slate-700: #4A4843;
+  --color-slate-800: #2A2825;
+  --color-slate-900: #141414;
+  --color-slate-950: #0E0D0B;
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -66,83 +68,83 @@
 
 /* ── Kit Fintech Muro (rediseño móvil) ─────────────────────────── */
 @theme {
-  --shadow-glass: 0 10px 30px rgb(107 74 51 / 0.2);
-  --shadow-glass-sm: 0 4px 16px rgb(107 74 51 / 0.1);
+  --shadow-glass: 0 10px 30px rgb(20 20 20 / 0.14);
+  --shadow-glass-sm: 0 4px 16px rgb(20 20 20 / 0.08);
   --blur-glass: 12px;
   --radius-hero: 1.5rem;
 }
 @custom-variant standalone (@media (display-mode: standalone));
 
-/* Tema claro «Muro» (opción B): fondo arena profundo, tarjetas crema,
-   acentos café/ocre. Fuente: design-propuestas/sistema-klo-ser.html */
+/* Tema claro «blanco galería» (rebranding B&N): fondo gris-cálido claro,
+   tarjetas blanco roto, tinta negra. Fuente: docs/diseno/rebrand-sistema.html */
 :root {
-  --background: #E5DAC4;
-  --foreground: #221B14;
-  --card: #FAF7F1;
-  --card-foreground: #221B14;
-  --popover: #FAF7F1;
-  --popover-foreground: #221B14;
-  --primary: #6B4A33;
-  --primary-foreground: #F6F1E8;
-  --secondary: #F0E8D8;
-  --secondary-foreground: #503524;
-  --muted: #EDE3CD;
-  --muted-foreground: #6B5D4E;
-  --accent: #F0E8D8;
-  --accent-foreground: #221B14;
-  --destructive: #A34E28;
-  --border: rgba(34, 27, 20, 0.14);
-  --input: rgba(34, 27, 20, 0.18);
-  --ring: #6B4A33;
-  --chart-1: #6B4A33;
-  --chart-2: #C98A3B;
-  --chart-3: #9C6B4A;
-  --chart-4: #D8C9B0;
-  --chart-5: #7D8A5C;
+  --background: #EFEDE8;
+  --foreground: #141414;
+  --card: #FCFCFA;
+  --card-foreground: #141414;
+  --popover: #FCFCFA;
+  --popover-foreground: #141414;
+  --primary: #141414;
+  --primary-foreground: #FCFCFA;
+  --secondary: #F1F0EC;
+  --secondary-foreground: #2A2825;
+  --muted: #EFEDE8;
+  --muted-foreground: #6E6C66;
+  --accent: #F1F0EC;
+  --accent-foreground: #141414;
+  --destructive: #A3402E;
+  --border: rgba(20, 20, 20, 0.12);
+  --input: rgba(20, 20, 20, 0.16);
+  --ring: #141414;
+  --chart-1: #141414;
+  --chart-2: #8C8A84;
+  --chart-3: #4A4843;
+  --chart-4: #D0CEC7;
+  --chart-5: #6E6C66;
   --radius: 0.875rem;
-  --sidebar: #171209;
-  --sidebar-foreground: #EFE9DD;
+  --sidebar: #0E0D0B;
+  --sidebar-foreground: #F2F0EA;
   --sidebar-primary: #C98A3B;
-  --sidebar-primary-foreground: #2A1D0C;
-  --sidebar-accent: #2E261B;
-  --sidebar-accent-foreground: #F2EDE4;
-  --sidebar-border: rgba(242, 237, 228, 0.1);
+  --sidebar-primary-foreground: #1A1712;
+  --sidebar-accent: #26241F;
+  --sidebar-accent-foreground: #F2F0EA;
+  --sidebar-border: rgba(242, 240, 234, 0.1);
   --sidebar-ring: #C98A3B;
 }
 
-/* Modo noche «tinta cálida»: la misma familia café/arena/ocre invertida
-   (sin neón). Espejo del toggle noche del mockup del sistema. */
+/* Modo noche «negro editorial»: negro cálido con tinta marfil (mockup
+   aprobado 2026-08-10). Queda listo para el switch de tema en Ajustes. */
 .dark {
-  --background: #171209;
-  --foreground: #F2EDE4;
-  --card: #241D14;
-  --card-foreground: #F2EDE4;
-  --popover: #2C241A;
-  --popover-foreground: #F2EDE4;
-  --primary: #9C6B4A;
-  --primary-foreground: #F6F1E8;
-  --secondary: #2C241A;
-  --secondary-foreground: #E3D5BE;
-  --muted: #2C241A;
-  --muted-foreground: #C6B8A4;
-  --accent: #352B1E;
-  --accent-foreground: #F2EDE4;
+  --background: #0E0D0B;
+  --foreground: #F2F0EA;
+  --card: #171512;
+  --card-foreground: #F2F0EA;
+  --popover: #1C1A16;
+  --popover-foreground: #F2F0EA;
+  --primary: #F2F0EA;
+  --primary-foreground: #0E0D0B;
+  --secondary: #1C1A16;
+  --secondary-foreground: #D9D6CE;
+  --muted: #1C1A16;
+  --muted-foreground: #A5A29A;
+  --accent: #26241F;
+  --accent-foreground: #F2F0EA;
   --destructive: #C96A3F;
-  --border: rgba(242, 237, 228, 0.12);
-  --input: rgba(242, 237, 228, 0.16);
-  --ring: #C98A3B;
-  --chart-1: #9C6B4A;
-  --chart-2: #C98A3B;
-  --chart-3: #D8C9B0;
-  --chart-4: #453729;
-  --chart-5: #97A573;
-  --sidebar: #171209;
-  --sidebar-foreground: #EFE9DD;
+  --border: rgba(242, 240, 234, 0.12);
+  --input: rgba(242, 240, 234, 0.16);
+  --ring: #F2F0EA;
+  --chart-1: #F2F0EA;
+  --chart-2: #8C8A84;
+  --chart-3: #D0CEC7;
+  --chart-4: #4A4843;
+  --chart-5: #A5A29A;
+  --sidebar: #0E0D0B;
+  --sidebar-foreground: #F2F0EA;
   --sidebar-primary: #C98A3B;
-  --sidebar-primary-foreground: #2A1D0C;
-  --sidebar-accent: #2E261B;
-  --sidebar-accent-foreground: #F2EDE4;
-  --sidebar-border: rgba(242, 237, 228, 0.1);
+  --sidebar-primary-foreground: #1A1712;
+  --sidebar-accent: #26241F;
+  --sidebar-accent-foreground: #F2F0EA;
+  --sidebar-border: rgba(242, 240, 234, 0.1);
   --sidebar-ring: #C98A3B;
 }
 

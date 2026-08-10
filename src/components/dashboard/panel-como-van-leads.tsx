@@ -72,7 +72,7 @@ function BarrasEmbudo({ embudo, oscuro }: { embudo: ConteoEtapa[]; oscuro: boole
           <span
             className={cn(
               'w-24 shrink-0 truncate text-xs',
-              oscuro ? 'text-slate-600' : 'text-[#5B4C3A]'
+              oscuro ? 'text-slate-600' : 'text-[#6E6C66]'
             )}
           >
             {etiquetaEtapa(fila.etapa)}
@@ -87,7 +87,7 @@ function BarrasEmbudo({ embudo, oscuro }: { embudo: ConteoEtapa[]; oscuro: boole
           <span
             className={cn(
               'text-xs font-semibold tabular-nums',
-              oscuro ? 'text-slate-900' : 'text-[#221B14]'
+              oscuro ? 'text-slate-900' : 'text-[#141414]'
             )}
           >
             {fila.cuenta}
@@ -113,10 +113,10 @@ function BarrasActividad({ actividad, oscuro }: { actividad: number[]; oscuro: b
                 cuenta === 0
                   ? oscuro
                     ? 'bg-slate-200'
-                    : 'bg-[#221B14]/10'
+                    : 'bg-[#141414]/10'
                   : oscuro
                     ? 'bg-slate-700'
-                    : 'bg-[#C98A3B]'
+                    : 'bg-[#141414]'
               )}
               style={{ height: cuenta === 0 ? '3px' : `${Math.max((cuenta / maximo) * 100, 12)}%` }}
             />
@@ -140,19 +140,19 @@ function ListaFuentes({ fuentes, oscuro }: { fuentes: ConteoFuente[]; oscuro: bo
           <span
             className={cn(
               'w-24 shrink-0 truncate text-xs',
-              oscuro ? 'text-slate-600' : 'text-[#5B4C3A]'
+              oscuro ? 'text-slate-600' : 'text-[#6E6C66]'
             )}
           >
             {etiquetaFuente(fila.fuente)}
           </span>
           <span
-            className={cn('h-2.5 rounded-full', oscuro ? 'bg-slate-400' : 'bg-[#A34E28]/60')}
+            className={cn('h-2.5 rounded-full', oscuro ? 'bg-slate-400' : 'bg-[#4A4843]/60')}
             style={{ width: `${Math.max((fila.cuenta / maximo) * 100, 6)}%` }}
           />
           <span
             className={cn(
               'text-xs font-semibold tabular-nums',
-              oscuro ? 'text-slate-900' : 'text-[#221B14]'
+              oscuro ? 'text-slate-900' : 'text-[#141414]'
             )}
           >
             {fila.cuenta}
@@ -193,7 +193,7 @@ export function ResumenComoVanLeads({
           </div>
           <div className="mt-2 flex items-end justify-between gap-3">
             <div className="flex flex-col">
-              <span className="text-xl font-semibold tracking-tight text-[#221B14]">
+              <span className="text-xl font-semibold tracking-tight text-[#141414]">
                 {resumenMediana}
               </span>
               <span className="text-[11px] text-slate-500">
@@ -248,7 +248,7 @@ export function PanelComoVanLeads({
   if (variante === 'movil') {
     return (
       <section aria-label="Cómo van los leads" className="flex flex-col gap-2">
-        <h2 className="text-sm font-semibold text-[#221B14]">Cómo van los leads</h2>
+        <h2 className="text-sm font-semibold text-[#141414]">Cómo van los leads</h2>
 
         <div className="grid grid-cols-2 gap-2">
           {medianaMin === null ? (

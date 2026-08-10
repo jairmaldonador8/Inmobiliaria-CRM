@@ -66,7 +66,7 @@ export default async function PaginaBandeja() {
           <div className="flex flex-col gap-4">
             <header className="flex flex-wrap items-start justify-between gap-3">
               <div className="flex flex-col gap-1">
-                <h1 className="text-xl font-semibold tracking-tight text-[#221B14]">Bandeja</h1>
+                <h1 className="text-xl font-semibold tracking-tight text-[#141414]">Bandeja</h1>
                 <p className="text-sm text-slate-500">
                   {leads.length === 0
                     ? 'Sin leads pendientes de asignar'
@@ -96,7 +96,7 @@ export default async function PaginaBandeja() {
                       <TarjetaGlass className="flex flex-col gap-3">
                         <div className="min-w-0">
                           <div className="flex flex-wrap items-center gap-1.5">
-                            <p className="truncate font-semibold text-[#221B14]">{lead.nombre}</p>
+                            <p className="truncate font-semibold text-[#141414]">{lead.nombre}</p>
                             <EtiquetaClasificacionEB clasificacion={lead.clasificacion_eb} />
                           </div>
                           {lead.propiedad ? (
@@ -113,7 +113,7 @@ export default async function PaginaBandeja() {
                             suppressHydrationWarning
                             className={cn(
                               'mt-1 inline-block text-xs',
-                              urgente ? 'font-semibold text-[#A34E28]' : 'text-slate-500'
+                              urgente ? 'font-semibold text-[#141414]' : 'text-slate-500'
                             )}
                           >
                             {espera}
@@ -123,7 +123,7 @@ export default async function PaginaBandeja() {
                         <div className="flex items-center justify-between gap-3">
                           <Link
                             href={`/admin/leads/${lead.id}`}
-                            className="inline-flex items-center gap-0.5 text-sm font-medium text-[#6B4A33] underline-offset-4 hover:underline"
+                            className="inline-flex items-center gap-0.5 text-sm font-medium text-[#141414] underline-offset-4 hover:underline"
                           >
                             Ver
                             <ChevronRight aria-hidden className="size-3.5" />

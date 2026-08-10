@@ -48,7 +48,7 @@ export default function StatCard({
         <span className="text-2xl font-bold text-slate-900">{valor}</span>
         {delta !== 0 && (
           <span
-            className={cn('text-xs font-semibold', sube ? 'text-[#65A30D]' : 'text-[#A34E28]')}
+            className={cn('text-xs font-semibold', sube ? 'text-[#141414]' : 'text-[#8C8A84]')}
             data-tendencia={sube ? 'sube' : 'baja'}
           >
             <span className="sr-only">{sube ? 'subió' : 'bajó'} </span>

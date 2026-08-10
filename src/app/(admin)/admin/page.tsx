@@ -240,7 +240,7 @@ export default async function PaginaDashboardAdmin() {
         <FondoFintech className="px-4 pt-6 pb-32">
           <div className="flex flex-col gap-4">
             <header className="flex flex-col gap-1">
-              <h1 className="text-xl font-semibold tracking-tight text-[#221B14]">
+              <h1 className="text-xl font-semibold tracking-tight text-[#141414]">
                 Hola, {usuario.nombre.split(' ')[0]}
               </h1>
             </header>
@@ -250,8 +250,8 @@ export default async function PaginaDashboardAdmin() {
               <div className="text-[11px] uppercase tracking-wide text-slate-500">
                 Leads · 30 días
               </div>
-              <p className="text-3xl font-bold text-[#221B14]">{leadsUltimos30Dias}</p>
-              <GraficaLinea datos={serieLeads} color="#C98A3B" className="mt-2" />
+              <p className="text-3xl font-bold text-[#141414]">{leadsUltimos30Dias}</p>
+              <GraficaLinea datos={serieLeads} color="#141414" className="mt-2" />
             </TarjetaGlass>
 
             {/* Leads en riesgo (Fase C) — solo aparece si hay */}
@@ -266,7 +266,7 @@ export default async function PaginaDashboardAdmin() {
                 <p
                   className={cn(
                     'text-2xl font-bold',
-                    sinAtenderTodos.length > 0 ? 'text-[#A34E28]' : 'text-slate-900'
+                    sinAtenderTodos.length > 0 ? 'text-[#141414]' : 'text-slate-900'
                   )}
                 >
                   {sinAtenderTodos.length}
@@ -292,7 +292,7 @@ export default async function PaginaDashboardAdmin() {
                 </p>
               ) : (
                 <>
-                  <div className="mt-2 flex h-3 gap-1 overflow-hidden rounded-full bg-[#221B14]/5">
+                  <div className="mt-2 flex h-3 gap-1 overflow-hidden rounded-full bg-[#141414]/5">
                     {segmentosPipeline.map((segmento, indice) => (
                       <div
                         key={segmento.etapa}
@@ -308,7 +308,7 @@ export default async function PaginaDashboardAdmin() {
                     {segmentosPipeline.map((segmento, indice) => (
                       <li
                         key={segmento.etapa}
-                        className="flex items-center gap-1.5 text-xs text-[#5B4C3A]"
+                        className="flex items-center gap-1.5 text-xs text-[#6E6C66]"
                       >
                         <span
                           aria-hidden
@@ -318,7 +318,7 @@ export default async function PaginaDashboardAdmin() {
                           )}
                         />
                         {segmento.etiqueta}{' '}
-                        <span className="font-semibold text-[#221B14]">{segmento.cantidad}</span>
+                        <span className="font-semibold text-[#141414]">{segmento.cantidad}</span>
                       </li>
                     ))}
                   </ul>
@@ -336,10 +336,10 @@ export default async function PaginaDashboardAdmin() {
             {/* Sin atender >24h */}
             <div className="flex flex-col gap-2">
               <div className="flex items-center gap-2">
-                <AlertTriangle aria-hidden className="size-4 text-[#A34E28]" />
-                <h2 className="text-sm font-semibold text-[#221B14]">Sin atender &gt;24h</h2>
+                <AlertTriangle aria-hidden className="size-4 text-[#141414]" />
+                <h2 className="text-sm font-semibold text-[#141414]">Sin atender &gt;24h</h2>
                 {sinAtenderTodos.length > 0 ? (
-                  <span className="rounded-full bg-[#A34E28]/10 px-2 py-0.5 text-xs font-semibold text-[#A34E28]">
+                  <span className="rounded-full bg-[#141414]/8 px-2 py-0.5 text-xs font-semibold text-[#141414]">
                     {sinAtenderTodos.length}
                   </span>
                 ) : null}
@@ -362,12 +362,12 @@ export default async function PaginaDashboardAdmin() {
                           className="flex items-center justify-between gap-3 rounded-2xl border border-white/80 bg-[#FAF7F1]/65 p-3 shadow-glass-sm"
                         >
                           <div className="min-w-0 flex-1">
-                            <p className="truncate text-sm font-medium text-[#221B14]">
+                            <p className="truncate text-sm font-medium text-[#141414]">
                               {lead.nombre}
                             </p>
                             <p className="mt-0.5 text-xs text-slate-500">
                               {lead.asesor?.nombre ?? 'Sin asesor'} ·{' '}
-                              <span className="text-[#A34E28]">
+                              <span className="font-semibold text-[#141414]">
                                 {formatDistanceToNow(new Date(referencia), {
                                   addSuffix: true,
                                   locale: es,
