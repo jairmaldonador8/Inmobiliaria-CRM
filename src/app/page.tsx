@@ -251,12 +251,13 @@ export default function PaginaLanding() {
         <section className="mx-auto max-w-6xl px-6 pt-24">
           <div className="relative aspect-[21/8] w-full overflow-hidden">
             <Image
-              src="/landing/mb-sombra.jpg"
-              alt="Volumen de concreto recortado por la sombra"
+              src="/landing/br-bandas.jpg"
+              alt="Fachada de bandas horizontales de concreto"
               fill
+              quality={90}
               sizes="(max-width: 1152px) 100vw, 1152px"
               className="object-cover grayscale"
-              style={{ objectPosition: 'center 58%' }}
+              style={{ objectPosition: 'center 50%' }}
             />
           </div>
         </section>

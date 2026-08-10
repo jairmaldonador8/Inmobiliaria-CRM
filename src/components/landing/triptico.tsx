@@ -4,15 +4,27 @@ import Image from 'next/image'
 import { useEffect, useRef, useState } from 'react'
 
 /**
- * Tríptico editorial de la landing: tres verticales del moodboard, en
- * grayscale, que entran escalonadas cuando la sección aparece. Las fuentes
- * son verticales (2000 px de ancho), así que se muestran en 4:5 sin recortes
- * violentos; en móvil se apilan.
+ * Tríptico editorial de la landing: tres piezas brutalistas en grayscale que
+ * entran escalonadas cuando la sección aparece. Fotografías de Pexels
+ * (licencia libre para uso comercial, sin atribución obligatoria); se
+ * muestran en 4:5 y en móvil se apilan.
  */
 const PIEZAS = [
-  { src: '/landing/mb-torre.jpg', alt: 'Torre de volúmenes en voladizo contra el cielo', pos: 'center 40%' },
-  { src: '/landing/mb-columnas.jpg', alt: 'Ritmo de columnas y sombras triangulares', pos: 'center 92%' },
-  { src: '/landing/mb-luz.jpg', alt: 'Vano de concreto atravesado por un haz de luz', pos: 'center 50%' },
+  {
+    src: '/landing/br-chevron.jpg',
+    alt: 'Arista simétrica de concreto vista desde abajo',
+    pos: 'center 45%',
+  },
+  {
+    src: '/landing/br-rejilla.jpg',
+    alt: 'Fachada de celdas de concreto en diagonal',
+    pos: 'center 50%',
+  },
+  {
+    src: '/landing/br-curvas.jpg',
+    alt: 'Balcones curvos de concreto en perspectiva',
+    pos: 'center 40%',
+  },
 ]
 
 export function Triptico() {
