@@ -132,13 +132,24 @@ export default async function PaginaLeadsAdmin({
             </Table>
           </div>
 
-          {/* Tarjetas — móvil */}
-          <div className="grid gap-3 lg:hidden">
+          {/*
+            Tarjetas — móvil.
+
+            `min-w-0` en la tarjeta: es un item de rejilla, y un item de
+            rejilla no baja de su tamaño mínimo automático. Como el título de
+            la propiedad usa `truncate` (que incluye `whitespace-nowrap`), su
+            ancho mínimo es la CADENA ENTERA, así que un título largo estiraba
+            la columna y con ella la página. Medido en producción: 599px en
+            una pantalla de 390 con «CASA VENTA EN LOS ÁNGELES BOSQUE
+            RESIDENCIAL, VALLE ORIENTE». Con `min-w-0` el texto vuelve a
+            recortarse, que es lo que `truncate` prometía.
+          */}
+          <div className="grid min-w-0 gap-3 lg:hidden">
             {leads.map((lead) => (
               <Link
                 key={lead.id}
                 href={`/admin/leads/${lead.id}`}
-                className="flex flex-col gap-2 rounded-xl bg-white p-4 ring-1 ring-slate-200 transition-shadow hover:shadow-sm"
+                className="flex min-w-0 flex-col gap-2 rounded-xl bg-white p-4 ring-1 ring-slate-200 transition-shadow hover:shadow-sm"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
