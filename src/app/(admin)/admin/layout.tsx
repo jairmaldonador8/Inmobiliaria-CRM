@@ -68,7 +68,9 @@ export default async function AdminLayout({
         {children}
       </main>
 
-      <BotonSugerencia className="bottom-24 lg:bottom-6" />
+      {/* El admin no tiene el FAB «+ Registrar lead» encima, así que va
+          pegado a la píldora de pestañas y no un piso más arriba. */}
+      <BotonSugerencia className="bottom-[calc(var(--alto-nav,4rem)+0.75rem)] lg:bottom-6" />
       <TabBarAdmin nombre={usuario.nombre} />
     </div>
   )
