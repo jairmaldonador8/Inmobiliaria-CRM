@@ -215,7 +215,10 @@ export default async function PaginaLeadsAsesor({
             Ver cerrados
           </Link>
         </div>
-        <p className="text-sm text-slate-500">
+        {/* Oculto en el teléfono: ahí la lista pone su propio conteo, que
+            además dice cuántos van sin seguimiento (ver ListaLeadsMovil).
+            Los dos renglones juntos decían dos veces lo mismo. */}
+        <p className="hidden text-sm text-slate-500 lg:block">
           {items.length === 0
             ? 'Aún no tienes leads asignados'
             : `${items.length} lead${items.length === 1 ? '' : 's'} en tu pipeline`}
