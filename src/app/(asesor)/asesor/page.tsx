@@ -171,7 +171,7 @@ export default async function PaginaInicioAsesor({
     }
 
     const { data: datosContactos } = await supabase
-      .from('contactos_whatsapp')
+      .from('contactos')
       .select('lead_id, resultado, creado_en')
       .in(
         'lead_id',

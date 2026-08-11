@@ -1,6 +1,6 @@
 // @vitest-environment node
 /**
- * Tests de integracion RLS de `contactos_whatsapp` (migracion 0013).
+ * Tests de integracion RLS de `contactos` (migracion 0013).
  *
  * Mismas convenciones que src/test/rls.integration.test.ts: corre contra el
  * proyecto Supabase REAL de desarrollo (credenciales en .env.local), con JWTs
@@ -14,7 +14,7 @@
  *   - grant de tabla revocado (delete)              -> error 42501.
  *
  * Higiene de fixtures: a diferencia de `leads`/`seguimientos`,
- * `contactos_whatsapp` NO tiene trigger de inmutabilidad, asi que el
+ * `contactos` NO tiene trigger de inmutabilidad, asi que el
  * service-role si puede borrar sus filas y el afterAll lo hace. Los LEADS en
  * cambio son imborrables desde la migracion 0016 (el delete en cascada de su
  * evento `lead_creado` choca con el trigger de inmutabilidad de
@@ -92,7 +92,7 @@ async function crearLead(nombre: string, telefono: string, asesorId: string): Pr
 /** Crea un contacto de WhatsApp pendiente con service-role. */
 async function crearContacto(leadId: string, autorId: string): Promise<string> {
   const { data, error } = await svc
-    .from('contactos_whatsapp')
+    .from('contactos')
     .insert({ lead_id: leadId, autor_id: autorId, resultado: 'pendiente' })
     .select('id')
     .single();
@@ -157,7 +157,7 @@ afterAll(async () => {
       // Los contactos si se borran (sin trigger de inmutabilidad). Se borra
       // por lead_id (no por los ids de contacto conocidos) para arrastrar
       // tambien cualquier fila que se hubiera colado si el aislamiento fallara.
-      await svc.from('contactos_whatsapp').delete().in('lead_id', leadIds);
+      await svc.from('contactos').delete().in('lead_id', leadIds);
       // Desde la migracion 0016 los leads son imborrables (su `lead_creado` en
       // cascada choca con el trigger de inmutabilidad de lead_eventos):
       // archivar en vez de borrar — patron easybroker-sync — y ASERTAR el
@@ -176,10 +176,10 @@ afterAll(async () => {
   await asesor2?.auth.signOut();
 }, 30_000);
 
-describe('contactos_whatsapp: RLS por ownership del lead (migracion 0013)', () => {
+describe('contactos: RLS por ownership del lead (migracion 0013)', () => {
   it('asesor1 NO puede leer los contactos de un lead de asesor2 (policy USING: 0 filas sin error)', async () => {
     const { data, error } = await asesor1
-      .from('contactos_whatsapp')
+      .from('contactos')
       .select('id')
       .eq('id', contactoA2Id);
     expect(error).toBeNull();
@@ -188,7 +188,7 @@ describe('contactos_whatsapp: RLS por ownership del lead (migracion 0013)', () =
     // Control positivo: el mismo select sobre su propio contacto SI devuelve la
     // fila. Sin esto, un select roto (o una tabla vacia) daria verde arriba.
     const { data: propio, error: propioError } = await asesor1
-      .from('contactos_whatsapp')
+      .from('contactos')
       .select('id, lead_id, resultado')
       .eq('id', contactoA1Id);
     expect(propioError).toBeNull();
@@ -198,7 +198,7 @@ describe('contactos_whatsapp: RLS por ownership del lead (migracion 0013)', () =
 
   it('asesor1 NO puede resolver el contacto de un lead de asesor2 (policy USING: 0 filas sin error)', async () => {
     const { data, error } = await asesor1
-      .from('contactos_whatsapp')
+      .from('contactos')
       .update({ resultado: 'contesto', resuelto_en: new Date().toISOString() })
       .eq('id', contactoA2Id)
       .select('id');
@@ -207,7 +207,7 @@ describe('contactos_whatsapp: RLS por ownership del lead (migracion 0013)', () =
 
     // Verificacion (service-role): el contacto de asesor2 sigue pendiente.
     const { data: after, error: afterError } = await svc
-      .from('contactos_whatsapp')
+      .from('contactos')
       .select('resultado, resuelto_en')
       .eq('id', contactoA2Id)
       .single();
@@ -220,14 +220,14 @@ describe('contactos_whatsapp: RLS por ownership del lead (migracion 0013)', () =
     // El lead SI es de asesor1 (pasa la primera mitad del with check), asi que
     // la unica razon posible del rechazo es el ancla de autoria.
     const { error } = await asesor1
-      .from('contactos_whatsapp')
+      .from('contactos')
       .insert({ lead_id: leadA1Id, autor_id: asesor2Id });
     expect(error).not.toBeNull();
     expect(error!.code).toBe('42501');
 
     // Verificacion (service-role): la fila con autor forjado nunca se creo.
     const { data: check, error: checkError } = await svc
-      .from('contactos_whatsapp')
+      .from('contactos')
       .select('id')
       .eq('lead_id', leadA1Id)
       .eq('autor_id', asesor2Id);
@@ -236,7 +236,7 @@ describe('contactos_whatsapp: RLS por ownership del lead (migracion 0013)', () =
 
     // Control positivo: el mismo insert con su propio autor_id SI funciona.
     const { data: ok, error: okError } = await asesor1
-      .from('contactos_whatsapp')
+      .from('contactos')
       .insert({ lead_id: leadA1Id, autor_id: asesor1Id })
       .select('id, resultado, autor_id')
       .single();
@@ -251,14 +251,14 @@ describe('contactos_whatsapp: RLS por ownership del lead (migracion 0013)', () =
     // la policy se cumpliria, asi que un 42501 aqui solo puede venir del grant
     // de columna. Sin este detalle el test daria verde por la razon equivocada.
     const { error: errorLeadId } = await asesor1
-      .from('contactos_whatsapp')
+      .from('contactos')
       .update({ lead_id: leadA1BisId })
       .eq('id', contactoA1Id);
     expect(errorLeadId).not.toBeNull();
     expect(errorLeadId!.code).toBe('42501');
 
     const { error: errorAutorId } = await asesor1
-      .from('contactos_whatsapp')
+      .from('contactos')
       .update({ autor_id: asesor2Id })
       .eq('id', contactoA1Id);
     expect(errorAutorId).not.toBeNull();
@@ -266,7 +266,7 @@ describe('contactos_whatsapp: RLS por ownership del lead (migracion 0013)', () =
 
     // Verificacion (service-role): ninguna de las dos columnas cambio.
     const { data: after, error: afterError } = await svc
-      .from('contactos_whatsapp')
+      .from('contactos')
       .select('lead_id, autor_id')
       .eq('id', contactoA1Id)
       .single();
@@ -276,13 +276,13 @@ describe('contactos_whatsapp: RLS por ownership del lead (migracion 0013)', () =
   });
 
   it('asesor1 NO puede borrar un contacto, ni siquiera el suyo (grant de DELETE revocado)', async () => {
-    const { error } = await asesor1.from('contactos_whatsapp').delete().eq('id', contactoA1Id);
+    const { error } = await asesor1.from('contactos').delete().eq('id', contactoA1Id);
     expect(error).not.toBeNull();
     expect(error!.code).toBe('42501');
 
     // Verificacion (service-role): la fila sigue existiendo.
     const { data: after, error: afterError } = await svc
-      .from('contactos_whatsapp')
+      .from('contactos')
       .select('id')
       .eq('id', contactoA1Id);
     expect(afterError).toBeNull();
@@ -294,7 +294,7 @@ describe('contactos_whatsapp: RLS por ownership del lead (migracion 0013)', () =
     // porque el UPDATE esta roto para todo el mundo, no porque RLS discrimine.
     const resueltoEn = new Date().toISOString();
     const { data, error } = await asesor1
-      .from('contactos_whatsapp')
+      .from('contactos')
       .update({ resultado: 'contesto', resuelto_en: resueltoEn })
       .eq('id', contactoA1BisId)
       .select('id, resultado');
@@ -304,7 +304,7 @@ describe('contactos_whatsapp: RLS por ownership del lead (migracion 0013)', () =
 
     // Verificacion (service-role): el cambio persiste.
     const { data: after, error: afterError } = await svc
-      .from('contactos_whatsapp')
+      .from('contactos')
       .select('resultado, resuelto_en')
       .eq('id', contactoA1BisId)
       .single();
@@ -320,14 +320,14 @@ describe('contactos_whatsapp: RLS por ownership del lead (migracion 0013)', () =
     // la reasignacion: invisible para el asesor nuevo y — peor — todavia en la
     // cola del anterior, que ya no es dueno del lead.
     const { data: antesA1, error: antesA1Error } = await asesor1
-      .from('contactos_whatsapp')
+      .from('contactos')
       .select('id')
       .eq('id', contactoReasignableId);
     expect(antesA1Error).toBeNull();
     expect(antesA1).toHaveLength(1);
 
     const { data: antesA2, error: antesA2Error } = await asesor2
-      .from('contactos_whatsapp')
+      .from('contactos')
       .select('id')
       .eq('id', contactoReasignableId);
     expect(antesA2Error).toBeNull();
@@ -344,7 +344,7 @@ describe('contactos_whatsapp: RLS por ownership del lead (migracion 0013)', () =
 
     // El asesor NUEVO ahora si ve el contacto pendiente...
     const { data: despuesA2, error: despuesA2Error } = await asesor2
-      .from('contactos_whatsapp')
+      .from('contactos')
       .select('id, resultado, autor_id')
       .eq('id', contactoReasignableId);
     expect(despuesA2Error).toBeNull();
@@ -356,7 +356,7 @@ describe('contactos_whatsapp: RLS por ownership del lead (migracion 0013)', () =
 
     // ...y el asesor ANTERIOR ya no.
     const { data: despuesA1, error: despuesA1Error } = await asesor1
-      .from('contactos_whatsapp')
+      .from('contactos')
       .select('id')
       .eq('id', contactoReasignableId);
     expect(despuesA1Error).toBeNull();
@@ -365,7 +365,7 @@ describe('contactos_whatsapp: RLS por ownership del lead (migracion 0013)', () =
     // Y el asesor nuevo tambien puede resolverlo (la policy de UPDATE usa el
     // mismo criterio de ownership que la de SELECT).
     const { data: resuelto, error: resueltoError } = await asesor2
-      .from('contactos_whatsapp')
+      .from('contactos')
       .update({ resultado: 'no_contesto', resuelto_en: new Date().toISOString() })
       .eq('id', contactoReasignableId)
       .select('id, resultado');
@@ -376,7 +376,7 @@ describe('contactos_whatsapp: RLS por ownership del lead (migracion 0013)', () =
 
   it('admin lee los contactos de cualquier lead, sea de quien sea', async () => {
     const { data, error } = await admin
-      .from('contactos_whatsapp')
+      .from('contactos')
       .select('id')
       .in('id', [contactoA1Id, contactoA1BisId, contactoA2Id, contactoReasignableId]);
     expect(error).toBeNull();

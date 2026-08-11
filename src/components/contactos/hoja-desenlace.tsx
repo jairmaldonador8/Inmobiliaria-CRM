@@ -45,6 +45,8 @@ type Props = PropsVisita & {
    * `sin_reporte` y entra B). Con el ID esa transición sí se ve.
    */
   contactoPendienteId: string | null
+  /** Canal del pendiente: cambia el texto de la pregunta y el icono. */
+  canalPendiente?: 'whatsapp' | 'llamada'
 }
 
 const OPCIONES: {
@@ -71,7 +73,11 @@ const OPCIONES: {
  * `visibilitychange` refresca y el servidor dice si hay pendiente → la hoja
  * pregunta cómo le fue.
  */
-export function HojaDesenlace({ contactoPendienteId, ...propsVisita }: Props) {
+export function HojaDesenlace({
+  contactoPendienteId,
+  canalPendiente = 'whatsapp',
+  ...propsVisita
+}: Props) {
   const { leadId, leadNombre } = propsVisita
   const router = useRouter()
   const [pendiente, iniciarTransicion] = useTransition()
@@ -123,7 +129,7 @@ export function HojaDesenlace({ contactoPendienteId, ...propsVisita }: Props) {
     }
 
     iniciarTransicion(async () => {
-      const resultado = await resolverContacto(leadId, desenlace)
+      const resultado = await resolverContacto(leadId, desenlace, canalPendiente)
 
       if ('error' in resultado) {
         // La hoja se queda abierta: el desenlace no quedó registrado y el
@@ -184,7 +190,11 @@ export function HojaDesenlace({ contactoPendienteId, ...propsVisita }: Props) {
         >
           <SheetHeader className="pb-0">
             <SheetTitle>¿Cómo te fue con {primerNombre}?</SheetTitle>
-            <SheetDescription>Un toque y seguimos.</SheetDescription>
+            <SheetDescription>
+              {canalPendiente === 'llamada'
+                ? 'Acabas de llamarle. Un toque y seguimos.'
+                : 'Un toque y seguimos.'}
+            </SheetDescription>
           </SheetHeader>
 
           <div className="grid gap-2 px-4 pb-4">

@@ -19,6 +19,8 @@ import {
   Home,
   Mail,
   Phone,
+  PhoneCall,
+  PhoneOutgoing,
   ArchiveRestore,
   ArrowRight,
   ArrowRightLeft,
@@ -110,6 +112,14 @@ export function etiquetaEvento(tipo: string, payload: PayloadEvento, nombres: No
         ? `WhatsApp: ${etiquetaResultado(desenlace)}`
         : 'Se registró el desenlace del WhatsApp'
     }
+    case 'llamada_iniciada':
+      return 'Le llamó'
+    case 'llamada_desenlace': {
+      const desenlace = comoTexto(payload.desenlace)
+      return desenlace
+        ? `Llamada: ${etiquetaResultado(desenlace)}`
+        : 'Se registró el desenlace de la llamada'
+    }
     case 'visita_agendada':
       return payload.reagendada ? 'Visita reagendada' : 'Visita agendada'
     case 'visita_realizada':
@@ -145,6 +155,8 @@ export const ICONOS_EVENTO: Record<string, LucideIcon> = {
   seguimiento_registrado: NotebookPen,
   whatsapp_enviado: MessageCircle,
   whatsapp_desenlace: MessageCircleReply,
+  llamada_iniciada: PhoneOutgoing,
+  llamada_desenlace: PhoneCall,
   visita_agendada: CalendarPlus,
   visita_realizada: CalendarCheck,
   visita_cancelada: CalendarX,

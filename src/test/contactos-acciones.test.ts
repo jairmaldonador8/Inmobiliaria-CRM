@@ -56,7 +56,11 @@ vi.mock('@/lib/leads/acciones-asesor', () => ({
   cambiarEtapa: cambiarEtapaMock,
 }))
 
-import { registrarSalidaWhatsapp, resolverContacto } from '@/lib/contactos/acciones'
+import {
+  registrarSalidaLlamada,
+  registrarSalidaWhatsapp,
+  resolverContacto,
+} from '@/lib/contactos/acciones'
 
 interface ErrorFake {
   message: string
@@ -85,9 +89,9 @@ const HACE_2_HORAS = new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString()
 /**
  * Stub chainable del flujo completo de `registrarSalidaWhatsapp`:
  *   seguimientos:       insert()                      (awaited directo)
- *   contactos_whatsapp: select().eq().eq()            (awaited directo)
- *   contactos_whatsapp: update().eq().eq()            (awaited directo)
- *   contactos_whatsapp: insert()                      (awaited directo)
+ *   contactos: select().eq().eq()            (awaited directo)
+ *   contactos: update().eq().eq()            (awaited directo)
+ *   contactos: insert()                      (awaited directo)
  *   leads:              select('etapa').eq().maybeSingle()
  *   leads:              update({etapa}).eq().eq().eq().select('id')  — avance
  */
@@ -109,7 +113,8 @@ function crearSupabaseFake(opts: {
   const eqSelectResultado = vi
     .fn()
     .mockResolvedValue({ data: opts.pendientes ?? [], error: null })
-  const eqSelectLead = vi.fn(() => ({ eq: eqSelectResultado }))
+  const eqSelectCanal = vi.fn(() => ({ eq: eqSelectResultado }))
+  const eqSelectLead = vi.fn(() => ({ eq: eqSelectCanal }))
   const selectContactos = vi.fn(() => ({ eq: eqSelectLead }))
 
   // update de pendientes viejos: .update().eq().eq().select('id') → resuelve
@@ -118,7 +123,8 @@ function crearSupabaseFake(opts: {
     error: opts.updateContactoError ?? null,
   })
   const eqUpdateResultado = vi.fn(() => ({ select: selectUpdateContactos }))
-  const eqUpdateLead = vi.fn(() => ({ eq: eqUpdateResultado }))
+  const eqUpdateCanal = vi.fn(() => ({ eq: eqUpdateResultado }))
+  const eqUpdateLead = vi.fn(() => ({ eq: eqUpdateCanal }))
   const updateContactos = vi.fn<
     (valores: Record<string, unknown>) => { eq: typeof eqUpdateLead }
   >(() => ({ eq: eqUpdateLead }))
@@ -157,7 +163,7 @@ function crearSupabaseFake(opts: {
 
   const from = vi.fn((table: string) => {
     if (table === 'seguimientos') return { insert: insertSeguimiento }
-    if (table === 'contactos_whatsapp')
+    if (table === 'contactos')
       return { select: selectContactos, update: updateContactos, insert: insertContacto }
     if (table === 'leads') return { select: selectLead, update: updateLead }
     if (table === 'lead_eventos') return { insert: insertEvento }
@@ -239,7 +245,7 @@ describe('registrarSalidaWhatsapp — dedupe de contactos', () => {
     // El nuevo contacto lleva SOLO (lead_id, autor_id).
     expect(fake.insertContacto).toHaveBeenCalledTimes(1)
     const argumentoInsert = fake.insertContacto.mock.calls[0][0]
-    expect(argumentoInsert).toEqual({ lead_id: 'lead-1', autor_id: 'asesor-1' })
+    expect(argumentoInsert).toEqual({ lead_id: 'lead-1', autor_id: 'asesor-1', canal: 'whatsapp' })
     // El grant de la tabla no incluye `resultado`: mandarlo truena en prod.
     expect(argumentoInsert).not.toHaveProperty('resultado')
     expect(argumentoInsert).not.toHaveProperty('id')
@@ -267,7 +273,7 @@ describe('registrarSalidaWhatsapp — dedupe de contactos', () => {
     const resultado = await registrarSalidaWhatsapp('lead-1', {})
 
     expect(resultado).toEqual({ ok: true })
-    expect(fake.insertContacto).toHaveBeenCalledWith({ lead_id: 'lead-1', autor_id: 'asesor-1' })
+    expect(fake.insertContacto).toHaveBeenCalledWith({ lead_id: 'lead-1', autor_id: 'asesor-1', canal: 'whatsapp' })
     expect(fake.updateContactos).not.toHaveBeenCalled()
   })
 
@@ -566,5 +572,59 @@ describe('resolverContacto — desenlaces', () => {
     expect(argumento).not.toHaveProperty('lead_id')
     expect(argumento).not.toHaveProperty('autor_id')
     expect(argumento).not.toHaveProperty('creado_en')
+  })
+})
+
+
+describe('registrarSalidaLlamada — el asesor marca desde la app', () => {
+  it('registra el contacto con canal «llamada» y anota el evento, sin nota de seguimiento', async () => {
+    const fake = crearSupabaseFake({ pendientes: [], etapaLead: 'contactado' })
+    createClientMock.mockResolvedValue(fake.supabase)
+
+    const resultado = await registrarSalidaLlamada('lead-1')
+
+    expect(resultado).toEqual({ ok: true })
+    expect(fake.insertContacto).toHaveBeenCalledWith({
+      lead_id: 'lead-1',
+      autor_id: 'asesor-1',
+      canal: 'llamada',
+    })
+    // La llamada NO escribe nota: su evento ya cuenta el hecho y la nota
+    // real la pone el asesor al reportar cómo le fue.
+    expect(fake.insertSeguimiento).not.toHaveBeenCalled()
+    expect(fake.insertEvento).toHaveBeenCalledWith({
+      lead_id: 'lead-1',
+      tipo: 'llamada_iniciada',
+      actor_id: 'asesor-1',
+      payload: { contacto_id: 'contacto-nuevo' },
+    })
+  })
+
+  it('un lead «nuevo» al que se le llama avanza a «contactado»', async () => {
+    const fake = crearSupabaseFake({ pendientes: [], etapaLead: 'nuevo' })
+    createClientMock.mockResolvedValue(fake.supabase)
+
+    await registrarSalidaLlamada('lead-1')
+
+    expect(fake.updateLead).toHaveBeenCalledWith(
+      expect.objectContaining({ etapa: 'contactado' })
+    )
+  })
+})
+
+describe('resolverContacto — desenlace de una llamada', () => {
+  it('resuelve solo los pendientes del canal «llamada» y anota llamada_desenlace', async () => {
+    const fake = crearSupabaseFake({ filasUpdateContactos: [{ id: 'contacto-9' }] })
+    createClientMock.mockResolvedValue(fake.supabase)
+
+    const resultado = await resolverContacto('lead-1', 'contesto', 'llamada')
+
+    expect(resultado).toEqual({ ok: true })
+    expect(fake.insertEvento).toHaveBeenCalledWith({
+      lead_id: 'lead-1',
+      tipo: 'llamada_desenlace',
+      actor_id: 'asesor-1',
+      payload: { contacto_id: 'contacto-9', desenlace: 'contesto' },
+    })
   })
 })

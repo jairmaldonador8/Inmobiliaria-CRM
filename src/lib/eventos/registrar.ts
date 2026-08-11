@@ -2,6 +2,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 
 export type TipoEventoApp =
   | 'seguimiento_registrado' | 'whatsapp_enviado' | 'whatsapp_desenlace'
+  | 'llamada_iniciada' | 'llamada_desenlace'
   | 'visita_agendada' | 'visita_realizada' | 'visita_cancelada'
   | 'tomado_de_bandeja' | 'escalamiento_paso' | 'push_recordatorio'
 

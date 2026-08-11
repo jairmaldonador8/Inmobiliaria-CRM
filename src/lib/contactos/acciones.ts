@@ -38,25 +38,47 @@ export async function registrarSalidaWhatsapp(
   leadId: string,
   datos: { nombrePlantilla?: string | null }
 ): Promise<ResultadoContactoAccion> {
+  const nota = datos.nombrePlantilla
+    ? `Se envió plantilla "${datos.nombrePlantilla}"`
+    : 'Mensaje directo por WhatsApp'
+  return registrarSalida(leadId, { canal: 'whatsapp', nota })
+}
+
+/**
+ * El asesor tocó «Llamar»: la llamada queda anotada en la historia ANTES de
+ * que el marcador se lleve la pantalla, y al volver la hoja preguntará cómo
+ * le fue. A diferencia de WhatsApp no escribe nota de seguimiento: el evento
+ * `llamada_iniciada` ya lo dice, y la nota real la pone el asesor al
+ * reportar el desenlace.
+ */
+export async function registrarSalidaLlamada(
+  leadId: string
+): Promise<ResultadoContactoAccion> {
+  return registrarSalida(leadId, { canal: 'llamada' })
+}
+
+async function registrarSalida(
+  leadId: string,
+  datos: { canal: 'whatsapp' | 'llamada'; nota?: string }
+): Promise<ResultadoContactoAccion> {
   const usuario = await usuarioActual()
   if (!usuario) return { error: 'Tu sesión no es válida' }
 
   const supabase = await createClient()
 
-  // El seguimiento se escribe SIEMPRE, aunque el dedupe suprima el contacto:
+  // WhatsApp escribe SIEMPRE su nota, aunque el dedupe suprima el contacto:
   // hoy cada toque deja rastro en el timeline y quitarlo sería una regresión.
-  const nota = datos.nombrePlantilla
-    ? `Se envió plantilla "${datos.nombrePlantilla}"`
-    : 'Mensaje directo por WhatsApp'
-
-  const { error: errorSeguimiento } = await supabase.from('seguimientos').insert({
-    lead_id: leadId,
-    autor_id: usuario.user_id,
-    tipo: 'whatsapp',
-    nota,
-  })
-  if (errorSeguimiento) {
-    return { error: 'No se pudo registrar el seguimiento' }
+  // La llamada no manda nota: su evento ya cuenta el hecho.
+  if (datos.nota) {
+    const { error: errorSeguimiento } = await supabase.from('seguimientos').insert({
+      lead_id: leadId,
+      autor_id: usuario.user_id,
+      tipo: 'whatsapp',
+      nota: datos.nota,
+    })
+    if (errorSeguimiento) {
+      return { error: 'No se pudo registrar el seguimiento' }
+    }
   }
 
   // El comportamiento instrumentado es SOLO del asesor dueño del lead. Un
@@ -72,9 +94,10 @@ export async function registrarSalidaWhatsapp(
   // simultáneos pueden crear dos filas; se acepta (ver spec). Nada aguas
   // abajo asume «un solo pendiente por lead».
   const { data: pendientes } = await supabase
-    .from('contactos_whatsapp')
+    .from('contactos')
     .select('id, creado_en')
     .eq('lead_id', leadId)
+    .eq('canal', datos.canal)
     .eq('resultado', 'pendiente')
 
   const ahora = Date.now()
@@ -87,16 +110,17 @@ export async function registrarSalidaWhatsapp(
     // el registro honesto de que ese intento nunca se reportó.
     if ((pendientes ?? []).length > 0) {
       const { data: degradados } = await supabase
-        .from('contactos_whatsapp')
+        .from('contactos')
         .update({ resultado: 'sin_reporte', resuelto_en: new Date().toISOString() })
         .eq('lead_id', leadId)
+        .eq('canal', datos.canal)
         .eq('resultado', 'pendiente')
         .select('id')
       for (const contacto of degradados ?? []) {
         await registrarEvento(
           supabase,
           leadId,
-          'whatsapp_desenlace',
+          datos.canal === 'llamada' ? 'llamada_desenlace' : 'whatsapp_desenlace',
           { contacto_id: contacto.id, desenlace: 'sin_reporte' },
           usuario.user_id
         )
@@ -108,8 +132,8 @@ export async function registrarSalidaWhatsapp(
     // truena con «permission denied for column resultado». El default de la
     // columna es quien lo pone.
     const { data: contacto, error: errorContacto } = await supabase
-      .from('contactos_whatsapp')
-      .insert({ lead_id: leadId, autor_id: usuario.user_id })
+      .from('contactos')
+      .insert({ lead_id: leadId, autor_id: usuario.user_id, canal: datos.canal })
       .select('id')
       .single()
     if (errorContacto || !contacto) {
@@ -118,7 +142,7 @@ export async function registrarSalidaWhatsapp(
       await registrarEvento(
         supabase,
         leadId,
-        'whatsapp_enviado',
+        datos.canal === 'llamada' ? 'llamada_iniciada' : 'whatsapp_enviado',
         { contacto_id: contacto.id },
         usuario.user_id
       )
@@ -138,7 +162,7 @@ export async function registrarSalidaWhatsapp(
       etapaActual: lead.etapa,
       destino: 'contactado',
       autorId: usuario.user_id,
-      motivo: 'whatsapp_enviado',
+      motivo: datos.canal === 'llamada' ? 'llamada' : 'whatsapp_enviado',
     })
   }
 
@@ -148,7 +172,8 @@ export async function registrarSalidaWhatsapp(
 
 export async function resolverContacto(
   leadId: string,
-  desenlace: string
+  desenlace: string,
+  canal: 'whatsapp' | 'llamada' = 'whatsapp'
 ): Promise<ResultadoContactoAccion> {
   const usuario = await usuarioActual()
   if (!usuario) return { error: 'Tu sesión no es válida' }
@@ -171,9 +196,10 @@ export async function resolverContacto(
   // dos filas pendientes. Si se resolviera solo una, la hoja reaparecería
   // con la otra.
   const { data: resueltos, error } = await supabase
-    .from('contactos_whatsapp')
+    .from('contactos')
     .update({ resultado: valor, resuelto_en: new Date().toISOString() })
     .eq('lead_id', leadId)
+    .eq('canal', canal)
     .eq('resultado', 'pendiente')
     .select('id')
 
@@ -183,7 +209,7 @@ export async function resolverContacto(
     await registrarEvento(
       supabase,
       leadId,
-      'whatsapp_desenlace',
+      canal === 'llamada' ? 'llamada_desenlace' : 'whatsapp_desenlace',
       { contacto_id: contacto.id, desenlace: valor },
       usuario.user_id
     )

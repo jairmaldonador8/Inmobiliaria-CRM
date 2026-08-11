@@ -24,12 +24,17 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import { etapaTrasEvento } from '@/lib/leads/avance-etapa'
 import { etiquetaEtapa, type EtapaKanban } from '@/lib/leads/formato'
 
-export type MotivoAvance = 'visita_agendada' | 'visita_realizada' | 'whatsapp_enviado'
+export type MotivoAvance =
+  | 'visita_agendada'
+  | 'visita_realizada'
+  | 'whatsapp_enviado'
+  | 'llamada'
 
 const TEXTO_MOTIVO: Record<MotivoAvance, string> = {
   visita_agendada: 'al agendar una visita',
   visita_realizada: 'al marcar la visita como realizada',
   whatsapp_enviado: 'al enviar un WhatsApp',
+  llamada: 'al llamar al cliente',
 }
 
 /**

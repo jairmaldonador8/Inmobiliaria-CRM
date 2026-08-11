@@ -123,7 +123,7 @@ describe('HojaDesenlace', () => {
     fireEvent.click(screen.getByRole('button', { name: /no me contestó/i }))
 
     await vi.waitFor(() => {
-      expect(mockResolverContacto).toHaveBeenCalledWith('lead-1', 'no_contesto')
+      expect(mockResolverContacto).toHaveBeenCalledWith('lead-1', 'no_contesto', 'whatsapp')
     })
     await vi.waitFor(() => {
       expect(desenlaceVisible()).toBe(false)

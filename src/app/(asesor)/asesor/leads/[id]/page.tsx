@@ -27,6 +27,7 @@ import {
 } from '@/components/seguimientos/sheet-seguimiento'
 import { type OpcionPropiedadVisita } from '@/components/visitas/hoja-agendar-visita'
 import { HojaDesenlace } from '@/components/contactos/hoja-desenlace'
+import { BotonLlamar } from '@/components/contactos/boton-llamar'
 import { ListaVisitasLead } from '@/components/visitas/lista-visitas-lead'
 import { eventosDeLead, fusionarHistoria } from '@/lib/eventos/consultas'
 import { TimelineEventos } from '@/components/eventos/timeline-eventos'
@@ -140,8 +141,8 @@ export default async function PaginaDetalleLeadAsesor({
       // `registrarSalidaWhatsapp` acepta una carrera que puede dejar dos
       // filas pendientes, y `maybeSingle()` reventaría con PGRST116.
       supabase
-        .from('contactos_whatsapp')
-        .select('id, resultado')
+        .from('contactos')
+        .select('id, resultado, canal')
         .eq('lead_id', id)
         .order('creado_en', { ascending: false })
         .limit(1),
@@ -163,6 +164,9 @@ export default async function PaginaDetalleLeadAsesor({
   const filaUltimoContacto = (ultimoContacto ?? [])[0]
   const contactoPendienteId =
     filaUltimoContacto?.resultado === 'pendiente' ? filaUltimoContacto.id : null
+  // De qué canal preguntar al volver: la hoja cambia el texto y el icono.
+  const canalPendiente =
+    filaUltimoContacto?.canal === 'llamada' ? ('llamada' as const) : ('whatsapp' as const)
 
   const contexto = contextoPlantillasLead(leadDetalle, usuario.nombre)
   const opcionesPropiedad = (propiedades ?? []) as OpcionPropiedadSeguimiento[]
@@ -202,13 +206,7 @@ export default async function PaginaDetalleLeadAsesor({
       {/* Barra de acciones: 2×2 para objetivos táctiles grandes en móvil. */}
       <div className="grid grid-cols-2 gap-2">
         {leadDetalle.telefono ? (
-          <a
-            href={`tel:+${leadDetalle.telefono}`}
-            className="flex h-14 flex-col items-center justify-center gap-1 rounded-xl border border-input bg-white text-xs font-medium text-slate-900 shadow-xs transition-colors hover:bg-slate-50 active:translate-y-px"
-          >
-            <Phone aria-hidden className="size-5" />
-            Llamar
-          </a>
+          <BotonLlamar leadId={leadDetalle.id} telefono={leadDetalle.telefono} />
         ) : (
           <span className="flex h-14 flex-col items-center justify-center gap-1 rounded-xl border border-input bg-slate-50 text-xs font-medium text-slate-400">
             <Phone aria-hidden className="size-5" />
@@ -230,6 +228,7 @@ export default async function PaginaDetalleLeadAsesor({
             de desenlace al volver de WhatsApp. */}
         <HojaDesenlace
           contactoPendienteId={contactoPendienteId}
+          canalPendiente={canalPendiente}
           leadId={leadDetalle.id}
           leadNombre={leadDetalle.nombre}
           telefono={leadDetalle.telefono}
