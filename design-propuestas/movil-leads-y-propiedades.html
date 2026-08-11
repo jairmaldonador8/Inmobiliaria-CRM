@@ -1,0 +1,1029 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Klo-Ser · El teléfono — leads y ficha de propiedad</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Jost:wght@200;300&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --tinta: #141414;
+    --tinta-2: #1C1B19;
+    --tinta-3: #2A2825;
+    --crema: #EFEDE8;
+    --papel: #FCFCFA;
+    --linea: #E3E1DB;
+    --linea-oscura: #35322D;
+    --gris: #8C8A84;
+    --gris-claro: #A5A29A;
+    --ambar: #C98A3B;
+    --rojo: #B4402C;
+    --verde: #4C7A34;
+  }
+
+  * { box-sizing: border-box; }
+
+  html {
+    font-feature-settings: "kern" 1, "liga" 1;
+    text-rendering: optimizeLegibility;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    margin: 0;
+    background: var(--tinta);
+    color: var(--crema);
+    font-family: Poppins, system-ui, sans-serif;
+    font-weight: 300;
+    font-size: clamp(15px, 1.1vw, 17px);
+    line-height: 1.55;
+  }
+
+  .envoltura { max-width: 1320px; margin: 0 auto; padding: 0 clamp(16px, 4vw, 48px) 96px; }
+
+  /* ── Encabezado ───────────────────────────────────────────── */
+  header.portada { padding: clamp(48px, 8vw, 104px) 0 clamp(32px, 5vw, 56px); }
+
+  .wordmark {
+    font-family: Jost, sans-serif;
+    font-weight: 200;
+    font-size: 15px;
+    letter-spacing: 0.42em;
+    color: var(--crema);
+  }
+  .wordmark i {
+    display: inline-block;
+    width: 10px; height: 1px;
+    background: var(--ambar);
+    vertical-align: middle;
+    margin: 0 4px 2px;
+    font-style: normal;
+  }
+
+  .kicker {
+    margin: 28px 0 0;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: var(--gris-claro);
+  }
+
+  h1 {
+    margin: 14px 0 0;
+    font-size: clamp(30px, 5.2vw, 56px);
+    font-weight: 600;
+    line-height: 1.08;
+    letter-spacing: -0.02em;
+    max-width: 20ch;
+    hyphens: none;
+  }
+
+  .entradilla {
+    margin: 22px 0 0;
+    max-width: 62ch;
+    font-size: clamp(16px, 1.3vw, 19px);
+    color: #CFCBC2;
+  }
+  .entradilla strong { font-weight: 600; color: var(--crema); }
+
+  /* ── Secciones ────────────────────────────────────────────── */
+  section.bloque { padding-top: clamp(48px, 7vw, 88px); }
+
+  .barra-seccion {
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+    padding-bottom: 18px;
+    border-bottom: 1px solid var(--linea-oscura);
+  }
+  .num {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.2em;
+    color: var(--ambar);
+  }
+  h2 {
+    margin: 0;
+    font-size: clamp(22px, 2.6vw, 32px);
+    font-weight: 600;
+    letter-spacing: -0.015em;
+    hyphens: none;
+  }
+
+  .contexto { margin: 24px 0 0; max-width: 68ch; color: #CFCBC2; }
+  .contexto + .contexto { margin-top: 12px; }
+
+  /* ── Diagnóstico medido ───────────────────────────────────── */
+  .medicion {
+    margin: 28px 0 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .dato {
+    border: 1px solid var(--linea-oscura);
+    border-radius: 12px;
+    padding: 12px 16px;
+    background: var(--tinta-2);
+  }
+  .dato dt {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--gris-claro);
+    margin: 0 0 4px;
+  }
+  .dato dd {
+    margin: 0;
+    font-size: 19px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums lining-nums;
+  }
+  .dato dd.mal { color: #E08A78; }
+  .dato dd.bien { color: #9BC47E; }
+
+  /* ── Rejilla de opciones ──────────────────────────────────── */
+  .opciones {
+    margin: 40px 0 0;
+    display: grid;
+    gap: clamp(20px, 2.4vw, 32px);
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    align-items: start;
+  }
+
+  .opcion {
+    border: 1px solid var(--linea-oscura);
+    border-radius: 20px;
+    background: var(--tinta-2);
+    padding: 20px;
+    cursor: pointer;
+    transition: border-color 140ms ease, background 140ms ease, transform 140ms ease;
+  }
+  .opcion:hover { border-color: #56514A; transform: translateY(-2px); }
+  .opcion[aria-pressed="true"] {
+    border-color: var(--ambar);
+    background: #201C15;
+  }
+  .opcion:focus-visible { outline: 2px solid var(--ambar); outline-offset: 3px; }
+
+  .etiqueta-opcion {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--gris-claro);
+  }
+  .marca-sel {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px; height: 18px;
+    border: 1px solid #56514A;
+    border-radius: 50%;
+    font-size: 11px;
+    color: transparent;
+  }
+  .opcion[aria-pressed="true"] .marca-sel {
+    border-color: var(--ambar);
+    background: var(--ambar);
+    color: var(--tinta);
+  }
+  .recomendada {
+    margin-left: auto;
+    border: 1px solid var(--ambar);
+    color: var(--ambar);
+    border-radius: 999px;
+    padding: 2px 9px;
+    font-size: 9px;
+    letter-spacing: 0.12em;
+  }
+
+  .opcion h3 {
+    margin: 12px 0 0;
+    font-size: 19px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    hyphens: none;
+  }
+  .opcion p.desc { margin: 8px 0 0; font-size: 14.5px; color: #C3BFB6; line-height: 1.5; }
+  .opcion p.pero {
+    margin: 10px 0 0;
+    font-size: 13px;
+    color: var(--gris-claro);
+    padding-left: 12px;
+    border-left: 2px solid var(--linea-oscura);
+  }
+
+  /* ── Maqueta de teléfono ──────────────────────────────────── */
+  .telefono {
+    width: 100%;
+    max-width: 390px;
+    margin: 18px auto 4px;
+    border-radius: 30px;
+    background: var(--crema);
+    color: var(--tinta);
+    overflow: hidden;
+    border: 6px solid #0A0A0A;
+    box-shadow: 0 18px 44px rgb(0 0 0 / 0.45);
+    font-size: 14px;
+    line-height: 1.45;
+  }
+  .estado {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 7px 16px 3px;
+    background: var(--tinta);
+    color: var(--crema);
+    font-size: 11px;
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+  }
+  .barra-app {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 9px 14px;
+    background: var(--tinta);
+    color: var(--crema);
+  }
+  .barra-app .wordmark { font-size: 11px; letter-spacing: 0.34em; }
+  .lienzo { padding: 14px; min-height: 380px; }
+  .lienzo.sin-pad { padding: 0; min-height: 380px; }
+
+  .titulo-p { margin: 0; font-size: 21px; font-weight: 600; letter-spacing: -0.015em; }
+  .sub-p { margin: 2px 0 0; font-size: 12.5px; color: var(--gris); }
+
+  /* Chips de etapa */
+  .chips {
+    display: flex;
+    gap: 7px;
+    margin: 14px -14px 0;
+    padding: 0 14px 4px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .chips::-webkit-scrollbar { display: none; }
+  .chip {
+    flex: 0 0 auto;
+    border-radius: 999px;
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: 500;
+    background: #E7E4DE;
+    color: var(--tinta-3);
+    white-space: nowrap;
+  }
+  .chip.on { background: var(--tinta); color: var(--crema); }
+  .chip b { font-weight: 600; font-variant-numeric: tabular-nums; }
+
+  /* Tarjeta de lead */
+  .lead {
+    display: flex;
+    gap: 11px;
+    align-items: flex-start;
+    background: var(--papel);
+    border: 1px solid var(--linea);
+    border-radius: 14px;
+    padding: 12px;
+    margin-top: 9px;
+  }
+  .lead .avatar {
+    flex: 0 0 auto;
+    width: 38px; height: 38px;
+    border-radius: 50%;
+    background: #E7E4DE;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 600; color: var(--tinta-3);
+  }
+  .lead .cuerpo { min-width: 0; flex: 1; }
+  .lead .nom {
+    margin: 0;
+    font-size: 14.5px;
+    font-weight: 600;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .lead .meta {
+    margin: 1px 0 0;
+    font-size: 12px;
+    color: var(--gris);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .lead .pies { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 7px; align-items: center; }
+  .punto { width: 7px; height: 7px; border-radius: 50%; flex: 0 0 auto; }
+  .punto.rojo { background: var(--rojo); }
+  .punto.ambar { background: var(--ambar); }
+
+  .badge {
+    border-radius: 999px;
+    padding: 2px 8px;
+    font-size: 10.5px;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+  .b-nuevo { background: #DBEAFE; color: #1D4ED8; }
+  .b-cont { background: #E0F2FE; color: #0369A1; }
+  .b-cita { background: #EDE9FE; color: #6D28D9; }
+  .b-visito { background: #E0E7FF; color: #4338CA; }
+  .b-nego { background: #FEF3C7; color: #B45309; }
+  .b-gris { background: #E7E4DE; color: var(--gris); }
+  .b-fuente { background: #E7E4DE; color: #4A4843; }
+
+  .cuando { font-size: 11px; color: var(--gris-claro); }
+
+  /* Encabezado de grupo */
+  .grupo {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: 16px 0 0;
+    padding-bottom: 5px;
+    border-bottom: 1px solid var(--linea);
+  }
+  .grupo span:first-child {
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: var(--gris);
+  }
+  .grupo span:last-child { font-size: 12px; color: var(--gris-claro); font-variant-numeric: tabular-nums; }
+
+  /* Acordeón */
+  .fila-acordeon {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    background: var(--papel);
+    border: 1px solid var(--linea);
+    border-radius: 14px;
+    padding: 12px 13px;
+    margin-top: 9px;
+  }
+  .fila-acordeon .izq { display: flex; align-items: center; gap: 9px; }
+  .conteo {
+    font-size: 13px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    color: var(--tinta-3);
+  }
+  .chevron { color: var(--gris-claro); font-size: 13px; }
+  .abierto { border-bottom-left-radius: 0; border-bottom-right-radius: 0; margin-bottom: 0; }
+  .panel {
+    background: #F5F3EF;
+    border: 1px solid var(--linea);
+    border-top: 0;
+    border-radius: 0 0 14px 14px;
+    padding: 4px 10px 11px;
+  }
+  .panel .lead { margin-top: 8px; }
+
+  /* Kanban roto (estado actual) */
+  .tablero {
+    display: flex;
+    gap: 10px;
+    margin: 14px -14px 0;
+    padding: 0 14px;
+    overflow: hidden;
+  }
+  .col-k {
+    flex: 0 0 240px;
+    background: #E7E4DE;
+    border-radius: 14px;
+    padding: 9px;
+  }
+  .col-k header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+  .cinta-corte {
+    position: relative;
+    margin-top: 10px;
+    font-size: 11px;
+    color: var(--rojo);
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+  .cinta-corte::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: repeating-linear-gradient(90deg, var(--rojo) 0 5px, transparent 5px 10px);
+  }
+
+  /* Ficha de propiedad */
+  .foto {
+    aspect-ratio: 16 / 10;
+    border-radius: 12px;
+    background:
+      linear-gradient(135deg, #C9C4BA 0%, #A8A199 42%, #837C72 100%);
+    position: relative;
+    overflow: hidden;
+  }
+  .foto.sangrada { border-radius: 0; aspect-ratio: 4 / 3; }
+  .foto .contador {
+    position: absolute;
+    right: 10px; bottom: 10px;
+    background: rgb(20 20 20 / 0.72);
+    color: var(--crema);
+    border-radius: 999px;
+    padding: 3px 9px;
+    font-size: 11px;
+    font-variant-numeric: tabular-nums;
+  }
+  .foto .puntos {
+    position: absolute;
+    left: 0; right: 0; bottom: 12px;
+    display: flex; justify-content: center; gap: 5px;
+  }
+  .foto .puntos i {
+    width: 5px; height: 5px; border-radius: 50%;
+    background: rgb(252 252 250 / 0.5);
+  }
+  .foto .puntos i.on { background: var(--papel); width: 16px; border-radius: 999px; }
+  .velo {
+    position: absolute; inset: auto 0 0 0;
+    padding: 46px 14px 14px;
+    background: linear-gradient(to top, rgb(20 20 20 / 0.86), transparent);
+    color: var(--papel);
+  }
+
+  .minis { display: flex; gap: 7px; margin-top: 9px; overflow: hidden; }
+  .minis i {
+    flex: 0 0 auto;
+    width: 62px; height: 46px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #C9C4BA, #8E877D);
+  }
+  .minis i:first-child { outline: 2px solid var(--tinta); outline-offset: 1px; }
+
+  .precio { margin: 10px 0 0; font-size: 26px; font-weight: 600; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+  .tit-prop { margin: 3px 0 0; font-size: 14px; font-weight: 500; line-height: 1.35; }
+  .zona { margin: 5px 0 0; font-size: 12.5px; color: var(--gris); }
+
+  .rejilla-ficha { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; margin-top: 12px; }
+  .celda {
+    background: var(--papel);
+    border: 1px solid var(--linea);
+    border-radius: 11px;
+    padding: 9px 11px;
+  }
+  .celda dt { margin: 0; font-size: 10.5px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--gris-claro); }
+  .celda dd { margin: 2px 0 0; font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; }
+
+  .tarjeta {
+    background: var(--papel);
+    border: 1px solid var(--linea);
+    border-radius: 14px;
+    padding: 13px;
+    margin-top: 11px;
+  }
+  .tarjeta h4 { margin: 0 0 6px; font-size: 12.5px; font-weight: 600; }
+  .tarjeta p { margin: 0; font-size: 12.5px; color: #55534E; line-height: 1.55; }
+  .leer-mas { margin-top: 7px; font-size: 12.5px; font-weight: 600; color: var(--tinta); }
+
+  .fila-dato {
+    display: flex; justify-content: space-between; align-items: baseline;
+    padding: 7px 0;
+    border-bottom: 1px solid var(--linea);
+    font-size: 12.5px;
+  }
+  .fila-dato:last-child { border-bottom: 0; }
+  .fila-dato dt { color: var(--gris); margin: 0; }
+  .fila-dato dd { margin: 0; font-weight: 500; font-variant-numeric: tabular-nums; }
+
+  .boton-wa {
+    display: flex; align-items: center; justify-content: center; gap: 7px;
+    background: #1F7A4D; color: var(--papel);
+    border-radius: 12px;
+    padding: 12px;
+    font-size: 13.5px; font-weight: 600;
+    margin-top: 11px;
+  }
+  .barra-fija {
+    position: sticky; bottom: 0;
+    display: flex; gap: 8px;
+    padding: 10px 14px 12px;
+    background: rgb(239 237 232 / 0.94);
+    border-top: 1px solid var(--linea);
+    backdrop-filter: blur(8px);
+  }
+  .barra-fija > * { flex: 1; text-align: center; border-radius: 11px; padding: 11px 6px; font-size: 12.5px; font-weight: 600; }
+  .bf-wa { background: #1F7A4D; color: var(--papel); }
+  .bf-neg { background: var(--tinta); color: var(--crema); }
+
+  .tabbar {
+    display: flex;
+    justify-content: space-around;
+    padding: 9px 6px 12px;
+    background: var(--papel);
+    border-top: 1px solid var(--linea);
+    font-size: 10px;
+    color: var(--gris);
+  }
+  .tabbar b { font-weight: 600; color: var(--tinta); }
+
+  .pie-maqueta {
+    text-align: center;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--gris-claro);
+    margin: 10px 0 0;
+  }
+
+  /* ── Resumen ──────────────────────────────────────────────── */
+  .resumen {
+    margin-top: clamp(56px, 8vw, 96px);
+    border: 1px solid var(--linea-oscura);
+    border-radius: 20px;
+    background: var(--tinta-2);
+    padding: clamp(22px, 3vw, 34px);
+  }
+  .resumen h2 { font-size: clamp(20px, 2.2vw, 26px); }
+  .resumen ul { margin: 18px 0 0; padding: 0; list-style: none; }
+  .resumen li {
+    display: flex; gap: 12px; align-items: baseline;
+    padding: 12px 0;
+    border-top: 1px solid var(--linea-oscura);
+  }
+  .resumen li span:first-child {
+    flex: 0 0 190px;
+    font-size: 11px; font-weight: 600;
+    letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--gris-claro);
+  }
+  .resumen li span:last-child { font-weight: 500; }
+  .vacio { color: var(--gris-claro); font-weight: 300 !important; font-style: italic; }
+
+  footer.cierre {
+    margin-top: 40px;
+    padding-top: 22px;
+    border-top: 1px solid var(--linea-oscura);
+    font-size: 13px;
+    color: var(--gris-claro);
+    max-width: 70ch;
+  }
+
+  @media (max-width: 720px) {
+    .resumen li { flex-direction: column; gap: 3px; }
+    .resumen li span:first-child { flex: none; }
+  }
+</style>
+
+<div class="envoltura">
+
+  <header class="portada">
+    <div class="wordmark">KLO<i></i>SER</div>
+    <p class="kicker">Propuesta de producto · 11 de agosto de 2026</p>
+    <h1>El teléfono: leads y ficha de propiedad</h1>
+    <p class="entradilla">
+      Dos pantallas se desbordan en el teléfono por razones distintas. La ficha de propiedad
+      <strong>ya está corregida</strong> — era un defecto y aplica a todas las propiedades por igual. Los leads
+      no son un defecto: es un tablero de escritorio metido a la fuerza en una pantalla de mano, y eso
+      es una decisión de diseño. Abajo van las opciones. Toca la que quieras y al final te queda el resumen
+      de lo aprobado.
+    </p>
+  </header>
+
+  <!-- ══ 1 · FICHA DE PROPIEDAD ══════════════════════════════ -->
+  <section class="bloque">
+    <div class="barra-seccion">
+      <span class="num">01</span>
+      <h2>Ficha de propiedad</h2>
+    </div>
+
+    <p class="contexto">
+      La tira de miniaturas medía 608&nbsp;px y arrastraba a lo ancho a toda la página en vez de hacer
+      scroll dentro de sí misma. Por eso <em>cualquier</em> propiedad con varias fotos salía así: no era
+      una propiedad rara, era la configuración de la galería. Ya está arreglado en el componente, o sea
+      en las 26&nbsp;propiedades y en las dos vistas (dirección y asesor).
+    </p>
+
+    <div class="medicion">
+      <div class="dato"><dt>Antes · iPhone 13</dt><dd class="mal">624 px</dd></div>
+      <div class="dato"><dt>Pantalla</dt><dd>390 px</dd></div>
+      <div class="dato"><dt>Después</dt><dd class="bien">390 px</dd></div>
+      <div class="dato"><dt>Escritorio</dt><dd class="bien">Sin cambios</dd></div>
+    </div>
+
+    <p class="contexto">
+      Con eso ya no hay que hacer zoom. La pregunta que queda es qué tan lejos llevamos la pantalla:
+      <strong>P1</strong> es lo que ya está en tu rama; <strong>P2</strong> y <strong>P3</strong> la
+      reacomodan para el pulgar.
+    </p>
+
+    <div class="opciones">
+
+      <!-- P1 -->
+      <div class="opcion" role="button" tabindex="0" aria-pressed="false" data-grupo="propiedad" data-valor="P1 · Corrección mínima">
+        <div class="etiqueta-opcion"><span class="marca-sel">✓</span> Opción P1 · Ya hecho</div>
+
+        <div class="telefono">
+          <div class="estado"><span>9:35</span><span>▮▮▮ ◵</span></div>
+          <div class="barra-app"><span class="wordmark">KLO<i></i>SER</span><span>◔</span></div>
+          <div class="lienzo">
+            <div class="foto"><span class="contador">1 / 7</span></div>
+            <div class="minis"><i></i><i></i><i></i><i></i><i></i></div>
+            <div style="display:flex; gap:6px; margin-top:11px;">
+              <span class="badge" style="background:#1F7A4D; color:#FCFCFA;">Venta</span>
+              <span class="badge b-gris">Publicada</span>
+            </div>
+            <p class="precio">$23,900,000</p>
+            <p class="tit-prop">Departamento en venta sobre Calzada del Valle · 3 recámaras · 201 m²</p>
+            <p class="zona">Del Valle, San Pedro Garza García</p>
+            <div class="boton-wa">Compartir por WhatsApp</div>
+            <div class="tarjeta">
+              <h4>Ficha técnica</h4>
+              <dl style="margin:0;">
+                <div class="fila-dato"><dt>Recámaras</dt><dd>3</dd></div>
+                <div class="fila-dato"><dt>Baños</dt><dd>4.5</dd></div>
+                <div class="fila-dato"><dt>Construcción</dt><dd>201 m²</dd></div>
+              </dl>
+            </div>
+          </div>
+          <div class="tabbar"><span>Inicio</span><span>Bandeja</span><span>Leads</span><b>Propiedades</b><span>Más</span></div>
+        </div>
+        <p class="pie-maqueta">Igual que hoy, pero cabe</p>
+
+        <h3>Corrección mínima</h3>
+        <p class="desc">
+          El mismo orden de siempre — galería, miniaturas, precio, título, WhatsApp, ficha —
+          solo que ahora las miniaturas hacen scroll dentro de su tira y nada se sale.
+        </p>
+        <p class="pero">Cero riesgo, cero rediseño. Ya está listo: si eliges esta, no toco nada más.</p>
+      </div>
+
+      <!-- P2 -->
+      <div class="opcion" role="button" tabindex="0" aria-pressed="false" data-grupo="propiedad" data-valor="P2 · Foto a sangre + barra de acción">
+        <div class="etiqueta-opcion"><span class="marca-sel">✓</span> Opción P2 · Vitrina <span class="recomendada">RECOMENDADA</span></div>
+
+        <div class="telefono">
+          <div class="estado"><span>9:35</span><span>▮▮▮ ◵</span></div>
+          <div class="lienzo sin-pad">
+            <div class="foto sangrada">
+              <span class="contador">1 / 7</span>
+              <span class="puntos"><i class="on"></i><i></i><i></i><i></i><i></i><i></i><i></i></span>
+              <div class="velo">
+                <div style="font-size:11px; letter-spacing:0.1em; text-transform:uppercase; opacity:.85;">Venta · Publicada</div>
+                <div style="font-size:26px; font-weight:600; letter-spacing:-0.02em; font-variant-numeric:tabular-nums;">$23,900,000</div>
+                <div style="font-size:12.5px; opacity:.9;">Del Valle, San Pedro Garza García</div>
+              </div>
+            </div>
+            <div style="padding:14px;">
+              <p class="tit-prop" style="font-size:15px;">Departamento en venta sobre Calzada del Valle · 3 recámaras · 201 m²</p>
+              <div class="rejilla-ficha">
+                <div class="celda"><dt>Recámaras</dt><dd>3</dd></div>
+                <div class="celda"><dt>Baños</dt><dd>4.5</dd></div>
+                <div class="celda"><dt>Construcción</dt><dd>201 m²</dd></div>
+                <div class="celda"><dt>Estac.</dt><dd>2</dd></div>
+              </div>
+              <div class="tarjeta">
+                <h4>Descripción</h4>
+                <p>Departamento de 201 m² sobre Calzada del Valle, con 3 recámaras y opción de adaptar un área flex. Cuenta con sala, comedor, cocina…</p>
+                <div class="leer-mas">Leer más</div>
+              </div>
+            </div>
+          </div>
+          <div class="barra-fija"><span class="bf-wa">Compartir</span><span class="bf-neg">Ver en EasyBroker</span></div>
+          <div class="tabbar"><span>Inicio</span><span>Bandeja</span><span>Leads</span><b>Propiedades</b><span>Más</span></div>
+        </div>
+        <p class="pie-maqueta">La foto manda, la acción siempre a la mano</p>
+
+        <h3>Foto a sangre y barra de acción fija</h3>
+        <p class="desc">
+          La foto ocupa el ancho completo y se pasa deslizando, con puntos en vez de miniaturas —
+          el gesto que ya usa todo el mundo. Los datos duros pasan a cuatro celdas que se leen de un
+          vistazo, y «Compartir» queda fija abajo: no hay que scrollear para mandarle la propiedad al cliente.
+        </p>
+        <p class="pero">Es la que mejor se ve enseñándola en vivo, y la que más código toca de las tres.</p>
+      </div>
+
+      <!-- P3 -->
+      <div class="opcion" role="button" tabindex="0" aria-pressed="false" data-grupo="propiedad" data-valor="P3 · Resumen primero">
+        <div class="etiqueta-opcion"><span class="marca-sel">✓</span> Opción P3 · Resumen</div>
+
+        <div class="telefono">
+          <div class="estado"><span>9:35</span><span>▮▮▮ ◵</span></div>
+          <div class="barra-app"><span class="wordmark">KLO<i></i>SER</span><span>◔</span></div>
+          <div class="lienzo">
+            <p class="precio" style="margin-top:0;">$23,900,000</p>
+            <p class="tit-prop">Departamento sobre Calzada del Valle</p>
+            <p class="zona">Del Valle, San Pedro Garza García</p>
+            <div class="rejilla-ficha" style="grid-template-columns:1fr 1fr 1fr;">
+              <div class="celda"><dt>Rec.</dt><dd>3</dd></div>
+              <div class="celda"><dt>Baños</dt><dd>4.5</dd></div>
+              <div class="celda"><dt>m²</dt><dd>201</dd></div>
+            </div>
+            <div class="foto" style="margin-top:12px;">
+              <span class="contador">1 / 7</span>
+              <span class="puntos"><i class="on"></i><i></i><i></i><i></i><i></i><i></i><i></i></span>
+            </div>
+            <div class="boton-wa">Compartir por WhatsApp</div>
+            <div class="tarjeta">
+              <h4>Descripción</h4>
+              <p>Departamento de 201 m² sobre Calzada del Valle, con 3 recámaras y opción de adaptar…</p>
+              <div class="leer-mas">Leer más</div>
+            </div>
+          </div>
+          <div class="tabbar"><span>Inicio</span><span>Bandeja</span><span>Leads</span><b>Propiedades</b><span>Más</span></div>
+        </div>
+        <p class="pie-maqueta">Los números antes que la foto</p>
+
+        <h3>Resumen primero</h3>
+        <p class="desc">
+          Pensada para cuando abres la ficha con el cliente al teléfono: precio, recámaras, baños y
+          metros en la primera pantalla, sin scrollear. La galería queda debajo, para cuando la
+          conversación pide fotos.
+        </p>
+        <p class="pero">Gana la consulta rápida y pierde el impacto visual: la foto ya no recibe.</p>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ══ 2 · LEADS ═══════════════════════════════════════════ -->
+  <section class="bloque">
+    <div class="barra-seccion">
+      <span class="num">02</span>
+      <h2>Leads</h2>
+    </div>
+
+    <p class="contexto">
+      Aquí no hay defecto que arreglar: el tablero mide <strong>1&thinsp;480&nbsp;px</strong> repartidos en
+      cinco columnas de 280&nbsp;px, y la pantalla tiene 390. En el teléfono ves una columna y un pedazo
+      de la siguiente; para llegar a «Negociación» hay que deslizar cuatro veces a ciegas. En la
+      computadora el mismo tablero se ve completo y funciona muy bien — por eso la propuesta es
+      <strong>dejar el kanban en escritorio y darle al teléfono una pantalla propia</strong>.
+    </p>
+
+    <div class="medicion">
+      <div class="dato"><dt>Ancho del tablero</dt><dd class="mal">1 480 px</dd></div>
+      <div class="dato"><dt>Pantalla</dt><dd>390 px</dd></div>
+      <div class="dato"><dt>Columnas</dt><dd>5</dd></div>
+      <div class="dato"><dt>Visibles de un vistazo</dt><dd class="mal">1.4</dd></div>
+    </div>
+
+    <div class="opciones" style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));">
+
+      <!-- Estado actual, no seleccionable -->
+      <div class="opcion" style="cursor:default; border-style:dashed;" aria-hidden="true">
+        <div class="etiqueta-opcion" style="color:#E08A78;">Hoy · el problema</div>
+
+        <div class="telefono">
+          <div class="estado"><span>9:35</span><span>▮▮▮ ◵</span></div>
+          <div class="barra-app"><span class="wordmark">KLO<i></i>SER</span><span>◔</span></div>
+          <div class="lienzo">
+            <p class="titulo-p">Leads</p>
+            <p class="sub-p">12 leads</p>
+            <div class="tablero">
+              <div class="col-k">
+                <header><span class="badge b-nuevo">Nuevo</span><span class="conteo">3</span></header>
+                <div class="lead" style="margin-top:0;"><div class="avatar">MG</div><div class="cuerpo"><p class="nom">María González</p><p class="meta">Depto. Calzada del Valle</p></div></div>
+                <div class="lead"><div class="avatar">RS</div><div class="cuerpo"><p class="nom">Ricardo Salinas</p><p class="meta">Casa en Cumbres</p></div></div>
+              </div>
+              <div class="col-k">
+                <header><span class="badge b-cont">Contactado</span><span class="conteo">4</span></header>
+                <div class="lead" style="margin-top:0;"><div class="avatar">LV</div><div class="cuerpo"><p class="nom">Lucía Vega</p><p class="meta">—</p></div></div>
+              </div>
+            </div>
+            <p class="cinta-corte">Aquí se acaba la pantalla · faltan 3 columnas</p>
+          </div>
+          <div class="tabbar"><span>Inicio</span><b>Leads</b><span>Propiedades</span><span>Perfil</span></div>
+        </div>
+        <p class="pie-maqueta" style="color:#E08A78;">1 480 px en una pantalla de 390</p>
+
+        <h3>El tablero de escritorio, tal cual</h3>
+        <p class="desc">
+          Funciona en la computadora porque caben las cinco columnas a la vez. En el teléfono
+          se convierte en un carrusel a ciegas: no sabes cuántos leads te faltan ni dónde están.
+        </p>
+      </div>
+
+      <!-- L1 -->
+      <div class="opcion" role="button" tabindex="0" aria-pressed="false" data-grupo="leads" data-valor="L1 · Lista con filtro por etapa">
+        <div class="etiqueta-opcion"><span class="marca-sel">✓</span> Opción L1 · Filtros <span class="recomendada">RECOMENDADA</span></div>
+
+        <div class="telefono">
+          <div class="estado"><span>9:35</span><span>▮▮▮ ◵</span></div>
+          <div class="barra-app"><span class="wordmark">KLO<i></i>SER</span><span>◔</span></div>
+          <div class="lienzo">
+            <p class="titulo-p">Leads</p>
+            <p class="sub-p">12 activos · 2 sin seguimiento</p>
+            <div class="chips">
+              <span class="chip on">Todos <b>12</b></span>
+              <span class="chip">Nuevo <b>3</b></span>
+              <span class="chip">Contactado <b>4</b></span>
+              <span class="chip">Cita <b>2</b></span>
+              <span class="chip">Visitó <b>2</b></span>
+              <span class="chip">Negociación <b>1</b></span>
+            </div>
+            <div class="lead">
+              <div class="avatar">MG</div>
+              <div class="cuerpo">
+                <p class="nom">María González</p>
+                <p class="meta">Depto. Calzada del Valle · 201 m²</p>
+                <div class="pies"><span class="punto rojo"></span><span class="badge b-nuevo">Nuevo</span><span class="badge b-fuente">Portal</span><span class="cuando">hace 3 días</span></div>
+              </div>
+            </div>
+            <div class="lead">
+              <div class="avatar">RS</div>
+              <div class="cuerpo">
+                <p class="nom">Ricardo Salinas</p>
+                <p class="meta">Casa en Cumbres Elite</p>
+                <div class="pies"><span class="punto ambar"></span><span class="badge b-cont">Contactado</span><span class="badge b-fuente">WhatsApp</span><span class="cuando">ayer</span></div>
+              </div>
+            </div>
+            <div class="lead">
+              <div class="avatar">LV</div>
+              <div class="cuerpo">
+                <p class="nom">Lucía Vega Treviño</p>
+                <p class="meta">Depto. en Valle Oriente</p>
+                <div class="pies"><span class="badge b-cita">Cita agendada</span><span class="badge b-fuente">Referido</span><span class="cuando">hace 2 h</span></div>
+              </div>
+            </div>
+            <div class="lead">
+              <div class="avatar">AM</div>
+              <div class="cuerpo">
+                <p class="nom">Andrés Montemayor</p>
+                <p class="meta">Casa en San Jerónimo</p>
+                <div class="pies"><span class="badge b-nego">Negociación</span><span class="badge b-fuente">Portal</span><span class="cuando">hace 5 h</span></div>
+              </div>
+            </div>
+          </div>
+          <div class="tabbar"><span>Inicio</span><b>Leads</b><span>Propiedades</span><span>Perfil</span></div>
+        </div>
+        <p class="pie-maqueta">Una sola columna, todo a la vista</p>
+
+        <h3>Lista con filtro por etapa</h3>
+        <p class="desc">
+          Una fila de chips arriba con el conteo de cada etapa y, debajo, la lista completa en vertical.
+          Tocas «Nuevo» y ves los 3; tocas «Todos» y los tienes todos ordenados por urgencia. El punto
+          rojo o ámbar sigue marcando al que lleva mucho sin seguimiento.
+        </p>
+        <p class="pero">
+          Para cambiar de etapa se sigue usando el menú «⋮ → Mover a…», que en táctil ya era más
+          confiable que arrastrar. El kanban se queda intacto en la computadora.
+        </p>
+      </div>
+
+      <!-- L2 -->
+      <div class="opcion" role="button" tabindex="0" aria-pressed="false" data-grupo="leads" data-valor="L2 · Acordeón por etapa">
+        <div class="etiqueta-opcion"><span class="marca-sel">✓</span> Opción L2 · Acordeón</div>
+
+        <div class="telefono">
+          <div class="estado"><span>9:35</span><span>▮▮▮ ◵</span></div>
+          <div class="barra-app"><span class="wordmark">KLO<i></i>SER</span><span>◔</span></div>
+          <div class="lienzo">
+            <p class="titulo-p">Leads</p>
+            <p class="sub-p">12 activos en 5 etapas</p>
+
+            <div class="fila-acordeon abierto" style="margin-top:14px;">
+              <div class="izq"><span class="badge b-nuevo">Nuevo</span><span class="conteo">3</span></div>
+              <span class="chevron">▲</span>
+            </div>
+            <div class="panel">
+              <div class="lead">
+                <div class="avatar">MG</div>
+                <div class="cuerpo"><p class="nom">María González</p><p class="meta">Depto. Calzada del Valle</p>
+                  <div class="pies"><span class="punto rojo"></span><span class="cuando">hace 3 días</span></div></div>
+              </div>
+              <div class="lead">
+                <div class="avatar">RS</div>
+                <div class="cuerpo"><p class="nom">Ricardo Salinas</p><p class="meta">Casa en Cumbres Elite</p>
+                  <div class="pies"><span class="cuando">ayer</span></div></div>
+              </div>
+            </div>
+
+            <div class="fila-acordeon"><div class="izq"><span class="badge b-cont">Contactado</span><span class="conteo">4</span></div><span class="chevron">▾</span></div>
+            <div class="fila-acordeon"><div class="izq"><span class="badge b-cita">Cita agendada</span><span class="conteo">2</span></div><span class="chevron">▾</span></div>
+            <div class="fila-acordeon"><div class="izq"><span class="badge b-visito">Visitó</span><span class="conteo">2</span></div><span class="chevron">▾</span></div>
+            <div class="fila-acordeon"><div class="izq"><span class="badge b-nego">Negociación</span><span class="conteo">1</span></div><span class="chevron">▾</span></div>
+          </div>
+          <div class="tabbar"><span>Inicio</span><b>Leads</b><span>Propiedades</span><span>Perfil</span></div>
+        </div>
+        <p class="pie-maqueta">El embudo completo en una pantalla</p>
+
+        <h3>Acordeón por etapa</h3>
+        <p class="desc">
+          Las cinco etapas apiladas, cada una con su conteo, y se abren tocándolas. Es lo más parecido
+          al kanban sin salirse de la pantalla: sigues viendo el embudo entero y en qué etapa se te
+          está atorando el trabajo.
+        </p>
+        <p class="pero">Ver un lead concreto cuesta un toque más: primero abres la etapa, luego el lead.</p>
+      </div>
+
+      <!-- L3 -->
+      <div class="opcion" role="button" tabindex="0" aria-pressed="false" data-grupo="leads" data-valor="L3 · Cola por urgencia">
+        <div class="etiqueta-opcion"><span class="marca-sel">✓</span> Opción L3 · Cola del día</div>
+
+        <div class="telefono">
+          <div class="estado"><span>9:35</span><span>▮▮▮ ◵</span></div>
+          <div class="barra-app"><span class="wordmark">KLO<i></i>SER</span><span>◔</span></div>
+          <div class="lienzo">
+            <p class="titulo-p">Leads</p>
+            <p class="sub-p">Ordenados por lo que urge</p>
+
+            <div class="grupo"><span>Te urgen</span><span>2</span></div>
+            <div class="lead">
+              <div class="avatar">MG</div>
+              <div class="cuerpo">
+                <p class="nom">María González</p>
+                <p class="meta">Sin seguimiento hace 3 días</p>
+                <div class="pies"><span class="punto rojo"></span><span class="badge b-nuevo">Nuevo</span></div>
+              </div>
+            </div>
+            <div class="lead">
+              <div class="avatar">RS</div>
+              <div class="cuerpo">
+                <p class="nom">Ricardo Salinas</p>
+                <p class="meta">Sin seguimiento hace 30 h</p>
+                <div class="pies"><span class="punto ambar"></span><span class="badge b-cont">Contactado</span></div>
+              </div>
+            </div>
+
+            <div class="grupo"><span>Hoy</span><span>3</span></div>
+            <div class="lead">
+              <div class="avatar">LV</div>
+              <div class="cuerpo">
+                <p class="nom">Lucía Vega Treviño</p>
+                <p class="meta">Cita hoy 5:00 p.&thinsp;m.</p>
+                <div class="pies"><span class="badge b-cita">Cita agendada</span></div>
+              </div>
+            </div>
+
+            <div class="grupo"><span>Al día</span><span>7</span></div>
+            <div class="lead">
+              <div class="avatar">AM</div>
+              <div class="cuerpo">
+                <p class="nom">Andrés Montemayor</p>
+                <p class="meta">Casa en San Jerónimo</p>
+                <div class="pies"><span class="badge b-nego">Negociación</span></div>
+              </div>
+            </div>
+          </div>
+          <div class="tabbar"><span>Inicio</span><b>Leads</b><span>Propiedades</span><span>Perfil</span></div>
+        </div>
+        <p class="pie-maqueta">Qué hago ahorita, no en qué etapa va</p>
+
+        <h3>Cola por urgencia</h3>
+        <p class="desc">
+          Se olvida de las etapas como estructura y agrupa por lo que un asesor pregunta al abrir el
+          teléfono: «¿a quién le tengo que marcar ya?». Te urgen, hoy y al día. La etapa queda como
+          etiqueta, no como organización.
+        </p>
+        <p class="pero">
+          Es la que más se aleja de lo que ya conoce el equipo. Y para dirección, que sí piensa en
+          embudo, hace falta seguir viendo el kanban en la computadora.
+        </p>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ══ RESUMEN ═════════════════════════════════════════════ -->
+  <div class="resumen">
+    <h2>Lo que apruebas</h2>
+    <ul>
+      <li><span>Ficha de propiedad</span><span id="sel-propiedad" class="vacio">Sin elegir</span></li>
+      <li><span>Leads en el teléfono</span><span id="sel-leads" class="vacio">Sin elegir</span></li>
+    </ul>
+    <p style="margin:20px 0 0; font-size:14px; color:#C3BFB6;">
+      Dime las dos claves — por ejemplo «P2 y L1» — y las implemento. Si eliges P1 en propiedades,
+      esa parte ya está lista y no hay nada más que hacer.
+    </p>
+  </div>
+
+  <footer class="cierre">
+    Las maquetas son estáticas: sirven para decidir la forma, no son la app corriendo. Todo lo que
+    aparece aquí usa los datos y las etapas reales del CRM (Nuevo, Contactado, Cita agendada, Visitó,
+    Negociación) y la paleta del rebranding en negro editorial.
+  </footer>
+
+</div>
+
+<script>
+  const opciones = document.querySelectorAll('.opcion[role="button"]')
+  const destinos = { propiedad: document.getElementById('sel-propiedad'), leads: document.getElementById('sel-leads') }
+
+  function elegir(tarjeta) {
+    const grupo = tarjeta.dataset.grupo
+    for (const otra of document.querySelectorAll(`.opcion[data-grupo="${grupo}"]`)) {
+      otra.setAttribute('aria-pressed', String(otra === tarjeta))
+    }
+    const destino = destinos[grupo]
+    destino.textContent = tarjeta.dataset.valor
+    destino.classList.remove('vacio')
+  }
+
+  for (const tarjeta of opciones) {
+    tarjeta.addEventListener('click', () => elegir(tarjeta))
+    tarjeta.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); elegir(tarjeta) }
+    })
+  }
+</script>
