@@ -14,7 +14,23 @@ export default async function AdminLayout({
   const usuario = await requireAdmin()
 
   return (
-    <div className="flex min-h-dvh flex-1 flex-col bg-slate-50">
+    <div
+      className="flex min-h-dvh flex-1 flex-col bg-slate-50"
+      /*
+        Alto real de la píldora de pestañas inferior: 3.125rem de la píldora +
+        su separación al borde, que crece con la barra de gestos del iPhone
+        (ver TabBarAdmin, `pb-[max(0.75rem,env(safe-area-inset-bottom))]`). Lo
+        publica el layout, que es quien la monta, para que lo que deba quedar
+        por encima (la barra de acciones de la ficha de propiedad) no copie el
+        número y se desincronice. Misma variable que en (asesor), con el valor
+        de ESTA barra: las dos no miden lo mismo.
+      */
+      style={
+        {
+          '--alto-nav': 'calc(3.125rem + max(0.75rem, env(safe-area-inset-bottom)))',
+        } as React.CSSProperties
+      }
+    >
       <RegistroPush />
       <BannerInstalacion />
       {/* Sidebar de escritorio */}

@@ -13,7 +13,21 @@ export default async function AsesorLayout({
   const usuario = await requireAsesor()
 
   return (
-    <div className="flex min-h-dvh flex-1 flex-col bg-slate-50">
+    <div
+      className="flex min-h-dvh flex-1 flex-col bg-slate-50"
+      /*
+        Alto real de la barra de pestañas inferior: 4rem del <ul> + 1px del
+        borde superior + la barra de gestos del iPhone. Lo publica el layout
+        porque el layout es quien monta esa barra (ver NavAsesor); cualquier
+        elemento fijo que deba quedar POR ENCIMA de ella (la barra de acciones
+        de la ficha de propiedad) lo lee de aquí en vez de copiar el número.
+        Sin el `env()`, en un iPhone con barra de gestos la nav crece ~34px y
+        se comería lo que estuviera anclado a una altura fija.
+      */
+      style={
+        { '--alto-nav': 'calc(4rem + 1px + env(safe-area-inset-bottom))' } as React.CSSProperties
+      }
+    >
       <RegistroPush />
       <BannerInstalacion />
 
