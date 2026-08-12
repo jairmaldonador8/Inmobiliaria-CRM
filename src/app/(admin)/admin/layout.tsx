@@ -1,4 +1,5 @@
 import { requireAdmin } from '@/lib/auth/usuario-actual'
+import { PantallaCarga } from '@/components/marca/pantalla-carga'
 import { Wordmark } from '@/components/marca/wordmark'
 import { CambiarVista } from '@/components/nav/cambiar-vista'
 import { BarraMovilAdmin, NavAdmin, PieSesion } from '@/components/nav/nav-admin'
@@ -31,6 +32,7 @@ export default async function AdminLayout({
         } as React.CSSProperties
       }
     >
+      <PantallaCarga />
       <RegistroPush />
       <BannerInstalacion />
       {/* Sidebar de escritorio */}

@@ -433,6 +433,67 @@
   }
 }
 
+/* ─────────────────────────────────────────────────────────────────────────
+   Pantalla de carga: el gallo camina mientras el sistema arranca y se
+   voltea de frente al terminar. Son dos tiras de sprites sacadas del video
+   original de la marca (public/marca/), no un GIF: así se controla cuándo
+   arranca cada tramo y el bucle de la caminata cierra exacto.
+
+   Las tiras van sin fondo y con la sombra del suelo convertida en alfa (se
+   midió cuánto oscurecía la mostaza y eso se volvió transparencia), así que
+   el gallo camina sobre el fondo claro de la app sin caja de por medio.
+
+   La caminata son 12 cuadros = un ciclo completo (medido sobre el video:
+   el mínimo de diferencia contra el cuadro 0 cae en el 12). El giro son 26
+   cuadros que arrancan en la misma fase del ciclo, para que el salto de una
+   tira a la otra no se note.
+
+   `background-size: auto 100%` deja la tira con el alto de la caja, así que
+   mide N veces su ancho; con la caja cuadrada, `background-position-x: 100%`
+   es exactamente el último cuadro. `jump-none` reparte los N cuadros
+   incluyendo el primero y el último.
+   ───────────────────────────────────────────────────────────────────────── */
+.gallo-carga {
+  position: absolute;
+  inset: 0;
+  background-repeat: no-repeat;
+  background-size: auto 100%;
+}
+.gallo-carga--camina {
+  background-image: url('/marca/gallo-camina.webp');
+  animation: gallo-camina 500ms steps(12, jump-none) infinite;
+}
+.gallo-carga--voltea {
+  background-image: url('/marca/gallo-voltea.webp');
+  animation: gallo-voltea 900ms steps(26, jump-none) forwards;
+}
+/* Sin animación y sin pintar: solo para que el navegador baje la tira del
+   giro mientras el gallo todavía camina, y el cambio no parpadee. */
+.gallo-carga--precarga {
+  background-image: url('/marca/gallo-voltea.webp');
+  opacity: 0;
+}
+
+@keyframes gallo-camina {
+  from { background-position-x: 0%; }
+  to { background-position-x: 100%; }
+}
+@keyframes gallo-voltea {
+  from { background-position-x: 0%; }
+  to { background-position-x: 100%; }
+}
+
+/* Con movimiento reducido no camina ni gira: se queda en el último cuadro,
+   el gallo de frente. */
+@media (prefers-reduced-motion: reduce) {
+  .gallo-carga--camina,
+  .gallo-carga--voltea {
+    animation: none !important;
+    background-image: url('/marca/gallo-voltea.webp');
+    background-position-x: 100%;
+  }
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

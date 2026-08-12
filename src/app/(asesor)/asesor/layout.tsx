@@ -1,4 +1,5 @@
 import { requireAsesor } from '@/lib/auth/usuario-actual'
+import { PantallaCarga } from '@/components/marca/pantalla-carga'
 import { Wordmark } from '@/components/marca/wordmark'
 import { CambiarVista } from '@/components/nav/cambiar-vista'
 import { NavAsesor, NavAsesorSidebar, PieSesionAsesor } from '@/components/nav/nav-asesor'
@@ -28,6 +29,7 @@ export default async function AsesorLayout({
         { '--alto-nav': 'calc(4rem + 1px + env(safe-area-inset-bottom))' } as React.CSSProperties
       }
     >
+      <PantallaCarga />
       <RegistroPush />
       <BannerInstalacion />
 
