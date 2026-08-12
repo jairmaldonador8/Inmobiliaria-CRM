@@ -64,16 +64,20 @@ export function PantallaCarga() {
   }, [])
 
   // Ya volteado: desvanecer y desmontar.
+  //
+  // Un paso por efecto, y cada uno programa SOLO su propio temporizador. Antes
+  // los dos se programaban juntos aquí: al cambiar `fase` a 'saliendo', React
+  // corría la limpieza y cancelaba también el de 'fuera', que todavía no había
+  // disparado. La pantalla se quedaba en opacidad 0 —invisible pero encima de
+  // todo— y se comía cada clic del sistema.
   useEffect(() => {
-    if (fase !== 'volteando') return
-    const aSalir = window.setTimeout(() => setFase('saliendo'), DURACION_GIRO)
-    const aFuera = window.setTimeout(
-      () => setFase('fuera'),
-      DURACION_GIRO + DURACION_SALIDA
-    )
-    return () => {
-      window.clearTimeout(aSalir)
-      window.clearTimeout(aFuera)
+    if (fase === 'volteando') {
+      const t = window.setTimeout(() => setFase('saliendo'), DURACION_GIRO)
+      return () => window.clearTimeout(t)
+    }
+    if (fase === 'saliendo') {
+      const t = window.setTimeout(() => setFase('fuera'), DURACION_SALIDA)
+      return () => window.clearTimeout(t)
     }
   }, [fase])
 
@@ -86,8 +90,13 @@ export function PantallaCarga() {
       role="status"
       aria-live="polite"
       aria-label="Cargando Klo-Ser"
+      /*
+        `pointer-events-none` en cuanto empieza a irse: es un cinturón. Aunque
+        algún día el desmontaje volviera a fallar, una capa invisible jamás
+        debe poder bloquear el sistema.
+      */
       className={`fixed inset-0 z-[120] flex flex-col items-center justify-center gap-5 bg-slate-50 transition-opacity duration-[260ms] ease-out ${
-        fase === 'saliendo' ? 'opacity-0' : 'opacity-100'
+        fase === 'saliendo' ? 'pointer-events-none opacity-0' : 'opacity-100'
       }`}
     >
       {/* Sin recorte ni fondo: el sprite es un background y no se desborda. */}
