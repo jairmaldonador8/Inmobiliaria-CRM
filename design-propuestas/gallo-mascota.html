@@ -1,0 +1,322 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Klo-Ser · El gallo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Jost:wght@200;300&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --tinta: #141414; --tinta-2: #1C1B19; --crema: #EFEDE8; --papel: #FCFCFA;
+    --linea: #E3E1DB; --linea-oscura: #35322D; --gris: #8C8A84; --gris-claro: #A5A29A;
+    --ambar: #C98A3B;
+  }
+  * { box-sizing: border-box; }
+  html { font-feature-settings: "kern" 1, "liga" 1; text-rendering: optimizeLegibility; -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0; background: var(--tinta); color: var(--crema);
+    font-family: Poppins, system-ui, sans-serif; font-weight: 300;
+    font-size: clamp(15px, 1.1vw, 17px); line-height: 1.55;
+  }
+  .envoltura { max-width: 1320px; margin: 0 auto; padding: 0 clamp(16px, 4vw, 48px) 96px; }
+
+  header.portada { padding: clamp(48px, 8vw, 100px) 0 clamp(28px, 4vw, 48px); }
+  .wordmark { font-family: Jost, sans-serif; font-weight: 200; font-size: 15px; letter-spacing: 0.42em; }
+  .wordmark i { display: inline-block; width: 10px; height: 1px; background: var(--ambar); vertical-align: middle; margin: 0 4px 2px; font-style: normal; }
+  .kicker { margin: 28px 0 0; font-size: 11px; font-weight: 600; letter-spacing: 0.24em; text-transform: uppercase; color: var(--gris-claro); }
+  h1 { margin: 14px 0 0; font-size: clamp(32px, 5.4vw, 58px); font-weight: 600; line-height: 1.06; letter-spacing: -0.022em; max-width: 18ch; hyphens: none; }
+  .entradilla { margin: 22px 0 0; max-width: 62ch; font-size: clamp(16px, 1.3vw, 19px); color: #CFCBC2; }
+  .entradilla strong { font-weight: 600; color: var(--crema); }
+
+  section.bloque { padding-top: clamp(40px, 6vw, 76px); }
+  .barra-seccion { display: flex; align-items: baseline; gap: 16px; padding-bottom: 18px; border-bottom: 1px solid var(--linea-oscura); }
+  .num { font-size: 11px; font-weight: 600; letter-spacing: 0.2em; color: var(--ambar); }
+  h2 { margin: 0; font-size: clamp(22px, 2.6vw, 32px); font-weight: 600; letter-spacing: -0.015em; hyphens: none; }
+  .contexto { margin: 24px 0 0; max-width: 68ch; color: #CFCBC2; }
+  .contexto + .contexto { margin-top: 14px; }
+
+  .aviso {
+    margin: 26px 0 0; max-width: 68ch;
+    border-left: 2px solid var(--ambar);
+    padding: 4px 0 4px 16px;
+    font-size: 14.5px; color: #C3BFB6;
+  }
+
+  .opciones { margin: 38px 0 0; display: grid; gap: clamp(20px, 2.4vw, 30px); grid-template-columns: repeat(auto-fit, minmax(310px, 1fr)); align-items: start; }
+  .opcion { border: 1px solid var(--linea-oscura); border-radius: 20px; background: var(--tinta-2); padding: 20px; cursor: pointer; transition: border-color 140ms, background 140ms, transform 140ms; }
+  .opcion:hover { border-color: #56514A; transform: translateY(-2px); }
+  .opcion[aria-pressed="true"] { border-color: var(--ambar); background: #201C15; }
+  .opcion:focus-visible { outline: 2px solid var(--ambar); outline-offset: 3px; }
+  .etiqueta-opcion { display: flex; align-items: center; gap: 8px; font-size: 11px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: var(--gris-claro); }
+  .marca-sel { display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; border: 1px solid #56514A; border-radius: 50%; font-size: 11px; color: transparent; }
+  .opcion[aria-pressed="true"] .marca-sel { border-color: var(--ambar); background: var(--ambar); color: var(--tinta); }
+  .recomendada { margin-left: auto; border: 1px solid var(--ambar); color: var(--ambar); border-radius: 999px; padding: 2px 9px; font-size: 9px; letter-spacing: 0.12em; }
+  .opcion h3 { margin: 14px 0 0; font-size: 19px; font-weight: 600; letter-spacing: -0.01em; hyphens: none; }
+  .opcion p.desc { margin: 8px 0 0; font-size: 14.5px; color: #C3BFB6; line-height: 1.5; }
+  .opcion p.pero { margin: 10px 0 0; font-size: 13px; color: var(--gris-claro); padding-left: 12px; border-left: 2px solid var(--linea-oscura); }
+
+  .lienzo { background: var(--crema); border-radius: 14px; padding: 14px; display: flex; align-items: center; justify-content: center; min-height: 210px; margin-top: 16px; }
+  .tallas { display: flex; align-items: flex-end; gap: 14px; margin-top: 10px; }
+  .talla { display: flex; flex-direction: column; align-items: center; gap: 5px; }
+  .talla span { font-size: 9.5px; letter-spacing: .1em; color: var(--gris-claro); }
+  .caja-clara { background: var(--crema); border-radius: 10px; padding: 7px; display: flex; }
+  .caja-oscura { background: #000; border-radius: 10px; padding: 7px; display: flex; }
+
+  /* Usos */
+  .usos { margin: 38px 0 0; display: grid; gap: 22px; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); }
+  .uso { border: 1px solid var(--linea-oscura); border-radius: 18px; padding: 18px; background: var(--tinta-2); }
+  .uso h4 { margin: 0 0 12px; font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: var(--gris-claro); font-weight: 600; }
+  .pantalla { background: var(--crema); border-radius: 14px; padding: 14px; color: var(--tinta); }
+  .barra-sup { display: flex; align-items: center; justify-content: space-between; background: var(--tinta); color: var(--crema); margin: -14px -14px 14px; padding: 10px 14px; border-radius: 14px 14px 0 0; }
+  .barra-sup .wordmark { font-size: 11px; letter-spacing: .34em; }
+  .vacio-caja { border: 1px dashed #CFCBC2; border-radius: 14px; padding: 22px 14px; text-align: center; }
+  .vacio-caja p { margin: 10px 0 0; font-size: 13px; color: #55534E; }
+  .vacio-caja p b { display: block; font-weight: 600; color: var(--tinta); font-size: 14px; margin-bottom: 3px; }
+  .homescreen { background: linear-gradient(160deg, #2F2A24, #0E0D0B); border-radius: 14px; padding: 22px; display: flex; gap: 16px; justify-content: center; }
+  .app-icono { text-align: center; }
+  .app-icono div { width: 62px; height: 62px; border-radius: 15px; background: var(--tinta); display: flex; align-items: center; justify-content: center; box-shadow: 0 6px 16px rgb(0 0 0 / .4); }
+  .app-icono span { display: block; margin-top: 6px; font-size: 10px; color: #E9E5DD; }
+  .fab { display: flex; align-items: center; gap: 8px; background: var(--tinta); color: var(--crema); border-radius: 999px; padding: 10px 18px 10px 12px; font-size: 13.5px; font-weight: 600; width: fit-content; margin: 0 auto; }
+
+  .resumen { margin-top: clamp(48px, 7vw, 84px); border: 1px solid var(--linea-oscura); border-radius: 20px; background: var(--tinta-2); padding: clamp(22px, 3vw, 34px); }
+  .resumen h2 { font-size: clamp(20px, 2.2vw, 26px); }
+  .resumen ul { margin: 18px 0 0; padding: 0; list-style: none; }
+  .resumen li { display: flex; gap: 12px; align-items: baseline; padding: 12px 0; border-top: 1px solid var(--linea-oscura); }
+  .resumen li span:first-child { flex: 0 0 190px; font-size: 11px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--gris-claro); }
+  .resumen li span:last-child { font-weight: 500; }
+  .vacio { color: var(--gris-claro); font-weight: 300 !important; font-style: italic; }
+  footer.cierre { margin-top: 40px; padding-top: 22px; border-top: 1px solid var(--linea-oscura); font-size: 13px; color: var(--gris-claro); max-width: 70ch; }
+  @media (max-width: 720px) { .resumen li { flex-direction: column; gap: 3px; } .resumen li span:first-child { flex: none; } }
+</style>
+
+<div class="envoltura">
+
+  <header class="portada">
+    <div class="wordmark">KLO<i></i>SER</div>
+    <p class="kicker">Propuesta de marca · 11 de agosto de 2026</p>
+    <h1>El gallo</h1>
+    <p class="entradilla">
+      Un personaje para Klo-Ser. No es adorno: el gallo es <strong>el que canta primero</strong>, y
+      esta app entera gira alrededor de eso — la mediana de primera respuesta, las guardias, el
+      escalamiento a los 30 minutos cuando nadie contestó. La mascota dice lo mismo que el producto.
+    </p>
+  </header>
+
+  <!-- ══ ORIGEN ══ -->
+  <section class="bloque">
+    <div class="barra-seccion"><span class="num">00</span><h2>De dónde sale</h2></div>
+    <p class="contexto">
+      La referencia que mandaste es una ilustración de <strong>Marco Palmieri para la identidad de
+      Petbarn</strong>. Ese trabajo tiene autor y tiene dueño, así que no lo copié. Lo que tomé es
+      el <em>espíritu</em>: forma plana, poquísimos elementos, carácter en la silueta.
+    </p>
+    <p class="contexto">
+      Los tres gallos de abajo están dibujados desde cero con la paleta que ya usas — tinta
+      #141414, crema #EFEDE8 y el ámbar #C98A3B del guion de tu logo. Son SVG, así que escalan sin
+      pixelearse y pesan unos cientos de bytes.
+    </p>
+    <p class="aviso">
+      Si en algún momento quieres exactamente ese estilo de ilustración, el camino correcto es
+      contratar a un ilustrador. Yo te doy un personaje propio, no una copia.
+    </p>
+  </section>
+
+  <!-- ══ OPCIONES ══ -->
+  <section class="bloque">
+    <div class="barra-seccion"><span class="num">01</span><h2>Tres gallos</h2></div>
+    <p class="contexto">
+      Cada uno está probado en grande, a 48&nbsp;px (el tamaño de un icono en la app), a 24&nbsp;px
+      (una favicon) y en negativo sobre negro. Un personaje que no aguanta 24&nbsp;px no sirve de
+      marca.
+    </p>
+
+    <div class="opciones">
+
+      <!-- G3 -->
+      <div class="opcion" role="button" tabindex="0" aria-pressed="false" data-valor="G3 · Sello">
+        <div class="etiqueta-opcion"><span class="marca-sel">✓</span> G3 · Sello <span class="recomendada">RECOMENDADO</span></div>
+        <div class="lienzo"><svg width="190" height="190" viewBox="0 0 200 200" data-gallo="sello" data-tinta="#141414" data-hueco="#EFEDE8"></svg></div>
+        <div class="tallas">
+          <div class="talla"><div class="caja-clara"><svg width="48" height="48" viewBox="0 0 200 200" data-gallo="sello" data-tinta="#141414" data-hueco="#EFEDE8"></svg></div><span>48 PX</span></div>
+          <div class="talla"><div class="caja-clara"><svg width="24" height="24" viewBox="0 0 200 200" data-gallo="sello" data-tinta="#141414" data-hueco="#EFEDE8"></svg></div><span>24 PX</span></div>
+          <div class="talla"><div class="caja-oscura"><svg width="48" height="48" viewBox="0 0 200 200" data-gallo="sello" data-tinta="#EFEDE8" data-hueco="#141414"></svg></div><span>NEGATIVO</span></div>
+          <div class="talla"><div class="caja-clara"><svg width="48" height="48" viewBox="0 0 200 200" data-gallo="sello" data-tinta="#141414" data-hueco="#EFEDE8" data-cresta="#C98A3B"></svg></div><span>ÁMBAR</span></div>
+        </div>
+        <h3>Sello</h3>
+        <p class="desc">
+          Silueta maciza, de una sola tinta. Pecho afuera, cresta dentada y la cola de hoces
+          arqueada: se lee como gallo aunque lo encojas a 24&nbsp;px. La cresta puede ir en el
+          ámbar de tu logo cuando haya espacio para el detalle.
+        </p>
+        <p class="pero">El que mejor aguanta el tamaño chico y el negativo. Es el que usaría como icono de la app.</p>
+      </div>
+
+      <!-- G2 -->
+      <div class="opcion" role="button" tabindex="0" aria-pressed="false" data-valor="G2 · Trazo">
+        <div class="etiqueta-opcion"><span class="marca-sel">✓</span> G2 · Trazo</div>
+        <div class="lienzo"><svg width="190" height="190" viewBox="0 0 200 200" data-gallo="trazo" data-tinta="#141414"></svg></div>
+        <div class="tallas">
+          <div class="talla"><div class="caja-clara"><svg width="48" height="48" viewBox="0 0 200 200" data-gallo="trazo" data-tinta="#141414"></svg></div><span>48 PX</span></div>
+          <div class="talla"><div class="caja-clara"><svg width="24" height="24" viewBox="0 0 200 200" data-gallo="trazo" data-tinta="#141414"></svg></div><span>24 PX</span></div>
+          <div class="talla"><div class="caja-oscura"><svg width="48" height="48" viewBox="0 0 200 200" data-gallo="trazo" data-tinta="#EFEDE8"></svg></div><span>NEGATIVO</span></div>
+        </div>
+        <h3>Trazo</h3>
+        <p class="desc">
+          El mismo gallo dibujado con una línea de grosor constante, como los iconos que ya usa la
+          app (Lucide). Se siente más ligero y editorial, y convive bien al lado de un texto.
+        </p>
+        <p class="pero">A 24&nbsp;px la línea se empieza a cerrar y pierde detalle. Va mejor de 40&nbsp;px para arriba.</p>
+      </div>
+
+      <!-- G1 -->
+      <div class="opcion" role="button" tabindex="0" aria-pressed="false" data-valor="G1 · Cabeza">
+        <div class="etiqueta-opcion"><span class="marca-sel">✓</span> G1 · Cabeza</div>
+        <div class="lienzo"><svg width="180" height="180" viewBox="0 0 120 120" data-gallo="cabeza"></svg></div>
+        <div class="tallas">
+          <div class="talla"><div class="caja-clara"><svg width="48" height="48" viewBox="0 0 120 120" data-gallo="cabeza"></svg></div><span>48 PX</span></div>
+          <div class="talla"><div class="caja-clara"><svg width="24" height="24" viewBox="0 0 120 120" data-gallo="cabeza"></svg></div><span>24 PX</span></div>
+          <div class="talla"><div class="caja-oscura"><svg width="48" height="48" viewBox="0 0 120 120" data-gallo="cabeza" data-tinta="#EFEDE8" data-ojo="#141414"></svg></div><span>NEGATIVO</span></div>
+        </div>
+        <h3>Cabeza</h3>
+        <p class="desc">
+          Solo el retrato, construido con figuras planas: un círculo, una cresta de picos y un pico
+          triangular. Es el más gráfico de los tres y el que más se apoya en el ámbar de la marca.
+        </p>
+        <p class="pero">Al no tener cuerpo pierde la postura de «pecho afuera», que es media personalidad del gallo.</p>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ══ USOS ══ -->
+  <section class="bloque">
+    <div class="barra-seccion"><span class="num">02</span><h2>Dónde viviría</h2></div>
+    <p class="contexto">
+      Una mascota que solo sale en la pantalla de carga no sirve de nada. Estos son los tres
+      lugares donde de verdad haría trabajo, usando el sello como ejemplo.
+    </p>
+
+    <div class="usos">
+      <div class="uso">
+        <h4>Icono de la app</h4>
+        <div class="homescreen">
+          <div class="app-icono">
+            <div><svg width="42" height="42" viewBox="0 0 200 200" data-gallo="sello" data-tinta="#EFEDE8" data-hueco="#141414" data-cresta="#C98A3B"></svg></div>
+            <span>Klo-Ser</span>
+          </div>
+        </div>
+        <p class="desc">En la pantalla de inicio del teléfono, donde hoy hay una ventana genérica. Un gallo se distingue de un vistazo entre veinte apps.</p>
+      </div>
+
+      <div class="uso">
+        <h4>Estados vacíos</h4>
+        <div class="pantalla">
+          <div class="barra-sup"><span class="wordmark">KLO<i></i>SER</span><span>◔</span></div>
+          <div class="vacio-caja">
+            <svg width="56" height="56" viewBox="0 0 200 200" data-gallo="sello" data-tinta="#CFCBC2" data-hueco="#EFEDE8"></svg>
+            <p><b>Nadie en Negociación</b>Cuando muevas un lead aquí, lo verás en esta lista.</p>
+          </div>
+        </div>
+        <p class="desc">Las pantallas sin datos hoy son una caja punteada y una frase. El gallo las vuelve parte de la marca en vez de un hueco.</p>
+      </div>
+
+      <div class="uso">
+        <h4>El botón de registrar</h4>
+        <div class="pantalla" style="display:flex; align-items:center; justify-content:center; min-height:118px;">
+          <div class="fab">
+            <svg width="22" height="22" viewBox="0 0 200 200" data-gallo="sello" data-tinta="#EFEDE8" data-hueco="#141414"></svg>
+            Registrar lead
+          </div>
+        </div>
+        <p class="desc">Sustituyendo al «+». Es el botón que más se toca en el teléfono y el que más se asocia a cazar un lead nuevo.</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="resumen">
+    <h2>Lo que apruebas</h2>
+    <ul>
+      <li><span>El gallo de Klo-Ser</span><span id="sel-gallo" class="vacio">Sin elegir</span></li>
+    </ul>
+    <p style="margin:20px 0 0; font-size:14px; color:#C3BFB6;">
+      Dime la clave — «G3», «G2» o «G1» — y lo dejo listo como componente para usarlo en la app.
+      También puedo ajustarle lo que no te lata: la cresta, la cola, el ángulo de la cabeza.
+    </p>
+  </div>
+
+  <footer class="cierre">
+    Los tres gallos son SVG originales dibujados para esta propuesta, en la paleta del rebranding en
+    negro editorial. Las pantallas son maquetas estáticas: sirven para decidir, no son la app
+    corriendo.
+  </footer>
+
+</div>
+
+<script>
+  /* Un solo lugar con la geometría de cada gallo; los <svg> del documento la
+     piden por `data-gallo` y eligen sus colores por `data-tinta` / `data-hueco`. */
+  const GALLOS = {
+    sello: (t, hueco, cresta) => `
+      <g fill="${t}">
+        <path d="M74 108 C46 100 28 76 36 44 C48 60 58 84 78 96 Z"/>
+        <path d="M72 120 C40 120 18 98 20 68 C36 88 46 104 76 110 Z"/>
+        <path d="M74 132 C48 146 20 134 14 108 C34 122 50 126 76 124 Z"/>
+        <path d="M74 111 C80 88 100 76 118 80 C124 64 122 54 130 46 C138 36 154 38 159 49
+                 C163 57 158 63 152 65 C146 74 143 85 145 96 C158 106 160 128 149 142
+                 C138 156 110 160 94 149 C80 139 72 126 74 111 Z"/>
+        <path d="M158 48 L184 55 L157 64 Z"/>
+        <path d="M150 64 C160 70 160 84 148 84 C140 84 138 70 144 64 Z"/>
+        <path d="M104 156 h7 v20 h-7 Z M108 176 L94 186 M108 176 L122 186" stroke="${t}" stroke-width="6" stroke-linecap="round"/>
+        <path d="M126 154 h7 v22 h-7 Z M130 176 L116 186 M130 176 L144 186" stroke="${t}" stroke-width="6" stroke-linecap="round"/>
+      </g>
+      <path d="M126 46 C120 32 132 24 137 32 C136 18 150 16 152 28 C162 22 170 32 164 44 Z" fill="${cresta || t}"/>
+      <circle cx="146" cy="47" r="4.6" fill="${hueco}"/>
+      <path d="M96 108 C110 100 128 106 132 122 C122 130 104 126 96 108 Z" fill="none" stroke="${hueco}" stroke-width="5" stroke-linejoin="round"/>`,
+
+    trazo: (t) => `
+      <g fill="none" stroke="${t}" stroke-width="7" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M74 112 C48 106 30 82 36 50"/>
+        <path d="M72 122 C42 122 20 100 22 72"/>
+        <path d="M74 133 C48 145 22 134 16 110"/>
+        <path d="M108 156 L108 178 M108 178 L97 186 M108 178 L119 186"/>
+        <path d="M128 154 L128 178 M128 178 L117 186 M128 178 L139 186"/>
+        <path d="M74 111 C80 88 100 76 118 80 C124 64 122 54 130 46 C138 36 154 38 159 49
+                 C163 57 158 63 152 65 C146 74 143 85 145 96 C158 106 160 128 149 142
+                 C138 156 110 160 94 149 C80 139 72 126 74 111 Z"/>
+        <path d="M128 44 C124 34 130 28 136 32 C136 22 146 20 149 29 C156 24 163 30 160 40"/>
+        <path d="M158 50 L182 55 L157 62"/>
+        <path d="M150 66 C160 73 157 87 145 83"/>
+        <path d="M96 108 C110 100 128 106 132 122 C122 130 104 126 96 108 Z"/>
+      </g>
+      <circle cx="146" cy="47" r="3.6" fill="${t}"/>`,
+
+    cabeza: (t, ojo) => `
+      <path d="M32 54 L41 28 L51 47 L60 16 L71 44 L82 24 L88 52 Z" fill="#C98A3B"/>
+      <circle cx="56" cy="68" r="30" fill="${t}"/>
+      <path d="M84 60 L112 68 L84 78 Z" fill="#C98A3B"/>
+      <path d="M76 80 C90 84 93 104 80 107 C70 108 68 88 76 80 Z" fill="#C98A3B"/>
+      <circle cx="68" cy="60" r="5.5" fill="${ojo}"/>`,
+  }
+
+  for (const svg of document.querySelectorAll('svg[data-gallo]')) {
+    const tinta = svg.dataset.tinta ?? '#141414'
+    const hueco = svg.dataset.hueco ?? '#EFEDE8'
+    const ojo = svg.dataset.ojo ?? '#FCFCFA'
+    svg.innerHTML = GALLOS[svg.dataset.gallo](tinta, svg.dataset.gallo === 'cabeza' ? ojo : hueco, svg.dataset.cresta)
+  }
+
+  const destino = document.getElementById('sel-gallo')
+  for (const tarjeta of document.querySelectorAll('.opcion[role="button"]')) {
+    const elegir = () => {
+      for (const otra of document.querySelectorAll('.opcion[role="button"]')) {
+        otra.setAttribute('aria-pressed', String(otra === tarjeta))
+      }
+      destino.textContent = tarjeta.dataset.valor
+      destino.classList.remove('vacio')
+    }
+    tarjeta.addEventListener('click', elegir)
+    tarjeta.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); elegir() }
+    })
+  }
+</script>
