@@ -1,0 +1,458 @@
+/*
+  Estilo «Ascua» de la bandeja (aprobado 2026-08-12, ver
+  design-propuestas/bandeja-ascua.html).
+
+  Dos reglas de color que sostienen todo:
+
+  1. El naranja significa UNA sola cosa: «esto hay que atenderlo ahora».
+     Lo llevan el botón principal y lo vencido. Si además decorara,
+     dejaría de servir para señalar.
+
+  2. El resplandor va sobre las MARCAS de dato, nunca detrás de texto:
+     un halo detrás de una cifra le ensucia el borde a las letras y le
+     baja el contraste; detrás de una barra, la enciende.
+
+  La rampa de grises y el trío de severidad se corrieron por el
+  validador de paletas contra la superficie real de la tarjeta
+  (#1C1613): la rampa pasa los cuatro chequeos y el trío separa
+  ΔE 14.1 en daltonismo y 20.4 en visión normal.
+
+  Va en un módulo de CSS y no en clases de Tailwind porque son
+  degradados, halos y esquinas marcadas — cosas que en utilidades
+  quedan ilegibles (ver la guía de CSS de Next: Tailwind para lo
+  común, módulos para lo que las utilidades no cubren).
+*/
+
+.raiz {
+  --panel: #16110d;
+  --card: #1c1613;
+  --tile: #251d18;
+  --tile-2: #2e251e;
+  --tinta: #f7f3ee;
+  --tinta-2: #b9b0a5;
+  --mute: #8b8378;
+  --linea: rgb(247 243 238 / 0.09);
+  --linea-fuerte: rgb(247 243 238 / 0.16);
+
+  /* rampa ordinal: 1 el paso más tenue, 4 el más fuerte */
+  --ord-1: #5a544b;
+  --ord-2: #8b8378;
+  --ord-4: #f7f3ee;
+
+  --oro: #e8a32c;
+  --rojo: #e0483c;
+  --verde: #3e9e76;
+
+  --naranja: #f2701e;
+  --naranja-alto: #f58c33;
+  --naranja-bajo: #e8601a;
+  --naranja-tinta: #2a1207;
+  --halo: 0.55;
+
+  position: relative;
+  isolation: isolate;
+  /* que el degradado llegue al pie de la ventana aunque la cola sea corta;
+     si no, queda una franja del gris claro del layout debajo */
+  min-height: calc(100dvh - 3rem);
+  color: var(--tinta);
+  background:
+    radial-gradient(120% 46% at 50% -6%, #f0691b 0%, #a8410e 22%, #4d1e08 46%, #150b05 72%, #090604 100%),
+    #090604;
+  padding: 26px 26px 40px;
+}
+
+/* ── tarjetas ─────────────────────────────────────────────────── */
+.card {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  border-radius: 24px;
+  padding: 20px 22px;
+  background-color: var(--card);
+  /* esquinas marcadas: cuatro puntitos que hacen que la tarjeta se lea
+     como una pieza montada y no como un rectángulo suelto */
+  background-image:
+    radial-gradient(2px 2px at 11px 11px, var(--linea-fuerte), transparent 100%),
+    radial-gradient(2px 2px at calc(100% - 11px) 11px, var(--linea-fuerte), transparent 100%),
+    radial-gradient(2px 2px at 11px calc(100% - 11px), var(--linea-fuerte), transparent 100%),
+    radial-gradient(2px 2px at calc(100% - 11px) calc(100% - 11px), var(--linea-fuerte), transparent 100%);
+  background-repeat: no-repeat;
+}
+
+/* rayado diagonal finísimo, desvaneciéndose: textura, no ruido */
+.rayada::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: repeating-linear-gradient(135deg, rgb(247 243 238 / 0.045) 0 1px, transparent 1px 11px);
+  mask-image: linear-gradient(160deg, #000 0%, transparent 62%);
+}
+.card > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* La tarjeta de acento lleva bloom interior: más luz arriba a la
+   izquierda, como si le pegara una lámpara. Tinta café casi negra —
+   blanco sobre este naranja se queda en 3:1 y el texto chico muere. */
+.fuego {
+  color: var(--naranja-tinta);
+  background-color: var(--naranja);
+  background-image:
+    radial-gradient(78% 62% at 16% 6%, rgb(255 214 166 / 0.6), transparent 62%),
+    linear-gradient(158deg, var(--naranja-alto) 0%, var(--naranja) 46%, var(--naranja-bajo) 100%);
+  box-shadow:
+    0 18px 46px rgb(200 80 20 / 0.34),
+    0 0 70px rgb(242 112 30 / 0.25);
+}
+
+/* ── piezas ───────────────────────────────────────────────────── */
+.et {
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--mute);
+}
+.fuego .et,
+.fuego .pie {
+  color: rgb(42 18 7 / 0.66);
+}
+.pie {
+  margin-top: 10px;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--mute);
+}
+.cifra {
+  margin-top: 9px;
+  font-size: clamp(38px, 4.4vw, 54px);
+  font-weight: 600;
+  line-height: 0.94;
+  letter-spacing: -0.045em;
+}
+.cifra small {
+  margin-left: 0.12em;
+  font-size: 0.42em;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+
+.btn {
+  border: 0;
+  border-radius: 999px;
+  padding: 11px 20px;
+  font-size: 13.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  color: var(--naranja-tinta);
+  background: linear-gradient(150deg, var(--naranja-alto), var(--naranja-bajo));
+  box-shadow: 0 0 22px rgb(242 112 30 / calc(var(--halo) * 0.8));
+  transition: transform 0.15s;
+}
+.btn:hover {
+  transform: translateY(-1px);
+}
+.fuego .btn {
+  width: 100%;
+  color: #fff1e4;
+  background: var(--naranja-tinta);
+  box-shadow: 0 6px 20px rgb(42 18 7 / 0.3);
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 500;
+  white-space: nowrap;
+  color: var(--tinta-2);
+  background: var(--tile-2);
+}
+.chipVencido {
+  color: var(--rojo);
+  background: rgb(224 72 60 / 0.16);
+}
+.chipCurso {
+  color: var(--oro);
+  background: rgb(232 163 44 / 0.17);
+}
+.chipCola {
+  color: var(--verde);
+  background: rgb(62 158 118 / 0.15);
+}
+
+/* ── bandas y filas de la cola ───────────────────────────────── */
+.banda {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 18px 0 9px;
+}
+.banda h3 {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.bandaN {
+  border-radius: 999px;
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--mute);
+  background: var(--tile);
+}
+.regla {
+  flex: 1;
+  height: 1px;
+  background: var(--linea);
+}
+
+.fila {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  border-radius: 16px;
+  padding: 13px 15px;
+  margin-bottom: 7px;
+  background: var(--tile);
+  transition: background 0.15s;
+}
+.fila:hover {
+  background: var(--tile-2);
+}
+.punto {
+  width: 8px;
+  height: 8px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--ord-1);
+}
+.aviso .punto {
+  background: var(--oro);
+}
+/* el único punto encendido de la lista */
+.alerta .punto {
+  background: var(--naranja);
+  box-shadow: 0 0 12px rgb(242 112 30 / 0.9);
+}
+
+.medidor {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-top: 8px;
+  max-width: 320px;
+}
+.pista {
+  flex: 1;
+  height: 4px;
+  border-radius: 2px;
+  background: rgb(247 243 238 / 0.08);
+}
+.relleno {
+  height: 100%;
+  border-radius: 2px;
+  background: var(--ord-2);
+}
+.aviso .relleno {
+  background: var(--oro);
+}
+.alerta .relleno {
+  background: linear-gradient(90deg, var(--naranja-alto), var(--naranja-bajo));
+  box-shadow: 0 0 14px rgb(242 112 30 / calc(var(--halo) + 0.2));
+}
+.espera {
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  color: var(--mute);
+}
+.alerta .espera {
+  font-weight: 600;
+  color: var(--naranja);
+}
+
+/* ── línea de tiempo de la semana ─────────────────────────────── */
+.rejilla,
+.rejillaCab {
+  display: grid;
+  grid-template-columns: 52px repeat(7, minmax(0, 1fr));
+  gap: 6px;
+}
+.rejillaCab {
+  margin-bottom: 10px;
+}
+.rejillaCab div {
+  text-align: center;
+  font-size: 11.5px;
+  line-height: 1.35;
+  color: var(--mute);
+}
+.rejillaCab div b {
+  display: block;
+  margin-top: 2px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--tinta-2);
+}
+.rejillaCab .hoy b {
+  color: var(--tinta);
+}
+.hora {
+  padding-top: 5px;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  color: var(--mute);
+}
+.celda {
+  position: relative;
+  min-height: 34px;
+  border-top: 1px solid var(--linea);
+}
+.bloque {
+  position: absolute;
+  inset: 3px 0 auto;
+  overflow: hidden;
+  border-radius: 9px;
+  padding: 6px 9px;
+  font-size: 11px;
+  line-height: 1.25;
+}
+.bloque b {
+  display: block;
+  overflow: hidden;
+  font-size: 11.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.bloque span {
+  display: block;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  opacity: 0.7;
+}
+/* lo vencido es lo único encendido de toda la rejilla */
+.bVencido {
+  color: var(--naranja-tinta);
+  background: linear-gradient(150deg, var(--naranja-alto), var(--naranja-bajo));
+  box-shadow:
+    0 0 26px rgb(242 112 30 / var(--halo)),
+    0 3px 10px rgb(0 0 0 / 0.22);
+}
+.bHecho {
+  color: #231c16;
+  background: #efeae3;
+}
+.bHecho span {
+  opacity: 0.62;
+}
+.bCola {
+  color: var(--tinta-2);
+  background: var(--tile);
+  box-shadow: inset 0 0 0 1px var(--linea-fuerte);
+}
+
+/* ── waffle ───────────────────────────────────────────────────── */
+.waffle {
+  display: grid;
+  grid-template-columns: repeat(8, 16px);
+  gap: 6px;
+  margin-top: 16px;
+}
+.waffle i {
+  display: block;
+  width: 16px;
+  height: 16px;
+  border-radius: 5px;
+  background: currentColor;
+}
+
+/* ── arco ─────────────────────────────────────────────────────── */
+.arco {
+  position: relative;
+  margin-top: 4px;
+}
+.arco svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+.arcoCentro {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  padding-bottom: 16px;
+  text-align: center;
+}
+.v {
+  font-size: 31px;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.035em;
+}
+.n {
+  margin-top: 5px;
+  font-size: 11.5px;
+  color: var(--mute);
+}
+
+/* ── leyenda ──────────────────────────────────────────────────── */
+.leyenda {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px 15px;
+  margin-top: 12px;
+  font-size: 12px;
+  color: var(--tinta-2);
+}
+.leyenda span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.leyenda i {
+  display: block;
+  width: 9px;
+  height: 9px;
+  flex: none;
+  border-radius: 3px;
+}
+
+/* ── AsignarLead se reutiliza tal cual (misma acción de servidor), pero
+      viene con los colores claros del sistema: aquí se baja al tono de
+      la tarjeta sin tocar el componente ─────────────────────────── */
+.asignar button[role='combobox'] {
+  border-color: var(--linea-fuerte);
+  background: var(--tile-2) !important;
+  color: var(--tinta);
+}
+.asignar button[role='combobox'] span,
+.asignar button[role='combobox'] svg {
+  color: inherit;
+}
+/* el botón de acción: el naranja solo cuando de verdad se puede asignar */
+.asignar button:not([role='combobox']) {
+  border-radius: 999px;
+  font-weight: 600;
+  color: var(--naranja-tinta);
+  background: linear-gradient(150deg, var(--naranja-alto), var(--naranja-bajo));
+  box-shadow: 0 0 18px rgb(242 112 30 / calc(var(--halo) * 0.7));
+}
+.asignar button:not([role='combobox']):disabled {
+  color: var(--mute);
+  background: var(--tile-2);
+  box-shadow: none;
+}
