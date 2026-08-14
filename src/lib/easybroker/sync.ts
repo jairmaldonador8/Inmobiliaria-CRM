@@ -112,6 +112,19 @@ export interface DepsSync {
   maxPaginas?: number
 }
 
+/** Opciones de la corrida (el cron route las arma desde el query string). */
+export interface OpcionesSync {
+  /**
+   * true = corre SOLO la fase de leads (el poll rapido de cada minuto, job
+   * pg_cron `easybroker-leads-1min`). Propiedades y estatus quedan a cargo
+   * del sync completo de cada 15 min: un lead nuevo no puede esperar 15
+   * minutos, el catalogo si. Comparte el mismo lease que el sync completo —
+   * si coinciden, el poll se salta esa vuelta (omitido=true) y el sync
+   * completo ya trae la fase de leads incluida, asi que no se pierde nada.
+   */
+  soloLeads?: boolean
+}
+
 export interface CtxPropiedades {
   agenciaId: string
   obtenerDetalle: (publicId: string) => Promise<PropiedadDetalleEB>
@@ -469,8 +482,10 @@ interface LeadExistente {
 /**
  * ¿Este contact request ya se registro antes? Se checa contra leads (creo un
  * lead nuevo) Y contra seguimientos (registro una consulta repetida).
+ * Exportada: la captura del sitio (lib/leads/captura) reutiliza el mismo
+ * dedup con ids `sitio:<solicitud_id>`.
  */
-async function contactRequestYaVisto(
+export async function contactRequestYaVisto(
   supabase: SupabaseClient,
   easybrokerId: string
 ): Promise<boolean> {
@@ -495,8 +510,9 @@ async function contactRequestYaVisto(
  * Busca un lead NO archivado con el mismo telefono o el mismo email, con DOS
  * queries indexadas separadas (nunca .or(): un email con comas/parentesis
  * romperia la sintaxis de filtros de PostgREST). Gana el match mas reciente.
+ * Exportada: tambien la usa la captura del sitio (lib/leads/captura).
  */
-async function buscarLeadExistente(
+export async function buscarLeadExistente(
   supabase: SupabaseClient,
   telefono: string | null,
   email: string | null
@@ -642,7 +658,12 @@ export async function procesarContactRequests(
   return resultado
 }
 
-async function registrarConsultaRepetida(
+/**
+ * Registra una consulta repetida (mismo telefono/email en un lead vivo) como
+ * seguimiento 'sistema' idempotente + notificacion al responsable. Exportada:
+ * tambien la usa la captura del sitio (lib/leads/captura).
+ */
+export async function registrarConsultaRepetida(
   supabase: SupabaseClient,
   existente: LeadExistente,
   fila: ReturnType<typeof mapearContactRequest>,
@@ -849,14 +870,16 @@ async function notificarLeadNuevo(
 // ---------------------------------------------------------------------------
 
 /**
- * Corre el sync completo (propiedades y luego leads) bajo un lease de
+ * Corre el sync completo (propiedades, leads, estatus) bajo un lease de
  * ejecucion unica. Nunca lanza: los errores quedan en el resultado y en
  * sync_estado.ultimo_error; si otra invocacion tiene el lease, regresa con
- * omitido=true sin hacer nada.
+ * omitido=true sin hacer nada. Con opciones.soloLeads solo corre la fase de
+ * leads (el poll rapido de cada minuto).
  */
 export async function sincronizarEasyBroker(
   supabase: SupabaseClient,
-  deps: DepsSync = {}
+  deps: DepsSync = {},
+  opciones: OpcionesSync = {}
 ): Promise<ResultadoSync> {
   const obtenerPagina =
     deps.obtenerPagina ?? ((path: string, params?: ParamsEB) => ebFetch<PaginaEB<unknown>>(path, params))
@@ -906,7 +929,8 @@ export async function sincronizarEasyBroker(
     const agenciaId: string = agencia.id
 
     // --- Propiedades: cursor por pagina (orden updated_at-asc lo hace seguro) ---
-    try {
+    // Omitida en el poll rapido (soloLeads): el catalogo aguanta los 15 min.
+    if (!opciones.soloLeads) try {
       const cursor = await leerCursor(supabase, 'propiedades')
       const params: ParamsEB = { limit: 50, 'search[sort_by]': 'updated_at-asc' }
       if (cursor) params['search[updated_after]'] = cursor
@@ -996,7 +1020,8 @@ export async function sincronizarEasyBroker(
     }
 
     // --- Estatus: pasada completa de listing_statuses, SIN cursor (ver jsdoc arriba) ---
-    try {
+    // Omitida en el poll rapido (soloLeads), igual que propiedades.
+    if (!opciones.soloLeads) try {
       const { estatusPorId, completo } = await obtenerMapaEstatusEB(obtenerPagina, maxPaginas)
 
       const propiedadesAgencia: PropiedadEstatusActual[] = []

@@ -146,6 +146,10 @@ export const config = {
      *   <CRON_SECRET>` sin cookies de sesión; el propio route handler
      *   valida ese secreto. Vercel cron NO sigue redirects, así que si
      *   esta ruta pasara por el proxy moriría en un 307 silencioso a /)
+     * - api/leads/captura (el backend del sitio oficial de Montana postea
+     *   leads server-to-server con `Authorization: Bearer
+     *   <LEADS_CAPTURA_SECRET>`, sin cookies; el route handler valida el
+     *   secreto — mismo contrato fail-closed que los crons)
      * - sw.js (el service worker se re-descarga en cada registro,
      *   `updateViaCache: 'none'`; pasarlo por el proxy gasta un
      *   getClaims() en cada fetch y un redirect rompería la registración)
@@ -154,6 +158,6 @@ export const config = {
      * nuevo que no deba llevar sesión (p. ej. otro webhook público) hay
      * que agregarlo explícitamente aquí.
      */
-    '/((?!_next/static|_next/image|favicon.ico|manifest.webmanifest|sw.js|api/cron|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)',
+    '/((?!_next/static|_next/image|favicon.ico|manifest.webmanifest|sw.js|api/cron|api/leads/captura|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)',
   ],
 }

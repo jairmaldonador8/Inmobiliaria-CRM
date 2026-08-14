@@ -28,10 +28,15 @@ export async function GET(request: Request) {
     return new Response('No autorizado', { status: 401 })
   }
 
-  const supabase = createAdminClient()
-  const resultado = await sincronizarEasyBroker(supabase)
+  // ?fase=leads = poll rapido (job pg_cron de cada minuto): solo contact
+  // requests, sin propiedades ni estatus. Sin query string = sync completo
+  // (job de cada 15 min), igual que siempre.
+  const soloLeads = new URL(request.url).searchParams.get('fase') === 'leads'
 
-  console.log('[cron/easybroker-sync]', JSON.stringify(resultado))
+  const supabase = createAdminClient()
+  const resultado = await sincronizarEasyBroker(supabase, {}, { soloLeads })
+
+  console.log('[cron/easybroker-sync]', JSON.stringify({ soloLeads, ...resultado }))
 
   return Response.json(
     { ok: resultado.errores.length === 0, ...resultado },

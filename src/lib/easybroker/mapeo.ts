@@ -117,11 +117,18 @@ export interface FilaPropiedadDetalle {
 }
 
 export interface FilaLead {
+  /**
+   * Id del evento externo que origino el lead. Para EasyBroker es el id del
+   * contact request; la captura del sitio oficial (lib/leads/captura) guarda
+   * `sitio:<solicitud_id>` — el unique de la columna hace idempotente el
+   * reintento en ambos canales.
+   */
   easybroker_id: string
   nombre: string
   telefono: string | null
   email: string | null
-  fuente: 'portal'
+  /** 'portal' = entro por el sync de EasyBroker; 'sitio' = formulario del sitio oficial. */
+  fuente: 'portal' | 'sitio'
   fuente_detalle: string | null
   /** public_id de EasyBroker; el sync lo resuelve a propiedad_id (uuid). */
   propiedad_eb_id: string | null

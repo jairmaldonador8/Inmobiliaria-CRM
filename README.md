@@ -63,6 +63,25 @@ El plan **Hobby** de Vercel solo permite crons diarios, así que el sync de Easy
 
 La ruta es fail-closed (401 sin el Bearer correcto) y el sync tiene lease de ejecución única de 5 min, cursores idempotentes y dedup de leads repetidos.
 
+#### Poll rápido de leads (`easybroker-leads-1min`)
+
+EasyBroker **no tiene webhooks** (ver skill `easybroker-api`), así que el "tiempo real" máximo es acortar el polling. La misma ruta acepta `?fase=leads`: corre **solo** la fase de contact requests (1–2 requests por vuelta, muy por debajo del rate limit) y deja propiedades y estatus al sync completo de 15 min. Con el job de cada minuto, un lead de EasyBroker cae al CRM (con push y guardias) en ≤ 90 s. Comparte el lease con el sync completo: si coinciden, el poll se salta esa vuelta — sin pérdida, porque el sync completo también trae la fase de leads.
+
+Programarlo por SQL (mismo criterio que `gcal-retry`: **nunca desde el UI de Cron Jobs**):
+
+```sql
+select cron.schedule('easybroker-leads-1min', '* * * * *', $$
+  select net.http_get(
+    url := 'https://www.klo-ser.com/api/cron/easybroker-sync?fase=leads',
+    headers := jsonb_build_object('Authorization', 'Bearer ' ||
+      (select decrypted_secret from vault.decrypted_secrets where name = 'cron_secret_easybroker')),
+    timeout_milliseconds := 60000
+  )
+$$);
+```
+
+(**No ejecutado todavía** — se programa en el Supabase de producción cuando este código llegue a main/producción.)
+
 ### Cron de reintento del espejo a Google Calendar (`gcal-retry`)
 
 El espejo de visitas a Google Calendar (ver skill `google-calendar`) marca una visita `gcal_sync_estado = 'pendiente'` cuando Google falla de forma transitoria. El job `gcal-retry` es quien la reintenta con backoff exponencial, igual que `easybroker-sync-15min`, programado por **pg_cron dentro de Supabase**:
@@ -86,6 +105,16 @@ $$);
 - Lote acotado a 20 visitas por corrida, ordenadas por `gcal_proximo_intento` (las más atrasadas primero). Claim atómico por fila (UPDATE condicional) antes de tocar cada una, así dos ticks traslapados nunca reintentan la misma visita dos veces.
 - Backoff exponencial: `1 min * 2^gcal_intentos` (1, 2, 4, 8, 16, 32 min). Tope de 6 intentos: al agotarlos, la visita queda `gcal_sync_estado = 'error'` con el motivo en `gcal_ultimo_error` (dead letter, requiere diagnóstico manual).
 - Ver estado y últimas corridas con las mismas consultas de `cron.job` / `cron.job_run_details` de arriba.
+
+## Captura de leads del sitio oficial de Montana
+
+El sitio oficial (repo aparte, lo desarrolla el equipo) manda sus leads directo al CRM **en tiempo real**: su backend hace `POST /api/leads/captura` con `Authorization: Bearer <LEADS_CAPTURA_SECRET>` en cuanto un visitante manda un formulario. El lead entra por la MISMA tubería que los de EasyBroker (dedup por teléfono/email, guardias, push + campanita), con `fuente = 'sitio'` (migración 0018).
+
+- **Server-to-server únicamente**: el secreto jamás va en el bundle del navegador; el formulario postea al backend del sitio y ese backend nos llama.
+- Idempotente por `solicitud_id` (el sitio manda un uuid por envío): reintentar es siempre seguro.
+- El proxy excluye la ruta de su matcher (`src/proxy.ts`); la puerta es el propio handler, fail-closed.
+- Env var `LEADS_CAPTURA_SECRET`: una por entorno (DEV en `.env.local`, prod en Vercel — recuerda el redeploy al agregarla).
+- Contrato completo, ejemplos y cómo probar: **`docs/integracion-sitio-montana.md`** (es el doc que se le entrega al dev del sitio).
 
 ## Integración con Google Calendar
 
