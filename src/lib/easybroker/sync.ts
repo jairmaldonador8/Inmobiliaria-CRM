@@ -747,7 +747,8 @@ export async function crearLeadNuevo(
       asesor_id: asignacion?.asesorId ?? null,
       asignado_en: asignacion ? ahora.toISOString() : null,
       escalamiento_desde: asignacion?.escalamientoDesde ?? null,
-      zona_interes: propiedad ? (propiedad.colonia ?? propiedad.ciudad) : null,
+      interes: fila.interes ?? null,
+      zona_interes: propiedad ? (propiedad.colonia ?? propiedad.ciudad) : (fila.zona ?? null),
       easybroker_id: fila.easybroker_id,
       mensaje_original: fila.mensaje_original,
       creado_en: fila.creado_en, // happened_at real del contact request (UTC)

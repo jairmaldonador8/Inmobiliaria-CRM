@@ -45,6 +45,8 @@ este endpoint con `fetch` desde el cliente ni de exponer el token en variables
 | `mensaje` | No | Máx 5000 chars. |
 | `propiedad_easybroker_id` | No | `public_id` de EasyBroker si el formulario está en la ficha de una propiedad. Con esto el asesor recibe el lead ya ligado a la propiedad. |
 | `pagina` | No | Ruta o nombre del formulario de origen (p. ej. `/contacto`). Aparece en el CRM como detalle de la fuente. |
+| `interes` | No | Qué busca el visitante: `compra`, `renta` o `venta` (también acepta `comprar`/`rentar`/`vender`). **`venta` = quiere vender su propiedad** — posible captación, no comprador. Valor no reconocido → se guarda sin interés, nunca se rechaza. |
+| `zona` | No | Zona de interés que escribió el visitante (máx 120). Solo se usa si no viene propiedad referida. |
 
 ## Respuestas
 

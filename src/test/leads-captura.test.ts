@@ -105,6 +105,23 @@ describe('validarSolicitudCaptura', () => {
     expect(validarSolicitudCaptura({ ...SOLICITUD_BASE, email: null }).ok).toBe(true)
     expect(validarSolicitudCaptura({ ...SOLICITUD_BASE, telefono: null }).ok).toBe(true)
   })
+
+  it('normaliza interes: tolera verbos del sitio y descarta basura sin rechazar', () => {
+    const casos: Array<[unknown, string | null]> = [
+      ['vender', 'venta'],
+      ['venta', 'venta'],
+      ['Comprar', 'compra'],
+      ['rentar', 'renta'],
+      ['invertir', null],
+      [42, null],
+      [undefined, null],
+    ]
+    for (const [entrada, esperado] of casos) {
+      const v = validarSolicitudCaptura({ ...SOLICITUD_BASE, interes: entrada })
+      expect(v.ok).toBe(true)
+      if (v.ok) expect(v.solicitud.interes).toBe(esperado)
+    }
+  })
 })
 
 function solicitudValidada(extra: Record<string, unknown> = {}) {
@@ -192,6 +209,20 @@ describe('capturarLeadSitio', () => {
       expect.anything(),
       'ag-1',
       expect.objectContaining({ fuente_detalle: 'sitio Montana' }),
+      null,
+      null
+    )
+  })
+
+  it('interes y zona viajan en la fila (lead de captacion)', async () => {
+    await capturarLeadSitio(
+      crearSupabaseFake(),
+      solicitudValidada({ interes: 'vender', zona: 'Valle Oriente', pagina: '/vender' })
+    )
+    expect(crearLeadNuevoMock).toHaveBeenCalledWith(
+      expect.anything(),
+      'ag-1',
+      expect.objectContaining({ interes: 'venta', zona: 'Valle Oriente' }),
       null,
       null
     )

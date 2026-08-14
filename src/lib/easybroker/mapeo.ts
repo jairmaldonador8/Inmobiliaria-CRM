@@ -130,6 +130,10 @@ export interface FilaLead {
   /** 'portal' = entro por el sync de EasyBroker; 'sitio' = formulario del sitio oficial. */
   fuente: 'portal' | 'sitio'
   fuente_detalle: string | null
+  /** Solo captura del sitio: intencion declarada del visitante ('venta' = posible captacion). */
+  interes?: 'compra' | 'renta' | 'venta' | null
+  /** Solo captura del sitio: zona que escribio el visitante (si no hay propiedad referida). */
+  zona?: string | null
   /** public_id de EasyBroker; el sync lo resuelve a propiedad_id (uuid). */
   propiedad_eb_id: string | null
   /** contact_id de EasyBroker; el sync lo usa SOLO para clasificar (GET /v1/contacts/{id}), no se persiste. */

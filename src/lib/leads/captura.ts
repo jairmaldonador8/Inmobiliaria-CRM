@@ -36,6 +36,10 @@ export interface SolicitudCapturaSitio {
   propiedad_easybroker_id: string | null
   /** Pagina o formulario de origen dentro del sitio (p. ej. "/propiedades/EB-123" o "contacto"). */
   pagina: string | null
+  /** Intencion declarada: 'venta' = quiere vender (posible captacion), no comprar. */
+  interes: 'compra' | 'renta' | 'venta' | null
+  /** Zona que escribio el visitante; solo se usa si no hay propiedad referida. */
+  zona: string | null
 }
 
 /**
@@ -54,6 +58,20 @@ function texto(valor: unknown, max: number): string | null {
   const limpio = valor.trim()
   if (!limpio) return null
   return limpio.slice(0, max)
+}
+
+/**
+ * Normaliza la intencion declarada. Tolera los verbos del sitio
+ * (comprar/rentar/vender) ademas de los valores del enum; lo demas -> null,
+ * jamas se rechaza el lead por esto.
+ */
+function normalizarInteres(valor: unknown): 'compra' | 'renta' | 'venta' | null {
+  if (typeof valor !== 'string') return null
+  const v = valor.trim().toLowerCase()
+  if (v === 'compra' || v === 'comprar') return 'compra'
+  if (v === 'renta' || v === 'rentar') return 'renta'
+  if (v === 'venta' || v === 'vender') return 'venta'
+  return null
 }
 
 /**
@@ -93,6 +111,8 @@ export function validarSolicitudCaptura(body: unknown): Validacion {
       mensaje: texto(b.mensaje, 5000),
       propiedad_easybroker_id: texto(b.propiedad_easybroker_id, 40),
       pagina: texto(b.pagina, 300),
+      interes: normalizarInteres(b.interes),
+      zona: texto(b.zona, 120),
     },
   }
 }
@@ -134,6 +154,8 @@ export async function capturarLeadSitio(
     contacto_eb_id: null,
     mensaje_original: solicitud.mensaje,
     creado_en: new Date().toISOString(),
+    interes: solicitud.interes,
+    zona: solicitud.zona,
   }
 
   const existente = await buscarLeadExistente(supabase, fila.telefono, fila.email)
