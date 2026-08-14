@@ -116,6 +116,19 @@ El sitio oficial (repo aparte, lo desarrolla el equipo) manda sus leads directo 
 - Env var `LEADS_CAPTURA_SECRET`: una por entorno (DEV en `.env.local`, prod en Vercel — recuerda el redeploy al agregarla).
 - Contrato completo, ejemplos y cómo probar: **`docs/integracion-sitio-montana.md`** (es el doc que se le entrega al dev del sitio).
 
+## Captaciones (asesor sube → admin revisa → un click a EasyBroker)
+
+El asesor sube su captación en `/asesor/captaciones` (fotos a Supabase Storage, bucket público `captaciones`) y ve **el score de calidad en vivo** — las reglas que los portales mexicanos premian (motor en `src/lib/captaciones/score.ts`, estilo «Panoramix» de Inmuebles24). El admin la revisa en `/admin/captaciones` (anillo + checklist) y con un click la **carga a EasyBroker** (`POST /v1/properties`, beta) — con las iniciales del asesor al final de la descripción (convención Montana) y el switch «publicar de inmediato / subir apagada».
+
+Aprendizajes del sandbox (2026-08-14) que el código ya blinda:
+
+- **Lat/lng son obligatorias** para la API (bloqueante del score).
+- **`location.name` debe existir tal cual en `GET /v1/locations`**: antes de cargar, la colonia se resuelve contra el catálogo y, si no está, el error sugiere las parecidas. Ojo: el **sandbox de staging rechaza cualquier location** (hasta el ejemplo de su propia doc) — la validación real solo ocurre contra el EasyBroker de producción. **La primera carga real conviene hacerla con el switch en «apagada»** y revisarla en EB antes de publicar.
+- La selección de portales por propiedad NO la expone la API: se hace dentro de EasyBroker.
+- La API no permite borrar propiedades: una carga es definitiva (por eso el candado de bloqueantes y la alerta en el dialog).
+
+Migración `0020` (tabla + bucket + RLS). La fuente de las fotos exige `*.supabase.co` en `next.config.ts`.
+
 ## Integración con Google Calendar
 
 Cada asesor conecta su cuenta desde su dashboard; las visitas del CRM se espejan en su calendario principal. El CRM es la fuente de verdad: editar el evento en Google **no** modifica la visita en Klo-Ser. Detalles de implementación en el skill de proyecto `google-calendar`.

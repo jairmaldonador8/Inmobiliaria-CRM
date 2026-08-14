@@ -9,6 +9,12 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "assets.easybroker.com",
       },
+      // Fotos de captaciones subidas por los asesores al bucket público de
+      // Supabase Storage (DEV y PROD comparten el sufijo del dominio).
+      {
+        protocol: "https",
+        hostname: "*.supabase.co",
+      },
       // El sandbox de EasyBroker (api.stagingeb.com, el que usa DEV) sirve las
       // fotos desde un host ficticio. Sin esto, la lista de propiedades en
       // local revienta con "Invalid src prop" y no se puede probar la pantalla.

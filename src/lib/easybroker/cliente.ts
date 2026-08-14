@@ -98,6 +98,44 @@ export async function ebFetch<T>(path: string, params?: ParamsEB): Promise<T> {
 }
 
 /**
+ * POST a EasyBroker (hoy solo lo usa la carga de captaciones:
+ * POST /v1/properties, endpoint en beta). Mismo contrato de errores que
+ * ebFetch: EasyBrokerError con status 0 para fallas de red.
+ */
+export async function ebPost<T>(path: string, body: unknown): Promise<T> {
+  const url = new URL(path.startsWith('http') ? path : `${baseUrl()}${path}`)
+
+  let respuesta: Response
+  try {
+    respuesta = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'X-Authorization': apiKey(),
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body),
+      signal: AbortSignal.timeout(TIMEOUT_MS),
+    })
+  } catch (error) {
+    const mensaje = error instanceof Error ? error.message : String(error)
+    throw new EasyBrokerError(0, `error de red: ${mensaje}`, url.toString())
+  }
+
+  if (!respuesta.ok) {
+    const cuerpo = await respuesta.text().catch(() => '')
+    throw new EasyBrokerError(respuesta.status, cuerpo, url.toString())
+  }
+
+  try {
+    return (await respuesta.json()) as T
+  } catch (error) {
+    const mensaje = error instanceof Error ? error.message : String(error)
+    throw new EasyBrokerError(respuesta.status, `respuesta no-JSON: ${mensaje}`, url.toString())
+  }
+}
+
+/**
  * Recorre un endpoint paginado siguiendo pagination.next_page y devuelve el
  * contenido acumulado. Respeta limit máximo 50 y pausa 100ms entre páginas.
  */

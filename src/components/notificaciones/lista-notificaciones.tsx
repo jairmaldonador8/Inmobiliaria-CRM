@@ -4,7 +4,7 @@ import { useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { formatDistanceToNow } from 'date-fns'
 import { es } from 'date-fns/locale'
-import { Bell, Sparkles, UserPlus, UserX, type LucideIcon } from 'lucide-react'
+import { Bell, ClipboardCheck, Sparkles, UserPlus, UserX, type LucideIcon } from 'lucide-react'
 
 import { marcarLeida, marcarTodasLeidas } from '@/lib/notificaciones/acciones'
 import { cn } from '@/lib/utils'
@@ -23,6 +23,9 @@ const ICONOS_TIPO: Record<string, LucideIcon> = {
   lead_asignado: UserPlus,
   asesor_desactivado: UserX,
   lead_nuevo: Sparkles,
+  captacion_enviada: ClipboardCheck,
+  captacion_regresada: ClipboardCheck,
+  captacion_cargada: ClipboardCheck,
 }
 
 function FilaNotificacion({ notificacion }: { notificacion: NotificacionListado }) {

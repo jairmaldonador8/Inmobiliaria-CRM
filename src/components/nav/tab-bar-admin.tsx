@@ -7,6 +7,7 @@ import {
   Bell,
   Building2,
   CalendarClock,
+  ClipboardCheck,
   Ellipsis,
   House,
   Inbox,
@@ -55,6 +56,7 @@ type PestanaMas = Omit<Pestana, 'exacta'>
  * destino real más cercano al que describe NavAdmin.
  */
 const DESTINOS_MAS: PestanaMas[] = [
+  { href: '/admin/captaciones', etiqueta: 'Captaciones', Icono: ClipboardCheck },
   { href: '/admin/asesores', etiqueta: 'Asesores', Icono: UserRound },
   { href: '/admin/guardias', etiqueta: 'Guardias', Icono: CalendarClock },
   { href: '/admin/ajustes', etiqueta: 'Plantillas', Icono: MessageSquareText },

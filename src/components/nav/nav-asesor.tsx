@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation'
 import {
   Building2,
   CircleUserRound,
+  ClipboardList,
   House,
   LogOut,
   Users,
@@ -25,6 +26,7 @@ const PESTANAS: Pestana[] = [
   { href: '/asesor', etiqueta: 'Inicio', Icono: House, exacta: true },
   { href: '/asesor/leads', etiqueta: 'Leads', Icono: Users },
   { href: '/asesor/propiedades', etiqueta: 'Propiedades', Icono: Building2 },
+  { href: '/asesor/captaciones', etiqueta: 'Captaciones', Icono: ClipboardList },
   { href: '/asesor/perfil', etiqueta: 'Perfil', Icono: CircleUserRound },
 ]
 
