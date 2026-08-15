@@ -1,3 +1,5 @@
+import Link from 'next/link'
+
 import { FormLogin } from '@/components/auth/form-login'
 import { Wordmark } from '@/components/marca/wordmark'
 
@@ -26,6 +28,14 @@ export default function PaginaLogin() {
 
         <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs sm:p-8">
           <FormLogin />
+          <p className="mt-4 text-center">
+            <Link
+              href="/recuperar"
+              className="text-xs text-slate-500 underline-offset-4 hover:text-slate-900 hover:underline"
+            >
+              ¿Olvidaste tu contraseña?
+            </Link>
+          </p>
         </div>
 
         <p className="mt-6 text-center text-xs text-slate-400">
