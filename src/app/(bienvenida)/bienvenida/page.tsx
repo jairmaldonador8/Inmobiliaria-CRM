@@ -13,5 +13,7 @@ export default async function PaginaBienvenida() {
   const usuario = await requireAsesor()
   if (usuario.bienvenida_completada) redirect('/asesor')
 
-  return <FlujoBienvenida nombre={usuario.nombre} temaInicial={usuario.tema} />
+  return (
+    <FlujoBienvenida nombre={usuario.nombre} temaInicial={usuario.tema} userId={usuario.user_id} />
+  )
 }

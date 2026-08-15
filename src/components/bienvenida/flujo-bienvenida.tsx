@@ -1,11 +1,12 @@
 'use client'
 
-import { useEffect, useMemo, useState, useTransition } from 'react'
+import { useEffect, useMemo, useRef, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import {
   ArrowRight,
   BellRing,
+  Camera,
   Building2,
   Check,
   ChevronDown,
@@ -17,16 +18,23 @@ import {
   Zap,
 } from 'lucide-react'
 
+import { createClient } from '@/lib/supabase/client'
 import { activarAvisos } from '@/lib/push/cliente'
 import { Wordmark } from '@/components/marca/wordmark'
-import { completarBienvenida, type TemaPluma } from '@/lib/bienvenida/acciones'
+import {
+  actualizarPerfilBienvenida,
+  completarBienvenida,
+  type TemaPluma,
+} from '@/lib/bienvenida/acciones'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { cn } from '@/lib/utils'
 
 /** El evento beforeinstallprompt (Chrome/Android): permite instalar con un botón. */
 type EventoInstalacion = Event & { prompt: () => Promise<void> }
 
-const PASOS = ['Bienvenida', 'Tu tema', 'Tus avisos', 'Listo'] as const
+const PASOS = ['Bienvenida', 'Tu perfil', 'Tu tema', 'Tus avisos', 'Listo'] as const
 
 /**
  * Klo en chiquito, con la MISMA animación que ya vive en la pantalla de
@@ -134,9 +142,11 @@ function VistaTema({
 export function FlujoBienvenida({
   nombre,
   temaInicial,
+  userId,
 }: {
   nombre: string
   temaInicial: TemaPluma
+  userId: string
 }) {
   const router = useRouter()
   const [paso, setPaso] = useState(0)
@@ -148,7 +158,18 @@ export function FlujoBienvenida({
   const [promptInstalar, setPromptInstalar] = useState<EventoInstalacion | null>(null)
   const [pendiente, iniciarTransicion] = useTransition()
 
-  const nombrePila = useMemo(() => nombre.trim().split(/\s+/)[0] ?? nombre, [nombre])
+  // paso «Tu perfil»
+  const inputFoto = useRef<HTMLInputElement>(null)
+  const [nombrePerfil, setNombrePerfil] = useState(nombre)
+  const [foto, setFoto] = useState<string | null>(null)
+  const [subiendoFoto, setSubiendoFoto] = useState(false)
+  const [pass1, setPass1] = useState('')
+  const [pass2, setPass2] = useState('')
+
+  const nombrePila = useMemo(
+    () => nombrePerfil.trim().split(/\s+/)[0] || nombre,
+    [nombrePerfil, nombre]
+  )
   const esIos = useMemo(
     () => typeof navigator !== 'undefined' && /iphone|ipad|ipod/i.test(navigator.userAgent),
     []
@@ -191,6 +212,56 @@ export function FlujoBienvenida({
     }
   }
 
+  async function alElegirFoto(lista: FileList | null) {
+    const archivo = lista?.[0]
+    if (!archivo) return
+    if (archivo.size > 3 * 1024 * 1024) {
+      toast.error('La foto pasa de 3MB — elige una más ligera.')
+      return
+    }
+    setSubiendoFoto(true)
+    const supabase = createClient()
+    const extension = archivo.name.split('.').pop()?.toLowerCase() || 'jpg'
+    const ruta = `${userId}/avatar-${Date.now()}.${extension}`
+    const { error } = await supabase.storage
+      .from('perfiles')
+      .upload(ruta, archivo, { contentType: archivo.type || 'image/jpeg' })
+    if (error) {
+      toast.error(`No se pudo subir la foto: ${error.message}`)
+    } else {
+      const { data } = supabase.storage.from('perfiles').getPublicUrl(ruta)
+      setFoto(data.publicUrl)
+    }
+    setSubiendoFoto(false)
+    if (inputFoto.current) inputFoto.current.value = ''
+  }
+
+  function guardarPerfil() {
+    if (pass1 || pass2) {
+      if (pass1.length < 8) {
+        toast.error('Tu contraseña nueva debe tener al menos 8 caracteres.')
+        return
+      }
+      if (pass1 !== pass2) {
+        toast.error('Las contraseñas no coinciden.')
+        return
+      }
+    }
+    iniciarTransicion(async () => {
+      const resultado = await actualizarPerfilBienvenida({
+        nombre: nombrePerfil,
+        foto,
+        password: pass1 || null,
+      })
+      if ('error' in resultado) {
+        toast.error(resultado.error)
+        return
+      }
+      if (pass1) toast.success('Contraseña actualizada — ya es tuya')
+      setPaso(2)
+    })
+  }
+
   function terminar() {
     iniciarTransicion(async () => {
       const resultado = await completarBienvenida(tema)
@@ -218,7 +289,7 @@ export function FlujoBienvenida({
       <main className="mx-auto flex w-full max-w-md flex-1 flex-col">
         {/* Klo, el anfitrión — la animación que ya vivía en el sistema */}
         <div className="pt-2">
-          <KloAnfitrion volteado={paso === 3} />
+          <KloAnfitrion volteado={paso === 4} />
         </div>
 
         {/* progreso: un punto por paso */}
@@ -290,10 +361,114 @@ export function FlujoBienvenida({
           </section>
         ) : null}
 
-        {/* ── Paso 1: el tema ── */}
+        {/* ── Paso 1: tu perfil ── */}
         {paso === 1 ? (
           <section
             key="p1"
+            className="flex flex-1 flex-col animate-in fade-in slide-in-from-bottom-4 duration-500"
+          >
+            <h1 className="mt-2 text-center text-3xl text-slate-900">Este es tu espacio</h1>
+            <p className="mt-2 text-center text-sm text-slate-500">
+              Así te verán tus compañeros y la dirección. Ponte guapo.
+            </p>
+
+            <div className="mt-6 rounded-xl bg-white p-5 ring-1 ring-slate-200">
+              <div className="flex items-center gap-4">
+                {foto ? (
+                  /* eslint-disable-next-line @next/next/no-img-element */
+                  <img
+                    src={foto}
+                    alt="Tu foto de perfil"
+                    className="size-16 rounded-full object-cover ring-2 ring-slate-200"
+                  />
+                ) : (
+                  <span className="grid size-16 place-content-center rounded-full bg-slate-900 text-xl font-semibold text-white">
+                    {nombrePila.charAt(0).toUpperCase()}
+                  </span>
+                )}
+                <div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => inputFoto.current?.click()}
+                    disabled={subiendoFoto}
+                  >
+                    <Camera data-icon="inline-start" />
+                    {subiendoFoto ? 'Subiendo…' : foto ? 'Cambiar foto' : 'Subir tu foto'}
+                  </Button>
+                  <p className="mt-1 text-[11px] text-slate-400">JPG o PNG, máximo 3MB.</p>
+                </div>
+                <input
+                  ref={inputFoto}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  className="hidden"
+                  onChange={(e) => void alElegirFoto(e.target.files)}
+                />
+              </div>
+
+              <div className="mt-5 grid gap-2">
+                <Label htmlFor="nombrePerfil">Tu nombre</Label>
+                <Input
+                  id="nombrePerfil"
+                  value={nombrePerfil}
+                  onChange={(e) => setNombrePerfil(e.target.value)}
+                  disabled={pendiente}
+                />
+              </div>
+            </div>
+
+            <div className="mt-3 rounded-xl bg-white p-5 ring-1 ring-slate-200">
+              <p className="text-sm font-semibold text-slate-900">Crea tu propia contraseña</p>
+              <p className="mt-1 text-xs leading-relaxed text-slate-500">
+                Entraste con una contraseña temporal — cámbiala por una tuya (mínimo 8
+                caracteres). Si prefieres, puedes hacerlo después desde tu perfil.
+              </p>
+              <div className="mt-3 grid gap-3">
+                <div className="grid gap-2">
+                  <Label htmlFor="pass1">Contraseña nueva</Label>
+                  <Input
+                    id="pass1"
+                    type="password"
+                    autoComplete="new-password"
+                    value={pass1}
+                    onChange={(e) => setPass1(e.target.value)}
+                    disabled={pendiente}
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="pass2">Repítela</Label>
+                  <Input
+                    id="pass2"
+                    type="password"
+                    autoComplete="new-password"
+                    value={pass2}
+                    onChange={(e) => setPass2(e.target.value)}
+                    disabled={pendiente}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-auto pt-8">
+              <Button
+                size="lg"
+                className="w-full"
+                onClick={guardarPerfil}
+                disabled={pendiente || subiendoFoto}
+              >
+                {pendiente ? 'Guardando…' : 'Guardar y continuar'}
+                <ArrowRight data-icon="inline-end" />
+              </Button>
+            </div>
+          </section>
+        ) : null}
+
+        {/* ── Paso 2: el tema ── */}
+        {paso === 2 ? (
+          <section
+            key="p2"
             className="flex flex-1 flex-col animate-in fade-in slide-in-from-bottom-4 duration-500"
           >
             <h1 className="mt-4 text-center text-3xl text-slate-900">¿Cómo prefieres trabajar?</h1>
@@ -308,7 +483,7 @@ export function FlujoBienvenida({
             </div>
 
             <div className="mt-auto pt-8">
-              <Button size="lg" className="w-full" onClick={() => setPaso(2)}>
+              <Button size="lg" className="w-full" onClick={() => setPaso(3)}>
                 Continuar
                 <ArrowRight data-icon="inline-end" />
               </Button>
@@ -317,9 +492,9 @@ export function FlujoBienvenida({
         ) : null}
 
         {/* ── Paso 2: los avisos ── */}
-        {paso === 2 ? (
+        {paso === 3 ? (
           <section
-            key="p2"
+            key="p3"
             className="flex flex-1 flex-col animate-in fade-in slide-in-from-bottom-4 duration-500"
           >
             <h1 className="mt-4 text-center text-3xl text-slate-900">Que te suene el teléfono</h1>
@@ -429,7 +604,7 @@ export function FlujoBienvenida({
             </div>
 
             <div className="mt-auto pt-8">
-              <Button size="lg" className="w-full" onClick={() => setPaso(3)}>
+              <Button size="lg" className="w-full" onClick={() => setPaso(4)}>
                 Continuar
                 <ArrowRight data-icon="inline-end" />
               </Button>
@@ -438,9 +613,9 @@ export function FlujoBienvenida({
         ) : null}
 
         {/* ── Paso 3: listo ── */}
-        {paso === 3 ? (
+        {paso === 4 ? (
           <section
-            key="p3"
+            key="p4"
             className="flex flex-1 flex-col animate-in fade-in slide-in-from-bottom-4 duration-500"
           >
             <h1 className="mt-2 text-center text-3xl text-slate-900">Todo listo, {nombrePila}</h1>

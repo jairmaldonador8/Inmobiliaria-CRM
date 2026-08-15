@@ -12,6 +12,7 @@ import { revalidatePath } from 'next/cache'
 
 import { requireAsesor } from '@/lib/auth/usuario-actual'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { createClient } from '@/lib/supabase/server'
 
 export type ResultadoBienvenida = { ok: true } | { error: string }
 
@@ -31,6 +32,44 @@ export async function guardarTema(tema: TemaPluma): Promise<ResultadoBienvenida>
     .update({ tema })
     .eq('user_id', usuario.user_id)
   if (error) return { error: `No se pudo guardar el tema: ${error.message}` }
+  return { ok: true }
+}
+
+/**
+ * Paso «Tu perfil» de la bienvenida: nombre propio, foto (URL del bucket
+ * 'perfiles', la sube el navegador) y, si la manda, su contraseña personal
+ * en lugar de la temporal que le dio el admin. La contraseña se cambia con
+ * el cliente de SESIÓN (auth.updateUser exige al dueño de la cuenta).
+ */
+export async function actualizarPerfilBienvenida(datos: {
+  nombre: string
+  foto: string | null
+  password: string | null
+}): Promise<ResultadoBienvenida> {
+  const usuario = await requireAsesor()
+
+  const nombre = typeof datos.nombre === 'string' ? datos.nombre.trim().slice(0, 120) : ''
+  if (nombre.length < 2) return { error: 'Escribe tu nombre como quieres aparecer.' }
+
+  if (datos.password) {
+    if (datos.password.length < 8) {
+      return { error: 'La contraseña nueva debe tener al menos 8 caracteres.' }
+    }
+    const sesion = await createClient()
+    const { error } = await sesion.auth.updateUser({ password: datos.password })
+    if (error) return { error: `No se pudo cambiar la contraseña: ${error.message}` }
+  }
+
+  const cambios: { nombre: string; foto?: string } = { nombre }
+  if (typeof datos.foto === 'string' && datos.foto.startsWith('http')) {
+    cambios.foto = datos.foto
+  }
+  const { error } = await createAdminClient()
+    .from('usuarios')
+    .update(cambios)
+    .eq('user_id', usuario.user_id)
+  if (error) return { error: `No se pudo guardar tu perfil: ${error.message}` }
+
   return { ok: true }
 }
 
