@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useMemo, useState, useTransition } from 'react'
-import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import {
@@ -24,6 +23,33 @@ import { cn } from '@/lib/utils'
 type EventoInstalacion = Event & { prompt: () => Promise<void> }
 
 const PASOS = ['Bienvenida', 'Tu tema', 'Tus avisos', 'Listo'] as const
+
+/**
+ * Klo en chiquito, con la MISMA animación que ya vive en la pantalla de
+ * carga (sprites de public/marca + clases .gallo-carga de globals.css):
+ * camina durante los pasos y, al llegar al final, se voltea a verte.
+ */
+function KloAnfitrion({ volteado }: { volteado: boolean }) {
+  return (
+    // Disco perla FIJO (no camaleón): el gallo es negro y debe verse igual
+    // de bien cuando el asesor elige el tema oscuro en el paso del tema.
+    <div
+      aria-hidden
+      className="mx-auto grid h-28 w-28 place-content-center rounded-full bg-[#F7F6F3] shadow-[inset_0_0_0_1px_rgb(20_20_20/0.08),0_10px_30px_rgb(0_0_0/0.12)]"
+    >
+      <div className="relative h-20 w-20">
+        {volteado ? (
+          <span className="gallo-carga gallo-carga--voltea" />
+        ) : (
+          <>
+            <span className="gallo-carga gallo-carga--camina" />
+            <span className="gallo-carga gallo-carga--precarga" />
+          </>
+        )}
+      </div>
+    </div>
+  )
+}
 
 function aplicarTema(tema: TemaPluma) {
   document.documentElement.classList.toggle('dark', tema === 'negro')
@@ -168,8 +194,13 @@ export function FlujoBienvenida({
   return (
     <div className="flex min-h-dvh flex-col bg-slate-50 px-5 pt-[max(env(safe-area-inset-top),1.25rem)] pb-[max(env(safe-area-inset-bottom),1.25rem)]">
       <main className="mx-auto flex w-full max-w-md flex-1 flex-col">
+        {/* Klo, el anfitrión — la animación que ya vivía en el sistema */}
+        <div className="pt-2">
+          <KloAnfitrion volteado={paso === 3} />
+        </div>
+
         {/* progreso: un punto por paso */}
-        <div className="mb-6 flex items-center justify-center gap-2 pt-2" aria-hidden>
+        <div className="mt-2 mb-5 flex items-center justify-center gap-2" aria-hidden>
           {PASOS.map((_, i) => (
             <span
               key={i}
@@ -183,19 +214,11 @@ export function FlujoBienvenida({
 
         {/* ── Paso 0: el saludo ── */}
         {paso === 0 ? (
-          <section className="flex flex-1 flex-col">
-            <div className="flex justify-center pt-4">
-              <Image
-                src="/marca/gallo-camina.webp"
-                alt="Klo, el gallo de Klo-Ser"
-                width={150}
-                height={150}
-                priority
-                unoptimized
-                className="h-36 w-auto"
-              />
-            </div>
-            <h1 className="mt-6 text-center text-3xl text-slate-900">
+          <section
+            key="p0"
+            className="flex flex-1 flex-col animate-in fade-in slide-in-from-bottom-4 duration-500"
+          >
+            <h1 className="mt-2 text-center text-3xl text-slate-900">
               Hola, {nombrePila}
             </h1>
             <p className="mt-2 text-center text-sm leading-relaxed text-slate-500">
@@ -247,7 +270,10 @@ export function FlujoBienvenida({
 
         {/* ── Paso 1: el tema ── */}
         {paso === 1 ? (
-          <section className="flex flex-1 flex-col">
+          <section
+            key="p1"
+            className="flex flex-1 flex-col animate-in fade-in slide-in-from-bottom-4 duration-500"
+          >
             <h1 className="mt-4 text-center text-3xl text-slate-900">¿Cómo prefieres trabajar?</h1>
             <p className="mt-2 text-center text-sm text-slate-500">
               Toca uno y míralo en vivo — lo puedes cambiar cuando quieras con la luna 🌙 de la
@@ -270,7 +296,10 @@ export function FlujoBienvenida({
 
         {/* ── Paso 2: los avisos ── */}
         {paso === 2 ? (
-          <section className="flex flex-1 flex-col">
+          <section
+            key="p2"
+            className="flex flex-1 flex-col animate-in fade-in slide-in-from-bottom-4 duration-500"
+          >
             <h1 className="mt-4 text-center text-3xl text-slate-900">Que te suene el teléfono</h1>
             <p className="mt-2 text-center text-sm leading-relaxed text-slate-500">
               Cuando estés de guardia y entre un lead, Klo-Ser te avisa al momento. Sin esto, la
@@ -340,18 +369,11 @@ export function FlujoBienvenida({
 
         {/* ── Paso 3: listo ── */}
         {paso === 3 ? (
-          <section className="flex flex-1 flex-col">
-            <div className="flex justify-center pt-4">
-              <Image
-                src="/marca/gallo-voltea.webp"
-                alt="Klo"
-                width={130}
-                height={130}
-                unoptimized
-                className="h-32 w-auto"
-              />
-            </div>
-            <h1 className="mt-6 text-center text-3xl text-slate-900">Todo listo, {nombrePila}</h1>
+          <section
+            key="p3"
+            className="flex flex-1 flex-col animate-in fade-in slide-in-from-bottom-4 duration-500"
+          >
+            <h1 className="mt-2 text-center text-3xl text-slate-900">Todo listo, {nombrePila}</h1>
             <p className="mt-2 text-center text-sm leading-relaxed text-slate-500">
               Tema {tema === 'negro' ? 'negro grafito' : 'blanco galería'}
               {estadoAvisos === 'ok' ? ' y avisos activados' : ''}. Una última cosa: lo que no
