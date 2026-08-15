@@ -1,0 +1,897 @@
+<!doctype html>
+<html lang="es" data-acento="plata" data-fondo="blanco" data-vidrio="cristal">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PLUMA · Sistema de diseño Klo-Ser</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Jost:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  /* ─────────────────────────────────────────────────────────────
+     PLUMA — negro editorial + un acento que se elige arriba.
+     Todo lo que ves usa los mismos tokens: cambiar el acento
+     re-pinta la lámina entera (así se sentiría el sistema real).
+     ───────────────────────────────────────────────────────────── */
+  :root {
+    --fondo: #0b0b0c;
+    --carbon: #151517;
+    --humo: #1e1e21;
+    --humo-2: #27272b;
+    --tinta: #f5f4f2;
+    --tinta-2: #b9b9bd;
+    --mute: #8e8e93;
+    --linea: rgb(245 244 242 / 0.08);
+    --linea-2: rgb(245 244 242 / 0.14);
+    --radio: 22px;
+
+    /* derivados del acento: en fondo negro son el acento tal cual; en
+       blanco se oscurecen un paso para leerse sin encandilar */
+    --ac-texto: var(--ac);
+    --ac-marca: var(--ac);
+    --ac-marca-2: var(--ac-2);
+  }
+  /* ── FONDO BLANCO: greige editorial (la referencia bento), misma alma ── */
+  [data-fondo="blanco"] {
+    --fondo: #f6f5f2;
+    --carbon: #ffffff;
+    --humo: #efede8;
+    --humo-2: #e2dfd7;
+    --tinta: #1a1917;
+    --tinta-2: #504e48;
+    --mute: #8a8880;
+    /* líneas un paso más presentes: en blanco los hairlines se pierden */
+    --linea: rgb(26 25 23 / 0.11);
+    --linea-2: rgb(26 25 23 / 0.2);
+
+    /* el acento se aterriza para el ojo: texto bien oscurecido, marcas un paso */
+    --ac-texto: color-mix(in oklab, var(--ac-2) 62%, #1a1917);
+    --ac-marca: var(--ac-2);
+    --ac-marca-2: color-mix(in oklab, var(--ac-2) 68%, #1a1917);
+  }
+  /* grano más fino sobre blanco (el ruido se nota más en claro) */
+  [data-fondo="blanco"] .grano { opacity: 0.032; }
+  /* el círculo plata necesita borde para existir sobre el selector claro */
+  [data-fondo="blanco"] .selector .b-plata { box-shadow: inset 0 0 0 1px rgb(26 25 23 / 0.25); }
+  /* con acento negro sobre blanco, los resplandores se vuelven sombras de tinta */
+  [data-fondo="blanco"][data-acento="plata"] .m-card.acento,
+  [data-fondo="blanco"][data-acento="plata"] .dash .d.acento,
+  [data-fondo="blanco"][data-acento="plata"] .tel .t-card.acento {
+    box-shadow: 0 14px 34px rgb(26 25 23 / 0.28);
+  }
+  [data-fondo="blanco"][data-acento="plata"] .klo-fab {
+    box-shadow: 0 8px 24px rgb(26 25 23 / 0.3);
+  }
+  [data-fondo="blanco"][data-acento="plata"] .ruta a.on {
+    box-shadow: 0 0 0 3px rgb(26 25 23 / 0.12);
+  }
+  /* las tarjetas de acento flotan con sombra suave (los acentos pálidos
+     desaparecerían sobre blanco sin ella) */
+  [data-fondo="blanco"] .m-card.acento,
+  [data-fondo="blanco"] .dash .d.acento,
+  [data-fondo="blanco"] .tel .t-card.acento {
+    box-shadow: 0 10px 28px color-mix(in oklab, var(--ac-2) 30%, rgb(26 25 23 / 0.1));
+  }
+  [data-fondo="blanco"] .klo-fab { box-shadow: 0 8px 26px color-mix(in oklab, var(--ac-2) 42%, rgb(26 25 23 / 0.1)); }
+  [data-fondo="blanco"] .ruta a { background: #d5d2c9; }
+  [data-fondo="blanco"] .ruta a.on { background: var(--ac-marca); }
+  [data-fondo="blanco"] .selector { background: rgb(255 255 255 / 0.82); }
+  [data-fondo="blanco"] .principio,
+  [data-fondo="blanco"] .tipo-card,
+  [data-fondo="blanco"] .m-card:not(.acento),
+  [data-fondo="blanco"] .org-card,
+  [data-fondo="blanco"] .dash,
+  [data-fondo="blanco"] .logo-card:not(.claro) {
+    box-shadow: 0 1px 3px rgb(26 25 23 / 0.05);
+  }
+  /* la tarjeta que era clara sobre negro se invierte: oscura sobre blanco */
+  [data-fondo="blanco"] .logo-card.claro { background: #1a1917; color: #f6f5f2; }
+  [data-fondo="blanco"] .logo-card.claro .logo-nota { color: rgb(246 245 242 / 0.6); }
+  [data-fondo="blanco"] .tel { background: #111; box-shadow: 0 30px 70px rgb(26 25 23 / 0.25), 0 0 60px color-mix(in oklab, var(--ac) 10%, transparent); }
+  /* vidrio sobre blanco: leche difuminada en vez de humo */
+  [data-fondo="blanco"][data-vidrio="humo"] .principio,
+  [data-fondo="blanco"][data-vidrio="humo"] .tipo-card,
+  [data-fondo="blanco"][data-vidrio="humo"] .m-card:not(.acento),
+  [data-fondo="blanco"][data-vidrio="humo"] .dash,
+  [data-fondo="blanco"][data-vidrio="humo"] .org-card,
+  [data-fondo="blanco"][data-vidrio="humo"] .logo-card:not(.claro) {
+    background: rgb(255 255 255 / 0.52);
+    border-color: rgb(26 25 23 / 0.09);
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.8), 0 1px 3px rgb(26 25 23 / 0.04);
+  }
+  [data-fondo="blanco"][data-vidrio="humo"] .dash .d:not(.acento),
+  [data-fondo="blanco"][data-vidrio="humo"] .tel .t-card:not(.acento) {
+    background: rgb(255 255 255 / 0.55);
+    border-color: rgb(26 25 23 / 0.09);
+  }
+  [data-fondo="blanco"] body::before,
+  [data-fondo="blanco"]::before { opacity: 1; }
+
+  [data-acento="niebla"]   { --ac: #a8b8e8; --ac-2: #7f96d9; --ac-tinta: #10162e; }
+  [data-acento="amarillo"] { --ac: #f2c14e; --ac-2: #d9a326; --ac-tinta: #2b1e04; }
+  [data-acento="oro"]      { --ac: #d4b67e; --ac-2: #b8955a; --ac-tinta: #241a08; }
+  [data-acento="cresta"]   { --ac: #e8604a; --ac-2: #c94531; --ac-tinta: #2e0d08; }
+  [data-acento="cobre"]    { --ac: #c98a5e; --ac-2: #a96e42; --ac-tinta: #26130a; }
+  [data-acento="salvia"]   { --ac: #a3c9a8; --ac-2: #7fae86; --ac-tinta: #0e1f12; }
+  [data-acento="hielo"]    { --ac: #9fd0dd; --ac-2: #6fb4c7; --ac-tinta: #06222a; }
+  [data-acento="cobalto"]  { --ac: #5b74e0; --ac-2: #4258c2; --ac-tinta: #eef2ff; }
+  /* «Plata» es el acento camaleón: SIEMPRE es la tinta contraria al fondo.
+     Sobre negro es blanco; sobre blanco se vuelve negro editorial. */
+  [data-acento="plata"]    { --ac: #f5f4f2; --ac-2: #c9c8c4; --ac-tinta: #16150f; }
+  [data-fondo="blanco"][data-acento="plata"] {
+    --ac: #1a1917;
+    --ac-2: #3c3a34;
+    --ac-tinta: #f6f5f2;
+    --ac-texto: #1a1917;
+    --ac-marca: #1a1917;
+    --ac-marca-2: #4a4841;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--fondo);
+    color: var(--tinta);
+    font-family: 'Poppins', sans-serif;
+    font-weight: 300;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  /* Ambiente: dos brasas del acento flotando al fondo, apenas visibles.
+     Son las que hacen que el modo vidrio tenga algo que dejar ver. */
+  body::before {
+    content: '';
+    position: fixed; inset: 0; z-index: -1; pointer-events: none;
+    background:
+      radial-gradient(34% 26% at 82% 12%, color-mix(in oklab, var(--ac) 9%, transparent), transparent 70%),
+      radial-gradient(30% 24% at 8% 58%, color-mix(in oklab, var(--ac) 7%, transparent), transparent 70%),
+      radial-gradient(26% 20% at 60% 96%, rgb(245 244 242 / 0.025), transparent 70%);
+    transition: opacity .3s;
+  }
+  
+  ::selection { background: var(--ac); color: var(--ac-tinta); }
+
+  .lienzo { max-width: 1180px; margin: 0 auto; padding: 0 32px 140px; }
+
+  /* tipografía */
+  h1, h2, .display, .num { font-family: 'Jost', sans-serif; }
+  h2 {
+    display: flex; align-items: center; gap: 20px;
+    font-size: 15px; font-weight: 500; letter-spacing: .3em; text-transform: uppercase; color: var(--ac-texto);
+  }
+  h2::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, var(--linea-2), transparent); }
+
+  /* ── grano de imprenta: 3% de ruido encima de todo ── */
+  .grano {
+    position: fixed; inset: 0; z-index: 90; pointer-events: none; opacity: .05;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  /* ── membrete fijo, como documento de especificación ── */
+  .membrete {
+    position: fixed; left: 26px; top: 24px; z-index: 50;
+    display: flex; align-items: baseline; gap: 12px;
+    font-family: 'Jost'; letter-spacing: .3em; font-size: 12px; font-weight: 500;
+  }
+  .membrete .marca { color: var(--tinta); }
+  .membrete .marca i { font-style: normal; color: var(--ac-texto); }
+  .membrete .v { color: var(--mute); font-size: 10px; letter-spacing: .2em; }
+
+  /* ── ruta lateral: un punto por sección ── */
+  .ruta {
+    position: fixed; left: 26px; top: 50%; transform: translateY(-50%); z-index: 45;
+    display: flex; flex-direction: column; gap: 12px;
+  }
+  .ruta a {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--humo-2); transition: transform .2s, background .2s;
+    position: relative;
+  }
+  .ruta a:hover { transform: scale(1.5); background: var(--tinta-2); }
+  .ruta a.on { background: var(--ac); transform: scale(1.45); box-shadow: 0 0 12px color-mix(in oklab, var(--ac) 55%, transparent); }
+  .ruta a::after {
+    content: attr(data-nombre); position: absolute; left: 18px; top: 50%; transform: translateY(-50%);
+    font-size: 10px; letter-spacing: .18em; text-transform: uppercase; color: var(--mute);
+    white-space: nowrap; opacity: 0; transition: opacity .2s; pointer-events: none; font-family: 'Jost';
+  }
+  .ruta a:hover::after { opacity: 1; }
+  @media (max-width: 1320px) { .ruta { display: none; } }
+
+  /* ── micro-interacciones: las tarjetas responden al mouse ── */
+  .principio, .tipo-card, .m-card, .logo-card, .org-card, .dash .d {
+    transition: transform .25s cubic-bezier(.3,.8,.3,1), border-color .25s, box-shadow .25s,
+                opacity .6s ease;
+  }
+  .principio:hover, .tipo-card:hover, .m-card:hover, .logo-card:hover, .org-card:hover, .dash .d:hover {
+    transform: translateY(-3px);
+    border-color: color-mix(in oklab, var(--ac) 35%, var(--linea));
+  }
+  .m-card.acento:hover, .dash .d.acento:hover {
+    box-shadow: 0 14px 44px color-mix(in oklab, var(--ac) 32%, transparent);
+  }
+  .org-card li { transition: background .2s, border-color .2s; }
+  .org-card li:hover { background: var(--humo-2); }
+
+  /* pie de la lámina */
+  .firma {
+    margin-top: 90px; display: flex; align-items: center; justify-content: space-between;
+    padding-top: 22px; border-top: 1px solid var(--linea);
+    font-family: 'Jost'; font-size: 11px; letter-spacing: .25em; text-transform: uppercase; color: var(--mute);
+  }
+  .firma b { color: var(--ac-texto); font-weight: 500; }
+  .seccion { margin-top: 130px; }
+  .seccion > p.intro { max-width: 62ch; margin-top: 14px; color: var(--tinta-2); font-size: 15px; }
+  .num { font-variant-numeric: tabular-nums; }
+  .micro { font-size: 10px; font-weight: 500; letter-spacing: .18em; text-transform: uppercase; color: var(--mute); }
+
+  /* ── selector de acento (fijo) ── */
+  .selector {
+    position: fixed; right: 22px; top: 22px; z-index: 50;
+    display: flex; gap: 8px; padding: 8px 10px;
+    background: rgb(21 21 23 / .8); backdrop-filter: blur(14px);
+    border: 1px solid var(--linea-2); border-radius: 999px;
+  }
+  .selector button {
+    width: 26px; height: 26px; border-radius: 50%; border: 2px solid transparent;
+    cursor: pointer; transition: transform .15s;
+  }
+  .selector button:hover { transform: scale(1.12); }
+  .selector button.on { border-color: var(--tinta); }
+  .selector .b-niebla { background: #a8b8e8; }
+  .selector .b-amarillo { background: #f2c14e; }
+  .selector .b-oro { background: #d4b67e; }
+  .selector .b-cresta { background: #e8604a; }
+  .selector .b-cobre { background: #c98a5e; }
+  .selector .b-salvia { background: #a3c9a8; }
+  .selector .b-hielo { background: #9fd0dd; }
+  .selector .b-cobalto { background: #5b74e0; }
+  .selector .b-plata { background: linear-gradient(135deg, #f5f4f2 49.5%, #1a1917 50.5%); }
+  .selector .division { width: 1px; align-self: stretch; background: var(--linea-2); margin: 0 2px; }
+  .selector .b-vidrio {
+    width: auto; border-radius: 999px; padding: 0 12px; height: 26px;
+    background: var(--humo); color: var(--mute);
+    font-family: 'Jost'; font-size: 11px; letter-spacing: .12em; text-transform: uppercase;
+  }
+  [data-vidrio="humo"] .selector .b-vidrio,
+  [data-vidrio="cristal"] .selector .b-vidrio,
+  [data-vidrio="ahumado"] .selector .b-vidrio { background: var(--tinta); color: var(--fondo); }
+
+  /* ── VIDRIO «HUMO»: translúcido sutil, apenas se nota ── */
+  [data-vidrio="humo"] .principio,
+  [data-vidrio="humo"] .tipo-card,
+  [data-vidrio="humo"] .m-card:not(.acento),
+  [data-vidrio="humo"] .dash,
+  [data-vidrio="humo"] .org-card,
+  [data-vidrio="humo"] .logo-card:not(.claro) {
+    background: rgb(245 244 242 / 0.045);
+    backdrop-filter: blur(22px) saturate(1.15);
+    -webkit-backdrop-filter: blur(22px) saturate(1.15);
+    border-color: rgb(245 244 242 / 0.1);
+    box-shadow: inset 0 1px 0 rgb(245 244 242 / 0.07);
+  }
+  [data-vidrio="humo"] .dash .d:not(.acento),
+  [data-vidrio="humo"] .tel .t-card:not(.acento) {
+    background: rgb(245 244 242 / 0.05);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border-color: rgb(245 244 242 / 0.1);
+  }
+
+  /* ── VIDRIO «CRISTAL»: líquido, con brillo especular arriba ── */
+  [data-vidrio="cristal"] .principio,
+  [data-vidrio="cristal"] .tipo-card,
+  [data-vidrio="cristal"] .m-card:not(.acento),
+  [data-vidrio="cristal"] .dash,
+  [data-vidrio="cristal"] .org-card,
+  [data-vidrio="cristal"] .logo-card:not(.claro) {
+    background: linear-gradient(135deg, rgb(255 255 255 / 0.1), rgb(255 255 255 / 0.03) 42%, rgb(255 255 255 / 0.07));
+    backdrop-filter: blur(28px) saturate(1.6);
+    -webkit-backdrop-filter: blur(28px) saturate(1.6);
+    border-color: rgb(255 255 255 / 0.17);
+    box-shadow:
+      inset 0 1px 1px rgb(255 255 255 / 0.28),
+      inset 0 -1px 1px rgb(255 255 255 / 0.06),
+      0 16px 44px rgb(0 0 0 / 0.4);
+  }
+  [data-vidrio="cristal"] .dash .d:not(.acento),
+  [data-vidrio="cristal"] .tel .t-card:not(.acento) {
+    background: linear-gradient(135deg, rgb(255 255 255 / 0.11), rgb(255 255 255 / 0.04));
+    backdrop-filter: blur(24px) saturate(1.5);
+    -webkit-backdrop-filter: blur(24px) saturate(1.5);
+    border-color: rgb(255 255 255 / 0.16);
+    box-shadow: inset 0 1px 1px rgb(255 255 255 / 0.22);
+  }
+
+  /* ── VIDRIO «AHUMADO»: el del iPhone — vidrio OSCURO profundo ── */
+  [data-vidrio="ahumado"] .principio,
+  [data-vidrio="ahumado"] .tipo-card,
+  [data-vidrio="ahumado"] .m-card:not(.acento),
+  [data-vidrio="ahumado"] .dash,
+  [data-vidrio="ahumado"] .org-card,
+  [data-vidrio="ahumado"] .logo-card:not(.claro) {
+    background: rgb(10 10 12 / 0.52);
+    backdrop-filter: blur(30px) saturate(1.35);
+    -webkit-backdrop-filter: blur(30px) saturate(1.35);
+    border-color: rgb(255 255 255 / 0.09);
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.1),
+      0 18px 50px rgb(0 0 0 / 0.5);
+    border-radius: 28px;
+  }
+  [data-vidrio="ahumado"] .dash .d:not(.acento),
+  [data-vidrio="ahumado"] .tel .t-card:not(.acento) {
+    background: rgb(10 10 12 / 0.5);
+    backdrop-filter: blur(26px) saturate(1.3);
+    -webkit-backdrop-filter: blur(26px) saturate(1.3);
+    border-color: rgb(255 255 255 / 0.09);
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.08);
+  }
+
+  /* ── FONDO «FOTO»: propiedad real en blanco y negro tras el vidrio ── */
+  [data-fondo="foto"] body::after {
+    content: '';
+    position: fixed; inset: 0; z-index: -2; pointer-events: none;
+    background: url('../public/demo-fotos/f1.jpg') center / cover no-repeat;
+    filter: grayscale(1) brightness(0.34) contrast(1.08);
+  }
+  [data-fondo="foto"] body { background: #0b0b0c; }
+
+  /* ── ANIMACIONES DE ENTRADA (scroll) ──
+     .prevela = aún no visto. Al entrar al viewport se quita y todo
+     transiciona: tarjetas suben en cascada, barras crecen, medidores se
+     llenan, anillos se dibujan. ── */
+  .rev { transition: opacity .6s ease, transform .7s cubic-bezier(.22, .9, .3, 1); }
+  .prevela .rev { opacity: 0; transform: translateY(24px); }
+
+  .barras i { transform-origin: bottom; transition: transform .9s cubic-bezier(.25, 1, .35, 1); }
+  .prevela .barras i { transform: scaleY(0.05); }
+  .barras i.on::after { transition: opacity .4s ease .75s; }
+  .prevela .barras i.on::after { opacity: 0; }
+
+  .lm-relleno, .embudo .e i b { transition: width 1s cubic-bezier(.25, 1, .35, 1) .15s; }
+  .prevela .lm-relleno, .prevela .embudo .e i b { width: 0 !important; }
+
+  svg .anim { transition: stroke-dasharray 1.2s cubic-bezier(.3, .9, .3, 1) .2s; }
+  .prevela svg .anim { stroke-dasharray: 0 999 !important; }
+
+  .portada .kicker, .portada h1, .portada .baja, .portada img.gallo {
+    transition: opacity .8s ease, transform .9s cubic-bezier(.22, .9, .3, 1);
+  }
+  .prevela.portada .kicker { opacity: 0; transform: translateY(14px); }
+  .prevela.portada h1 { opacity: 0; transform: translateY(30px); }
+  .prevela.portada .baja { opacity: 0; transform: translateY(20px); }
+  .prevela.portada img.gallo { opacity: 0; transform: translateX(30px); }
+  .portada h1 { transition-delay: .08s; }
+  .portada .baja { transition-delay: .2s; }
+  .portada img.gallo { transition-delay: .35s; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .rev, .barras i, .lm-relleno, .embudo .e i b, svg .anim { transition: none !important; }
+  }
+
+  /* ── portada ── */
+  .portada { min-height: 92vh; display: grid; align-content: center; position: relative; }
+  .portada::before {
+    content: ''; position: absolute; inset: -32px -100vw 0;
+    background: radial-gradient(60% 50% at 50% 0%, color-mix(in oklab, var(--ac) 14%, transparent), transparent 70%);
+    pointer-events: none;
+  }
+  .portada .kicker { color: var(--ac-texto); font-size: 12px; letter-spacing: .4em; text-transform: uppercase; font-weight: 500; }
+  .portada h1 {
+    margin-top: 18px; font-size: clamp(64px, 11vw, 150px); font-weight: 300;
+    letter-spacing: .06em; line-height: .95;
+  }
+  .portada h1 b { font-weight: 600; color: var(--ac-texto); }
+  .portada .baja { margin-top: 26px; max-width: 58ch; color: var(--tinta-2); font-size: 16px; }
+  .portada img.gallo { position: absolute; right: 4%; bottom: 8%; width: min(180px, 22vw); opacity: .92; }
+
+  /* ── principios ── */
+  .principios { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 34px; }
+  .principio { background: var(--carbon); border: 1px solid var(--linea); border-radius: var(--radio); padding: 26px 24px; }
+  .principio .n { font-family: 'Jost'; font-size: 13px; color: var(--ac-texto); letter-spacing: .2em; }
+  .principio h3 { font-family: 'Jost'; font-weight: 500; font-size: 19px; margin: 10px 0 8px; letter-spacing: .01em; }
+  .principio p { font-size: 13px; color: var(--mute); }
+
+  /* ── tokens ── */
+  .paleta { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; margin-top: 34px; }
+  .sw { border-radius: 16px; border: 1px solid var(--linea); padding: 14px 12px 12px; min-height: 120px; display: flex; flex-direction: column; justify-content: flex-end; gap: 2px; }
+  .sw .nom { font-size: 12px; font-weight: 500; }
+  .sw .hex { font-size: 10.5px; color: inherit; opacity: .6; font-variant-numeric: tabular-nums; }
+
+  .tipos { display: grid; grid-template-columns: 1.4fr 1fr; gap: 14px; margin-top: 34px; }
+  .tipo-card { background: var(--carbon); border: 1px solid var(--linea); border-radius: var(--radio); padding: 30px; }
+  .tipo-card .gigante { font-size: 96px; font-weight: 300; line-height: 1; letter-spacing: -0.02em; }
+  .tipo-card .gigante small { font-size: 24px; color: var(--mute); font-weight: 300; }
+
+  /* ── mockups: base de tarjeta ── */
+  .grid-metricas { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-top: 34px; }
+  .m-card {
+    background: var(--carbon); border: 1px solid var(--linea); border-radius: var(--radio);
+    padding: 20px; display: flex; flex-direction: column; gap: 4px; min-height: 150px;
+  }
+  .m-card .fila-top { display: flex; justify-content: space-between; align-items: flex-start; }
+  .m-card .num-hero { font-size: 46px; font-weight: 300; line-height: 1.05; margin-top: auto; }
+  .m-card .num-hero small { font-size: 15px; color: var(--mute); }
+  .m-card .delta { font-size: 11px; color: var(--tinta-2); }
+  .m-card.acento { background: linear-gradient(155deg, color-mix(in oklab, var(--ac) 92%, white 4%), var(--ac-2)); color: var(--ac-tinta); border: none; }
+  .m-card.acento .micro, .m-card.acento .delta { color: color-mix(in oklab, var(--ac-tinta) 70%, transparent); }
+
+  .puntos { width: 26px; height: 26px; border-radius: 9px; background: var(--humo); display: grid; place-content: center; color: var(--mute); font-size: 14px; letter-spacing: 2px; }
+  .m-card.acento .puntos { background: color-mix(in oklab, var(--ac-tinta) 14%, transparent); color: var(--ac-tinta); }
+
+  /* barras */
+  .barras { display: flex; align-items: flex-end; gap: 10px; height: 110px; margin-top: 16px; }
+  .barras i { flex: 1; border-radius: 8px 8px 6px 6px; background: var(--humo-2); position: relative; }
+  .barras i.on { background: linear-gradient(180deg, var(--ac-marca), var(--ac-marca-2)); box-shadow: 0 0 26px color-mix(in oklab, var(--ac-marca) 35%, transparent); }
+  .barras i.on::after {
+    content: attr(data-v); position: absolute; top: -24px; left: 50%; transform: translateX(-50%);
+    font-size: 11px; color: var(--tinta); font-family: 'Jost'; white-space: nowrap;
+  }
+
+  /* anillo */
+  .anillo-wrap { display: grid; place-content: center; position: relative; margin-top: 8px; }
+  .anillo-centro { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; }
+
+  /* pills de rango */
+  .pills { display: inline-flex; gap: 4px; background: var(--humo); border-radius: 999px; padding: 4px; }
+  .pills span { font-size: 10.5px; padding: 5px 11px; border-radius: 999px; color: var(--mute); font-weight: 500; }
+  .pills span.on { background: var(--ac); color: var(--ac-tinta); }
+
+  /* lista con medidores */
+  .lista-medidor { display: flex; flex-direction: column; gap: 13px; margin-top: 16px; }
+  .lm-fila .lm-cab { display: flex; justify-content: space-between; font-size: 12.5px; }
+  .lm-fila .lm-cab b { font-weight: 500; font-family: 'Jost'; letter-spacing: .02em; }
+  .lm-fila .lm-cab span { color: var(--mute); font-variant-numeric: tabular-nums; }
+  .lm-pista { height: 4px; border-radius: 2px; background: var(--humo-2); margin-top: 6px; }
+  .lm-relleno { height: 100%; border-radius: 2px; background: linear-gradient(90deg, color-mix(in oklab, var(--ac-marca) 55%, transparent), var(--ac-marca)); }
+
+  /* ── dashboard escritorio ── */
+  .dash {
+    margin-top: 34px; background: var(--carbon); border: 1px solid var(--linea);
+    border-radius: 28px; padding: 22px; display: grid; gap: 12px;
+    grid-template-columns: repeat(4, 1fr);
+  }
+  .dash .d { background: var(--humo); border-radius: 18px; padding: 16px; border: 1px solid var(--linea); }
+  .dash .col2 { grid-column: span 2; }
+  .dash .num-d { font-size: 34px; font-weight: 300; font-family: 'Jost'; line-height: 1.1; margin-top: 12px; }
+  .dash .num-d small { font-size: 13px; color: var(--mute); }
+  .dash .d.acento { background: linear-gradient(155deg, var(--ac), var(--ac-2)); color: var(--ac-tinta); border: none; }
+  .dash .d.acento .micro { color: color-mix(in oklab, var(--ac-tinta) 70%, transparent); }
+  .embudo { display: flex; flex-direction: column; gap: 7px; margin-top: 14px; }
+  .embudo .e { display: grid; grid-template-columns: 92px 1fr 34px; gap: 10px; align-items: center; font-size: 11.5px; color: var(--tinta-2); }
+  .embudo .e i { display: block; height: 12px; border-radius: 6px; background: var(--humo-2); }
+  .embudo .e i b { display: block; height: 100%; border-radius: 6px; background: linear-gradient(90deg, color-mix(in oklab, var(--ac-marca) 45%, transparent), var(--ac-marca)); }
+  .embudo .e:first-child i b { box-shadow: 0 0 18px color-mix(in oklab, var(--ac-marca) 30%, transparent); }
+  .embudo .e span:last-child { text-align: right; color: var(--mute); font-variant-numeric: tabular-nums; }
+
+  /* ── teléfonos ── */
+  .telefonos { display: flex; gap: 44px; justify-content: center; margin-top: 40px; flex-wrap: wrap; }
+  .tel {
+    width: 310px; border-radius: 44px; padding: 14px;
+    background: #060607; border: 1px solid var(--linea-2);
+    box-shadow: 0 40px 90px rgb(0 0 0 / .6), 0 0 60px color-mix(in oklab, var(--ac) 7%, transparent);
+  }
+  .tel .pantalla { background: var(--fondo); border-radius: 32px; padding: 20px 16px 26px; min-height: 600px; display: flex; flex-direction: column; gap: 12px; }
+  .tel .estado { display: flex; justify-content: space-between; align-items: center; }
+  .tel .avatar { width: 34px; height: 34px; border-radius: 50%; background: linear-gradient(140deg, var(--ac), var(--ac-2)); display: grid; place-content: center; color: var(--ac-tinta); font-family: 'Jost'; font-weight: 600; font-size: 14px; }
+  .tel .t-card { background: var(--carbon); border: 1px solid var(--linea); border-radius: 20px; padding: 16px; }
+  .tel .t-card.acento { background: linear-gradient(155deg, var(--ac), var(--ac-2)); color: var(--ac-tinta); border: none; }
+  .tel .t-card.acento .micro { color: color-mix(in oklab, var(--ac-tinta) 70%, transparent); }
+  .tel .t-num { font-family: 'Jost'; font-size: 38px; font-weight: 300; line-height: 1.1; margin-top: 8px; }
+  .tel .t-num small { font-size: 13px; opacity: .55; }
+  .tel .dos { display: grid; grid-template-columns: 1.2fr 1fr; gap: 12px; }
+  .tel .fila-lead { display: flex; align-items: center; gap: 10px; padding: 11px 4px; border-top: 1px solid var(--linea); font-size: 12px; }
+  .tel .fila-lead:first-of-type { border-top: 0; }
+  .tel .fila-lead .p { width: 7px; height: 7px; border-radius: 50%; background: var(--humo-2); }
+  .tel .fila-lead .p.on { background: var(--ac-marca); box-shadow: 0 0 10px var(--ac-marca); }
+  .tel .fila-lead b { font-weight: 500; font-family: 'Jost'; letter-spacing: .02em; }
+  .tel .fila-lead span { margin-left: auto; color: var(--mute); font-size: 10.5px; }
+  .klo-fab {
+    margin-top: auto; align-self: flex-end; width: 52px; height: 52px; border-radius: 50%;
+    background: linear-gradient(140deg, var(--ac), var(--ac-2)); display: grid; place-content: center;
+    box-shadow: 0 8px 30px color-mix(in oklab, var(--ac) 45%, transparent);
+  }
+
+  /* ── logos ── */
+  .logos { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 34px; }
+  .logo-card { background: var(--carbon); border: 1px solid var(--linea); border-radius: var(--radio); padding: 30px; display: grid; place-content: center; min-height: 210px; text-align: center; gap: 14px; }
+  .logo-card.claro { background: var(--tinta); color: var(--fondo); }
+  .wordmark { font-family: 'Jost'; font-weight: 500; font-size: 34px; letter-spacing: .34em; margin-right: -.34em; }
+  .wordmark .o { position: relative; }
+  .wordmark .o::before { content: ''; position: absolute; top: -1px; left: 12%; right: 12%; height: 3px; border-radius: 2px; background: var(--ac-marca); }
+  .logo-nota { font-size: 11.5px; color: var(--mute); max-width: 30ch; margin: 0 auto; }
+  .logo-card.claro .logo-nota { color: rgb(11 11 12 / .55); }
+  .cresta { display: block; margin: 0 auto; }
+
+  /* ── organización ── */
+  .org { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 34px; }
+  .org-card { background: var(--carbon); border: 1px solid var(--linea); border-radius: var(--radio); padding: 26px; }
+  .org-card h3 { font-family: 'Jost'; font-weight: 500; font-size: 17px; }
+  .org-card ol { margin-top: 14px; list-style: none; display: flex; flex-direction: column; gap: 8px; }
+  .org-card li { display: flex; align-items: baseline; gap: 10px; font-size: 13.5px; color: var(--tinta-2); padding: 8px 12px; background: var(--humo); border-radius: 10px; }
+  .org-card li b { font-family: 'Jost'; font-weight: 500; color: var(--tinta); min-width: 110px; letter-spacing: .02em; }
+  .org-card li.ac { border-left: 3px solid var(--ac-marca); }
+
+  .nota-final { margin-top: 60px; padding: 30px; border: 1px dashed var(--linea-2); border-radius: var(--radio); color: var(--tinta-2); font-size: 14px; max-width: 72ch; }
+  .nota-final b { color: var(--ac-texto); font-weight: 500; }
+
+  @media (max-width: 900px) {
+    .principios, .logos { grid-template-columns: 1fr; }
+    .paleta { grid-template-columns: repeat(3, 1fr); }
+    .grid-metricas, .dash { grid-template-columns: 1fr 1fr; }
+    .tipos, .org { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="selector" title="Elige el acento del sistema y prueba el modo vidrio">
+  <button class="b-niebla" data-a="niebla" aria-label="Acento niebla"></button>
+  <button class="b-amarillo" data-a="amarillo" aria-label="Acento amarillo"></button>
+  <button class="b-oro" data-a="oro" aria-label="Acento oro champagne"></button>
+  <button class="b-cresta" data-a="cresta" aria-label="Acento cresta"></button>
+  <button class="b-cobre" data-a="cobre" aria-label="Acento cobre"></button>
+  <button class="b-salvia" data-a="salvia" aria-label="Acento salvia"></button>
+  <button class="b-hielo" data-a="hielo" aria-label="Acento hielo"></button>
+  <button class="b-cobalto" data-a="cobalto" aria-label="Acento cobalto"></button>
+  <button class="b-plata on" data-a="plata" aria-label="Acento plata"></button>
+  <span class="division"></span>
+  <button class="b-vidrio" id="btnVidrio" aria-label="Cambiar estilo de vidrio">vidrio · cristal</button>
+  <button class="b-vidrio" id="btnFondo" aria-label="Cambiar fondo">fondo · blanco</button>
+</div>
+
+<div class="grano" aria-hidden="true"></div>
+
+<div class="membrete" aria-hidden="true">
+  <span class="marca">KLO-SER</span>
+  <span class="v">PLUMA · V1</span>
+</div>
+
+<nav class="ruta" aria-label="Secciones">
+  <a href="#portada" data-nombre="Portada"></a>
+  <a href="#s1" data-nombre="Principios"></a>
+  <a href="#s2" data-nombre="Color y tipo"></a>
+  <a href="#s3" data-nombre="Métricas"></a>
+  <a href="#s4" data-nombre="Dashboard"></a>
+  <a href="#s5" data-nombre="Teléfono"></a>
+  <a href="#s6" data-nombre="La marca (intocable)"></a>
+  <a href="#s7" data-nombre="Organización"></a>
+</nav>
+
+<div class="lienzo">
+
+  <!-- ═══════════ PORTADA ═══════════ -->
+  <header class="portada" id="portada">
+    <span class="kicker">Propuesta · Sistema de diseño Klo-Ser · 2026</span>
+    <h1>PLU<b>MA</b></h1>
+    <p class="baja">
+      Negro editorial, un solo acento, números que hablan. La pluma es del gallo:
+      ligera, precisa, suficiente. Un sistema para que TODO Klo-Ser — dashboards,
+      métricas, sitio y Klo mismo — se sienta una sola pieza profesional.
+    </p>
+    <img class="gallo" src="../public/marca/gallo-camina.webp" alt="Klo, el gallo">
+  </header>
+
+  <!-- ═══════════ PRINCIPIOS ═══════════ -->
+  <section class="seccion" id="s1">
+    <h2>01 · Los seis principios</h2>
+    <div class="principios">
+      <div class="principio"><span class="n">1</span><h3>El negro es el escenario</h3><p>El fondo casi negro no decora: hace que el dato brille. Nada de blanco encandilante en pantallas de trabajo.</p></div>
+      <div class="principio"><span class="n">2</span><h3>Un acento por sistema</h3><p>Un solo color de acento en todo Klo-Ser, y siempre significa lo mismo: «esto importa ahora». Si decora, se pierde.</p></div>
+      <div class="principio"><span class="n">3</span><h3>El número es el héroe</h3><p>Grande y en peso ligero. La etiqueta susurra en mayúsculas espaciadas. Se lee de un vistazo desde lejos.</p></div>
+      <div class="principio"><span class="n">4</span><h3>Degradado sutil, nunca plano chillón</h3><p>Las marcas de dato llevan gradientes suaves y halos difuminados. El texto jamás lleva color encima.</p></div>
+      <div class="principio"><span class="n">5</span><h3>Klo aparece en momentos</h3><p>El gallo vive en la carga, los vacíos, el chat y el ícono — no en cada esquina. Mascota con clase, no estampado.</p></div>
+      <div class="principio"><span class="n">6</span><h3>Una acción principal por pantalla</h3><p>Máximo dos niveles de navegación. Cada pantalla responde una pregunta y ofrece UNA acción obvia.</p></div>
+    </div>
+  </section>
+
+  <!-- ═══════════ TOKENS ═══════════ -->
+  <section class="seccion" id="s2">
+    <h2>02 · Color y tipografía</h2>
+    <p class="intro">Cinco neutros y un acento. Prueba los tres acentos con el selector de arriba a la derecha — toda la lámina se re-pinta, así se sentiría el sistema completo.</p>
+    <div class="paleta">
+      <div class="sw" style="background:#0b0b0c"><span class="nom">Fondo</span><span class="hex">#0B0B0C</span></div>
+      <div class="sw" style="background:#151517"><span class="nom">Carbón</span><span class="hex">#151517</span></div>
+      <div class="sw" style="background:#1e1e21"><span class="nom">Humo</span><span class="hex">#1E1E21</span></div>
+      <div class="sw" style="background:#f5f4f2;color:#0b0b0c"><span class="nom">Tinta</span><span class="hex">#F5F4F2</span></div>
+      <div class="sw" style="background:#8e8e93;color:#0b0b0c"><span class="nom">Mute</span><span class="hex">#8E8E93</span></div>
+      <div class="sw" style="background:linear-gradient(155deg,var(--ac),var(--ac-2));color:var(--ac-tinta)"><span class="nom">Acento</span><span class="hex">a elegir ↗</span></div>
+    </div>
+    <div class="tipos">
+      <div class="tipo-card">
+        <span class="micro">Jost — display y números</span>
+        <div class="gigante num">3,786<small> leads</small></div>
+        <p style="margin-top:14px;color:var(--mute);font-size:13px">La misma fuente del wordmark KLŌSER. Geométrica, ligera, con carácter — los números grandes son la firma visual del sistema.</p>
+      </div>
+      <div class="tipo-card">
+        <span class="micro">Poppins — cuerpo e interfaz</span>
+        <p style="margin-top:14px;font-size:15px">La que ya vive en la app. Cálida y legible en chico.</p>
+        <p style="margin-top:10px;font-size:13px;color:var(--mute)">MICRO-ETIQUETAS · MAYÚSCULAS · ESPACIADAS<br>El susurro que acompaña a cada número héroe.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════ MÉTRICAS ═══════════ -->
+  <section class="seccion" id="s3">
+    <h2>03 · El lenguaje de las métricas</h2>
+    <p class="intro">Las piezas con las que se arma cualquier dashboard: tile héroe, tile de acento (solo UNO por pantalla), barras redondeadas con la barra que importa encendida, anillo de progreso y medidores por persona.</p>
+
+    <div class="grid-metricas">
+      <div class="m-card acento">
+        <div class="fila-top"><span class="micro">Leads de hoy</span><span class="puntos">⋮</span></div>
+        <div class="num-hero num">12<small> ~8h</small></div>
+        <span class="delta">3 sin asignar — atiéndelos</span>
+      </div>
+      <div class="m-card">
+        <div class="fila-top"><span class="micro">Primera respuesta</span><span class="puntos">⋮</span></div>
+        <div class="num-hero num">9<small> min</small></div>
+        <span class="delta">6 bajo la meta de 15</span>
+      </div>
+      <div class="m-card">
+        <div class="fila-top"><span class="micro">Visitas de la semana</span><span class="puntos">⋮</span></div>
+        <div class="num-hero num">17</div>
+        <span class="delta">5 confirmadas hoy</span>
+      </div>
+      <div class="m-card">
+        <div class="fila-top"><span class="micro">Cierres del mes</span><span class="puntos">⋮</span></div>
+        <div class="num-hero num">4<small> / $28.4M</small></div>
+        <span class="delta">2 en negociación</span>
+      </div>
+    </div>
+
+    <div class="grid-metricas" style="grid-template-columns: 1.35fr 1fr 1fr">
+      <div class="m-card" style="min-height:230px">
+        <div class="fila-top">
+          <span class="micro">Leads por día</span>
+          <span class="pills"><span>7D</span><span class="on">30D</span><span>6M</span></span>
+        </div>
+        <div class="barras">
+          <i style="height:34%"></i><i style="height:52%"></i><i style="height:41%"></i>
+          <i class="on" style="height:88%" data-v="14 · mié"></i>
+          <i style="height:60%"></i><i style="height:47%"></i><i style="height:71%"></i>
+        </div>
+      </div>
+      <div class="m-card" style="min-height:230px">
+        <span class="micro">Compromiso cumplido</span>
+        <div class="anillo-wrap">
+          <svg width="130" height="130" viewBox="0 0 130 130">
+            <circle cx="65" cy="65" r="55" fill="none" stroke="var(--humo-2)" stroke-width="9"/>
+            <circle class="anim" cx="65" cy="65" r="55" fill="none" stroke="var(--ac-marca)" stroke-width="9"
+              stroke-linecap="round" stroke-dasharray="290 345" transform="rotate(-90 65 65)"/>
+          </svg>
+          <div class="anillo-centro">
+            <div class="num" style="font-size:30px;font-weight:300">84%</div>
+            <span class="micro">esta semana</span>
+          </div>
+        </div>
+      </div>
+      <div class="m-card" style="min-height:230px">
+        <span class="micro">Carga del equipo</span>
+        <div class="lista-medidor">
+          <div class="lm-fila"><div class="lm-cab"><b>Daniela</b><span>7/10</span></div><div class="lm-pista"><div class="lm-relleno" style="width:70%"></div></div></div>
+          <div class="lm-fila"><div class="lm-cab"><b>Mauricio</b><span>4/10</span></div><div class="lm-pista"><div class="lm-relleno" style="width:40%"></div></div></div>
+          <div class="lm-fila"><div class="lm-cab"><b>Jair</b><span>9/10</span></div><div class="lm-pista"><div class="lm-relleno" style="width:90%"></div></div></div>
+          <div class="lm-fila"><div class="lm-cab"><b>Sofía</b><span>2/10</span></div><div class="lm-pista"><div class="lm-relleno" style="width:20%"></div></div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════ DASHBOARD ESCRITORIO ═══════════ -->
+  <section class="seccion" id="s4">
+    <h2>04 · El dashboard de dirección</h2>
+    <p class="intro">Así se vería «Hoy» del admin: responde en un vistazo ¿cómo vamos, quién necesita ayuda y qué se está enfriando? — con los datos que el sistema ya mide.</p>
+    <div class="dash">
+      <div class="d acento">
+        <span class="micro">Esperando asignación</span>
+        <div class="num-d num" style="font-weight:400">3</div>
+        <span style="font-size:11.5px">1 pasó el compromiso</span>
+      </div>
+      <div class="d"><span class="micro">Leads del mes</span><div class="num-d num">87<small> +12%</small></div></div>
+      <div class="d"><span class="micro">Primera respuesta</span><div class="num-d num">9<small> min</small></div></div>
+      <div class="d"><span class="micro">De guardia ahora</span><div class="num-d num" style="font-size:22px;margin-top:16px">Daniela<br><small>hasta 14:00</small></div></div>
+      <div class="d col2">
+        <span class="micro">El embudo — agosto</span>
+        <div class="embudo">
+          <div class="e"><span>Nuevos</span><i><b style="width:100%"></b></i><span>87</span></div>
+          <div class="e"><span>Contactados</span><i><b style="width:76%"></b></i><span>66</span></div>
+          <div class="e"><span>Visita</span><i><b style="width:39%"></b></i><span>34</span></div>
+          <div class="e"><span>Negociación</span><i><b style="width:15%"></b></i><span>13</span></div>
+          <div class="e"><span>Cerrados</span><i><b style="width:5%"></b></i><span>4</span></div>
+        </div>
+      </div>
+      <div class="d col2">
+        <span class="micro">Captaciones en revisión</span>
+        <div class="lista-medidor" style="margin-top:14px">
+          <div class="lm-fila"><div class="lm-cab"><b>Casa Del Valle · DR</b><span>95%</span></div><div class="lm-pista"><div class="lm-relleno" style="width:95%"></div></div></div>
+          <div class="lm-fila"><div class="lm-cab"><b>Depto Carrizalejo · MC</b><span>72%</span></div><div class="lm-pista"><div class="lm-relleno" style="width:72%"></div></div></div>
+          <div class="lm-fila"><div class="lm-cab"><b>Terreno Chipinque · JM</b><span>58%</span></div><div class="lm-pista"><div class="lm-relleno" style="width:58%"></div></div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════ TELÉFONOS ═══════════ -->
+  <section class="seccion" id="s5">
+    <h2>05 · En el bolsillo del asesor</h2>
+    <p class="intro">El mismo lenguaje en el teléfono — y Klo siempre a un toque, en su botón flotante.</p>
+    <div class="telefonos">
+      <div class="tel"><div class="pantalla">
+        <div class="estado"><div class="avatar">D</div><span class="puntos">⋮⋮</span></div>
+        <div class="dos">
+          <div class="t-card acento"><span class="micro">Tu día</span><div class="t-num num" style="font-weight:400">3<small> visitas</small></div><span style="font-size:10.5px">1ª a las 11:00 — Casa Obispado</span></div>
+          <div class="t-card"><span class="micro">Leads vivos</span><div class="t-num num">7<small> /10</small></div></div>
+        </div>
+        <div class="t-card">
+          <span class="micro">Responder ahora</span>
+          <div class="fila-lead"><span class="p on"></span><b>Roberto González</b><span>hace 4 min</span></div>
+          <div class="fila-lead"><span class="p"></span><b>Maru de la Garza</b><span>hace 1 h</span></div>
+          <div class="fila-lead"><span class="p"></span><b>Susana Obregón</b><span>hace 3 h</span></div>
+        </div>
+        <div class="t-card">
+          <div class="fila-top" style="display:flex;justify-content:space-between"><span class="micro">Tu mes</span><span class="pills"><span class="on">Leads</span><span>Cierres</span></span></div>
+          <div class="barras" style="height:64px">
+            <i style="height:40%"></i><i style="height:65%"></i><i class="on" style="height:90%" data-v="9"></i><i style="height:50%"></i><i style="height:30%"></i>
+          </div>
+        </div>
+        <div class="klo-fab" title="Klo, tu asistente">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none"><path d="M7 15c0-4 2-8 5-9-1 2 0 3 1.5 3.5C16 10 18 11.5 18 14c0 3-2.5 5-5.5 5S7 18 7 15Z" fill="var(--ac-tinta)"/><circle cx="14.4" cy="8.2" r="1" fill="var(--ac-tinta)"/></svg>
+        </div>
+      </div></div>
+
+      <div class="tel"><div class="pantalla">
+        <div class="estado"><span class="micro" style="color:var(--tinta)">← Bandeja</span><span class="puntos">⚙</span></div>
+        <div class="t-card acento">
+          <span class="micro">Esperando asignación</span>
+          <div class="t-num num" style="font-weight:400">3</div>
+          <span style="font-size:10.5px">Roberto pasó el compromiso — asígnalo</span>
+        </div>
+        <div class="t-card">
+          <span class="micro">Entrada de la semana</span>
+          <div class="barras" style="height:80px;margin-top:12px">
+            <i style="height:30%"></i><i style="height:55%"></i><i style="height:45%"></i><i style="height:70%"></i><i class="on" style="height:95%" data-v="hoy · 5"></i><i style="height:20%"></i><i style="height:12%"></i>
+          </div>
+        </div>
+        <div class="t-card" style="display:flex;align-items:center;gap:14px">
+          <svg width="72" height="72" viewBox="0 0 72 72">
+            <circle cx="36" cy="36" r="29" fill="none" stroke="var(--humo-2)" stroke-width="6"/>
+            <circle class="anim" cx="36" cy="36" r="29" fill="none" stroke="var(--ac-marca)" stroke-width="6" stroke-linecap="round" stroke-dasharray="128 182" transform="rotate(-90 36 36)"/>
+          </svg>
+          <div><div class="num" style="font-size:24px">9 min</div><span class="micro">primera respuesta · meta 15</span></div>
+        </div>
+        <div class="klo-fab" title="Klo, tu asistente">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none"><path d="M7 15c0-4 2-8 5-9-1 2 0 3 1.5 3.5C16 10 18 11.5 18 14c0 3-2.5 5-5.5 5S7 18 7 15Z" fill="var(--ac-tinta)"/><circle cx="14.4" cy="8.2" r="1" fill="var(--ac-tinta)"/></svg>
+        </div>
+      </div></div>
+    </div>
+  </section>
+
+  <!-- ═══════════ LOGOS ═══════════ -->
+  <section class="seccion" id="s6">
+    <h2>06 · La marca — intocable</h2>
+    <p class="intro">La identidad ya existe y ya es tuya: el logo de Klo-Ser, su tipografía y el
+    gallito que hiciste <b style="color:var(--ac-texto);font-weight:500">se quedan exactamente como están</b>.
+    PLUMA no rediseña la marca: viste la interfaz alrededor de ella. El gallo sigue siendo el alma —
+    aparece en la pantalla de carga, los estados vacíos, el chat de Klo y el ícono de la app.</p>
+    <div class="logos" style="grid-template-columns: 1fr 1fr">
+      <div class="logo-card claro">
+        <img src="../public/marca/gallo-voltea.webp" alt="Klo" style="width:110px;margin:0 auto">
+        <p class="logo-nota">El gallo original — sin tocar. Momentos con alma, no papel tapiz.</p>
+      </div>
+      <div class="logo-card">
+        <img src="../public/marca/gallo-camina.webp" alt="Klo caminando" style="width:130px;margin:0 auto">
+        <p class="logo-nota">El logo y su tipografía se usan tal cual existen hoy, sobre los fondos blanco y negro de PLUMA.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════ ORGANIZACIÓN ═══════════ -->
+  <section class="seccion" id="s7">
+    <h2>07 · La organización — fácil de entender</h2>
+    <p class="intro">Cada quien ve solo lo que le sirve, ordenado por la pregunta que responde. Klo (el chatbot) vive como botón flotante en TODAS las pantallas — nunca hay que buscarlo.</p>
+    <div class="org">
+      <div class="org-card">
+        <h3>Dirección (admin)</h3>
+        <ol>
+          <li class="ac"><b>Hoy</b> ¿cómo vamos? — el dashboard de arriba</li>
+          <li><b>Bandeja</b> ¿qué lead espera dueño?</li>
+          <li><b>Leads</b> ¿cómo va cada persona interesada?</li>
+          <li><b>Propiedades</b> el inventario vivo</li>
+          <li><b>Captaciones</b> lo que el equipo está subiendo</li>
+          <li><b>Equipo</b> asesores + guardias en un solo lugar</li>
+          <li><b>Ajustes</b> compromisos, umbrales, plantillas</li>
+        </ol>
+      </div>
+      <div class="org-card">
+        <h3>Asesor</h3>
+        <ol>
+          <li class="ac"><b>Hoy</b> mis visitas, mis pendientes, mi guardia</li>
+          <li><b>Leads</b> mi cartera de personas</li>
+          <li><b>Propiedades</b> inventario para ofrecer</li>
+          <li><b>Captaciones</b> mis propiedades subiendo al 100</li>
+          <li><b>Perfil</b> mi cuenta y mis números del mes</li>
+        </ol>
+        <p style="margin-top:14px;font-size:12px;color:var(--mute)">Cambio vs hoy: «Equipo» une Asesores + Guardias en el admin, y ambos roles ganan una pantalla «Hoy» que abre el día.</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="nota-final">
+    <b>LA LEY DE PLUMA — sellada el 14 de agosto de 2026:</b> acento <b>camaleón</b> (blanco sobre negro,
+    negro sobre blanco — sistema 100% monocromo), vidrio <b>cristal</b>, fondo <b>blanco</b> por default
+    y <b>cada persona elige su fondo</b> (blanco o negro) en su introducción de bienvenida al sistema.
+    La ruta de construcción: el switch de tema + la bienvenida del asesor, luego el dashboard «Hoy»,
+    después bandeja y pantallas del asesor, y al final la landing pública.
+  </div>
+
+  <div class="firma">
+    <span>PLUMA · Sistema de diseño <b>Klo-Ser</b></span>
+    <span>Montana Realty · 2026 · hecho con Klo 🐓</span>
+  </div>
+
+</div>
+
+<script>
+  document.querySelectorAll('.selector button[data-a]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      document.documentElement.setAttribute('data-acento', b.dataset.a)
+      document.querySelectorAll('.selector button[data-a]').forEach(function (x) { x.classList.remove('on') })
+      b.classList.add('on')
+    })
+  })
+  // Ciclos de vidrio y fondo: cada clic avanza al siguiente estilo.
+  var raiz = document.documentElement
+  var VIDRIOS = ['off', 'humo', 'cristal', 'ahumado']
+  var FONDOS = ['negro', 'blanco', 'foto']
+  var btnV = document.getElementById('btnVidrio')
+  var btnF = document.getElementById('btnFondo')
+  btnV.addEventListener('click', function () {
+    var v = VIDRIOS[(VIDRIOS.indexOf(raiz.getAttribute('data-vidrio') || 'off') + 1) % VIDRIOS.length]
+    raiz.setAttribute('data-vidrio', v)
+    btnV.textContent = 'vidrio · ' + v
+  })
+  btnF.addEventListener('click', function () {
+    var f = FONDOS[(FONDOS.indexOf(raiz.getAttribute('data-fondo') || 'negro') + 1) % FONDOS.length]
+    raiz.setAttribute('data-fondo', f)
+    btnF.textContent = 'fondo · ' + f
+  })
+
+  // ── Animaciones de entrada: cascada por sección al scrollear ──
+  var ANIMABLES = '.principio, .sw, .tipo-card, .m-card, .dash, .logo-card, .org-card, .tel, .nota-final, .paleta > *'
+  document.querySelectorAll('.seccion, .portada').forEach(function (seccion) {
+    seccion.classList.add('prevela')
+    var hijos = seccion.querySelectorAll(ANIMABLES)
+    hijos.forEach(function (el, i) {
+      el.classList.add('rev')
+      el.style.transitionDelay = Math.min(i * 70, 560) + 'ms'
+    })
+  })
+  var observador = new IntersectionObserver(function (entradas) {
+    entradas.forEach(function (e) {
+      if (e.isIntersecting) {
+        e.target.classList.remove('prevela')
+        observador.unobserve(e.target)
+        // al terminar la cascada, quitar los delays para que el hover sea inmediato
+        var seccion = e.target
+        setTimeout(function () {
+          seccion.querySelectorAll('.rev').forEach(function (el) { el.style.transitionDelay = '' })
+        }, 1400)
+      }
+    })
+  }, { threshold: 0.15 })
+  document.querySelectorAll('.seccion, .portada').forEach(function (s) { observador.observe(s) })
+
+  // ── punto activo en la ruta lateral ──
+  var puntos = document.querySelectorAll('.ruta a')
+  var seguidor = new IntersectionObserver(function (entradas) {
+    entradas.forEach(function (e) {
+      if (!e.isIntersecting) return
+      var id = e.target.id
+      puntos.forEach(function (p) {
+        p.classList.toggle('on', p.getAttribute('href') === '#' + id)
+      })
+    })
+  }, { rootMargin: '-40% 0px -50% 0px' })
+  document.querySelectorAll('.seccion, .portada').forEach(function (s) { seguidor.observe(s) })
+</script>
+</body>
+</html>

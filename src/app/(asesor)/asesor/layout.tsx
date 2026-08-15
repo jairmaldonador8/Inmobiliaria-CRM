@@ -2,6 +2,7 @@ import { requireAsesor } from '@/lib/auth/usuario-actual'
 import { PantallaCarga } from '@/components/marca/pantalla-carga'
 import { Wordmark } from '@/components/marca/wordmark'
 import { CambiarVista } from '@/components/nav/cambiar-vista'
+import { CambiarTema } from '@/components/nav/cambiar-tema'
 import { NavAsesor, NavAsesorSidebar, PieSesionAsesor } from '@/components/nav/nav-asesor'
 import { Campana } from '@/components/notificaciones/campana'
 import BannerInstalacion from '@/components/push/banner-instalacion'
@@ -45,7 +46,10 @@ export default async function AsesorLayout({
       <aside className="fixed inset-y-0 left-0 z-40 hidden w-60 flex-col border-r border-slate-200 bg-white lg:flex">
         <div className="flex items-center justify-between gap-2 px-6 pt-6 pb-4">
           <Wordmark className="text-[14px] text-slate-900" />
-          <Campana href="/asesor/notificaciones" />
+          <div className="flex items-center">
+            <CambiarTema />
+            <Campana href="/asesor/notificaciones" />
+          </div>
         </div>
         <NavAsesorSidebar />
         <PieSesionAsesor nombre={usuario.nombre} />
@@ -55,7 +59,10 @@ export default async function AsesorLayout({
       <header className="sticky top-0 z-30 flex min-h-14 items-center border-b border-slate-200 bg-white px-2 pt-[env(safe-area-inset-top)] lg:hidden">
         <div className="mx-auto flex w-full max-w-md items-center justify-between px-2">
           <Wordmark className="text-[14px] text-slate-900" />
-          <Campana href="/asesor/notificaciones" />
+          <div className="flex items-center">
+            <CambiarTema />
+            <Campana href="/asesor/notificaciones" />
+          </div>
         </div>
       </header>
 

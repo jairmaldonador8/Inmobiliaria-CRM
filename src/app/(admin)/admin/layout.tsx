@@ -2,6 +2,7 @@ import { requireAdmin } from '@/lib/auth/usuario-actual'
 import { PantallaCarga } from '@/components/marca/pantalla-carga'
 import { Wordmark } from '@/components/marca/wordmark'
 import { CambiarVista } from '@/components/nav/cambiar-vista'
+import { CambiarTema } from '@/components/nav/cambiar-tema'
 import { BarraMovilAdmin, NavAdmin, PieSesion } from '@/components/nav/nav-admin'
 import { TabBarAdmin } from '@/components/nav/tab-bar-admin'
 import { Campana } from '@/components/notificaciones/campana'
@@ -46,10 +47,13 @@ export default async function AdminLayout({
               Montana Realty
             </p>
           </div>
-          <Campana
-            href="/admin/notificaciones"
-            className="text-slate-400 hover:bg-slate-900 hover:text-white"
-          />
+          <div className="flex items-center">
+            <CambiarTema className="text-slate-400 hover:bg-slate-900 hover:text-white" />
+            <Campana
+              href="/admin/notificaciones"
+              className="text-slate-400 hover:bg-slate-900 hover:text-white"
+            />
+          </div>
         </div>
         <NavAdmin />
         <PieSesion nombre={usuario.nombre} />
@@ -58,10 +62,13 @@ export default async function AdminLayout({
       {/* Barra superior móvil */}
       <BarraMovilAdmin
         campana={
-          <Campana
-            href="/admin/notificaciones"
-            className="text-slate-300 hover:bg-slate-900 hover:text-white"
-          />
+          <>
+            <CambiarTema className="text-slate-300 hover:bg-slate-900 hover:text-white" />
+            <Campana
+              href="/admin/notificaciones"
+              className="text-slate-300 hover:bg-slate-900 hover:text-white"
+            />
+          </>
         }
       />
 

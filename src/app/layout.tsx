@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Geist_Mono, Jost, Poppins } from "next/font/google";
+import { cookies } from "next/headers";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 
@@ -33,15 +34,20 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Tema PLUMA: la cookie la escribe CambiarTema; leerla aquí evita el
+  // parpadeo claro→oscuro al recargar (el html ya llega con la clase).
+  const tema = (await cookies()).get("tema")?.value;
+  const oscuro = tema === "negro" ? " dark" : "";
+
   return (
     <html
       lang="es"
-      className={`${poppins.variable} ${jost.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${poppins.variable} ${jost.variable} ${geistMono.variable} h-full antialiased${oscuro}`}
     >
       <body className="min-h-full flex flex-col">
         {children}
