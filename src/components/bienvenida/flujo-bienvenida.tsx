@@ -8,9 +8,12 @@ import {
   BellRing,
   Building2,
   Check,
+  ChevronDown,
   CircleCheck,
+  EllipsisVertical,
   History,
   Share,
+  SquarePlus,
   Zap,
 } from 'lucide-react'
 
@@ -148,6 +151,14 @@ export function FlujoBienvenida({
   const nombrePila = useMemo(() => nombre.trim().split(/\s+/)[0] ?? nombre, [nombre])
   const esIos = useMemo(
     () => typeof navigator !== 'undefined' && /iphone|ipad|ipod/i.test(navigator.userAgent),
+    []
+  )
+  // ¿Ya está corriendo COMO app? Entonces no hay nada que instalar.
+  const enApp = useMemo(
+    () =>
+      typeof window !== 'undefined' &&
+      (window.matchMedia('(display-mode: standalone)').matches ||
+        (navigator as Navigator & { standalone?: boolean }).standalone === true),
     []
   )
 
@@ -352,21 +363,68 @@ export function FlujoBienvenida({
                 Así vive en tu pantalla de inicio, abre al instante y los avisos llegan como de
                 cualquier app.
               </p>
-              {promptInstalar ? (
+
+              {enApp ? (
+                <div className="mt-3 flex items-center gap-3 rounded-lg bg-slate-100 p-3">
+                  <span className="grid size-8 shrink-0 place-content-center rounded-full bg-slate-900 text-white">
+                    <Check className="size-4" aria-hidden />
+                  </span>
+                  <p className="text-xs font-semibold text-slate-700">
+                    ¡Ya estás dentro de la app instalada! Nada que hacer aquí.
+                  </p>
+                </div>
+              ) : promptInstalar ? (
                 <Button size="lg" className="mt-3 w-full" onClick={() => void promptInstalar.prompt()}>
+                  <SquarePlus data-icon="inline-start" />
                   Instalar Klo-Ser
                 </Button>
               ) : esIos ? (
-                <p className="mt-3 flex items-start gap-2 rounded-lg bg-slate-100 p-3 text-xs leading-relaxed text-slate-600">
-                  <Share className="mt-0.5 size-4 shrink-0" aria-hidden />
-                  En iPhone: toca el botón Compartir de Safari y elige «Agregar a pantalla de
-                  inicio».
-                </p>
+                <>
+                  {/* Guía visual iOS: Apple no permite instalar con un botón,
+                      así que la llevamos de la mano paso a paso. */}
+                  <ol className="mt-3 grid gap-2">
+                    <li className="flex items-center gap-3 rounded-lg bg-slate-100 p-3">
+                      <span className="grid size-7 shrink-0 place-content-center rounded-full bg-slate-900 text-[11px] font-bold text-white">1</span>
+                      <span className="flex items-center gap-1.5 text-xs leading-relaxed text-slate-700">
+                        Toca el botón <Share className="inline size-4 text-[#0A84FF]" aria-hidden />
+                        <b>Compartir</b> en la barra de Safari
+                      </span>
+                    </li>
+                    <li className="flex items-center gap-3 rounded-lg bg-slate-100 p-3">
+                      <span className="grid size-7 shrink-0 place-content-center rounded-full bg-slate-900 text-[11px] font-bold text-white">2</span>
+                      <span className="flex items-center gap-1.5 text-xs leading-relaxed text-slate-700">
+                        Desliza y elige <SquarePlus className="inline size-4" aria-hidden />
+                        <b>«Agregar a pantalla de inicio»</b>
+                      </span>
+                    </li>
+                    <li className="flex items-center gap-3 rounded-lg bg-slate-100 p-3">
+                      <span className="grid size-7 shrink-0 place-content-center rounded-full bg-slate-900 text-[11px] font-bold text-white">3</span>
+                      <span className="text-xs leading-relaxed text-slate-700">
+                        Toca <b>«Agregar»</b> — y Klo queda en tu inicio 🐓
+                      </span>
+                    </li>
+                  </ol>
+                  <p className="mt-3 flex flex-col items-center gap-0.5 text-[11px] font-medium text-slate-500">
+                    El botón Compartir está aquí abajo
+                    <ChevronDown className="size-4 animate-bounce" aria-hidden />
+                  </p>
+                </>
               ) : (
-                <p className="mt-3 rounded-lg bg-slate-100 p-3 text-xs leading-relaxed text-slate-600">
-                  En el menú de tu navegador (⋮) busca «Instalar aplicación» o «Agregar a
-                  pantalla de inicio».
-                </p>
+                <ol className="mt-3 grid gap-2">
+                  <li className="flex items-center gap-3 rounded-lg bg-slate-100 p-3">
+                    <span className="grid size-7 shrink-0 place-content-center rounded-full bg-slate-900 text-[11px] font-bold text-white">1</span>
+                    <span className="flex items-center gap-1.5 text-xs leading-relaxed text-slate-700">
+                      Abre el menú <EllipsisVertical className="inline size-4" aria-hidden /> del
+                      navegador
+                    </span>
+                  </li>
+                  <li className="flex items-center gap-3 rounded-lg bg-slate-100 p-3">
+                    <span className="grid size-7 shrink-0 place-content-center rounded-full bg-slate-900 text-[11px] font-bold text-white">2</span>
+                    <span className="text-xs leading-relaxed text-slate-700">
+                      Toca <b>«Instalar aplicación»</b> o <b>«Agregar a pantalla de inicio»</b>
+                    </span>
+                  </li>
+                </ol>
               )}
             </div>
 
