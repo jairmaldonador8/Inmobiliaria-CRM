@@ -17,6 +17,7 @@ import { EtiquetaClasificacionEB } from '@/components/leads/etiqueta-clasificaci
 import { HojaAsignarLead } from '@/components/leads/hoja-asignar-lead'
 import { DialogRegistrarLead } from '@/components/leads/dialog-registrar-lead'
 import { PanelAscua } from '@/components/bandeja/panel-ascua'
+import { PanelBandeja, type PielBandeja } from '@/components/bandeja/panel-bandeja'
 import FondoFintech from '@/components/fintech/fondo-fintech'
 import TarjetaGlass from '@/components/fintech/tarjeta-glass'
 
@@ -24,9 +25,22 @@ import TarjetaGlass from '@/components/fintech/tarjeta-glass'
 // nav-admin) queda diferido: requiere pasar el conteo desde el layout de
 // servidor al nav de cliente. Por ahora el conteo vive en este encabezado.
 
-export default async function PaginaBandeja() {
+export default async function PaginaBandeja({
+  searchParams,
+}: {
+  searchParams: Promise<{ piel?: string }>
+}) {
   await requireAdmin()
   const supabase = createAdminClient()
+
+  // La bandeja de escritorio viste PLUMA (la ley, 2026-08-14): monocromo
+  // camaleón + vidrio cristal, sigue al switch de tema sola. Las pieles de
+  // la exploración siguen disponibles para comparar:
+  // ?piel=tinta | clara | obsidiana | ascua.
+  const { piel } = await searchParams
+  const usarAscua = piel === 'ascua'
+  const pielPanel: PielBandeja =
+    piel === 'clara' || piel === 'tinta' || piel === 'obsidiana' ? piel : 'pluma'
 
   // Un solo instante para toda la pantalla: si cada banda leyera su propio
   // Date.now(), un lead podría caer en dos bandas distintas del mismo render.
@@ -157,22 +171,39 @@ export default async function PaginaBandeja() {
         </FondoFintech>
       </div>
 
-      {/* Escritorio — estilo «Ascua» (aprobado 2026-08-12). El móvil se queda
-          con la estética «Fintech Muro» de arriba: son dos lenguajes distintos
-          a propósito hasta que se decida migrar también el móvil. */}
+      {/* Escritorio — piel «Clara» (colores del sistema, pedida 2026-08-14);
+          ?piel=ascua muestra la original para comparar. El móvil se queda con
+          la estética «Fintech Muro» de arriba: son dos lenguajes distintos a
+          propósito hasta que se decida migrar también el móvil. */}
       <div className="hidden lg:-mx-10 lg:-my-8 lg:block">
-        <PanelAscua
-          leads={leads}
-          asesores={opcionesAsesor}
-          carga={carga}
-          semana={semana}
-          medianaMin={medianaMin}
-          guardia={guardiaPanel}
-          ahora={ahora.getTime()}
-          registrarLead={
-            <DialogRegistrarLead asesores={opcionesAsesor} propiedades={opcionesPropiedad} />
-          }
-        />
+        {usarAscua ? (
+          <PanelAscua
+            leads={leads}
+            asesores={opcionesAsesor}
+            carga={carga}
+            semana={semana}
+            medianaMin={medianaMin}
+            guardia={guardiaPanel}
+            ahora={ahora.getTime()}
+            registrarLead={
+              <DialogRegistrarLead asesores={opcionesAsesor} propiedades={opcionesPropiedad} />
+            }
+          />
+        ) : (
+          <PanelBandeja
+            piel={pielPanel}
+            leads={leads}
+            asesores={opcionesAsesor}
+            carga={carga}
+            semana={semana}
+            medianaMin={medianaMin}
+            guardia={guardiaPanel}
+            ahora={ahora.getTime()}
+            registrarLead={
+              <DialogRegistrarLead asesores={opcionesAsesor} propiedades={opcionesPropiedad} />
+            }
+          />
+        )}
       </div>
     </>
   )

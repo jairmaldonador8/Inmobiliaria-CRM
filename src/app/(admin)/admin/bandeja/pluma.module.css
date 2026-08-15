@@ -1,0 +1,463 @@
+/*
+  Piel «PLUMA» de la bandeja — LA LEY (sellada 2026-08-14) hecha pantalla:
+
+  - 100% monocromo camaleón: lee la escala galería VIVA (var(--galeria-*)),
+    así que el switch de tema la voltea completa sin una línea de JS.
+  - Vidrio «cristal» en las tarjetas del coro: translúcidas, blur profundo,
+    brillo especular arriba. La tarjeta de acento es SÓLIDA (el solista no
+    se transparenta): tinta sobre claro, perla sobre oscuro.
+  - El número es el héroe (Jost ligera, var(--font-logo)); la etiqueta
+    susurra en mayúsculas espaciadas.
+  - La urgencia se dice con TINTA: lo vencido es lo único sólido y pesado.
+*/
+
+.raiz {
+  /* hereda el fondo del tema; el ambiente son dos veladuras de tinta */
+  --tinta: var(--galeria-900);
+  --tinta-2: var(--galeria-700);
+  --mute: var(--galeria-500);
+  --linea: color-mix(in oklab, var(--galeria-900) 12%, transparent);
+  --linea-2: color-mix(in oklab, var(--galeria-900) 20%, transparent);
+  --tile: color-mix(in oklab, var(--galeria-900) 5%, transparent);
+  --tile-2: color-mix(in oklab, var(--galeria-900) 9%, transparent);
+
+  /* el acento camaleón: tinta profunda en claro, perla en oscuro */
+  --acento: var(--galeria-950);
+  --acento-tinta: var(--galeria-50);
+
+  /* marcas de dato (el componente las lee con var()) — todo tinta */
+  --arco-1: var(--galeria-600);
+  --arco-2: var(--galeria-950);
+  --arco-pista: color-mix(in oklab, var(--galeria-900) 10%, transparent);
+  --arco-halo: var(--galeria-500);
+  --arco-punto: var(--galeria-50);
+  --arco-meta: var(--galeria-400);
+  --sw-ahora: linear-gradient(90deg, var(--galeria-600), var(--galeria-950));
+  --sem-vencido: linear-gradient(150deg, var(--galeria-700), var(--galeria-950));
+  --sem-hecho: color-mix(in oklab, var(--galeria-900) 8%, transparent);
+  --sem-cola: transparent;
+  --sem-cola-ring: var(--galeria-300);
+  --waffle-on: var(--galeria-50);
+  --waffle-off: color-mix(in oklab, var(--galeria-50) 24%, transparent);
+  --carga-libre: var(--galeria-300);
+  --carga-cargado: linear-gradient(90deg, var(--galeria-400), var(--galeria-600));
+  --carga-tope: linear-gradient(90deg, var(--galeria-700), var(--galeria-950));
+  --carga-tope-glow: 0 0 10px color-mix(in oklab, var(--galeria-900) 30%, transparent);
+
+  /* vidrio cristal (el claro; .dark lo re-declara abajo) */
+  --vidrio: rgb(255 255 255 / 0.3);
+  --vidrio-borde: rgb(255 255 255 / 0.75);
+  --vidrio-linea: color-mix(in oklab, var(--galeria-900) 17%, transparent);
+  --vidrio-brillo: rgb(255 255 255 / 0.85);
+  --sombra: 0 16px 44px color-mix(in oklab, var(--galeria-900) 18%, transparent);
+
+  position: relative;
+  isolation: isolate;
+  min-height: calc(100dvh - 3rem);
+  color: var(--tinta);
+  background:
+    radial-gradient(70% 30% at 50% -4%, color-mix(in oklab, var(--galeria-900) 15%, transparent), transparent 70%),
+    radial-gradient(34% 24% at 90% 60%, color-mix(in oklab, var(--galeria-900) 10%, transparent), transparent 72%),
+    radial-gradient(22% 16% at 12% 85%, color-mix(in oklab, var(--galeria-900) 9%, transparent), transparent 75%);
+  padding: 26px 26px 40px;
+}
+
+:global(.dark) .raiz {
+  --vidrio: rgb(21 21 23 / 0.72);
+  --vidrio-borde: rgb(252 252 250 / 0.16);
+  --vidrio-linea: rgb(252 252 250 / 0.17);
+  --vidrio-brillo: rgb(252 252 250 / 0.22);
+  --sombra: 0 18px 50px rgb(0 0 0 / 0.45);
+  background:
+    radial-gradient(70% 30% at 50% -4%, rgb(252 252 250 / 0.05), transparent 70%),
+    radial-gradient(34% 24% at 90% 60%, rgb(252 252 250 / 0.03), transparent 70%);
+}
+
+/* ── tarjetas: vidrio cristal ─────────────────────────────────── */
+.card {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  border-radius: 24px;
+  padding: 20px 22px;
+  background: linear-gradient(135deg, var(--vidrio), color-mix(in oklab, var(--vidrio) 55%, transparent) 45%, var(--vidrio));
+  backdrop-filter: blur(30px) saturate(1.3);
+  -webkit-backdrop-filter: blur(30px) saturate(1.3);
+  box-shadow:
+    inset 0 1px 1px var(--vidrio-brillo),
+    inset 0 0 0 1px var(--vidrio-linea),
+    var(--sombra);
+  transition: transform 0.25s cubic-bezier(0.3, 0.8, 0.3, 1);
+}
+.card:hover {
+  transform: translateY(-2px);
+}
+
+/* rayado finísimo desvaneciéndose (la textura de la casa) */
+.rayada::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    135deg,
+    color-mix(in oklab, var(--galeria-900) 4%, transparent) 0 1px,
+    transparent 1px 11px
+  );
+  mask-image: linear-gradient(160deg, #000 0%, transparent 62%);
+}
+.card > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* La ÚNICA tarjeta sólida: el acento camaleón. */
+.fuego {
+  color: var(--acento-tinta);
+  background: linear-gradient(
+    158deg,
+    color-mix(in oklab, var(--acento) 88%, var(--acento-tinta)) 0%,
+    var(--acento) 55%
+  );
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  box-shadow: 0 18px 44px color-mix(in oklab, var(--galeria-900) 26%, transparent);
+}
+:global(.dark) .fuego {
+  box-shadow: 0 18px 44px rgb(0 0 0 / 0.5), 0 0 60px rgb(252 252 250 / 0.07);
+}
+
+/* ── piezas ───────────────────────────────────────────────────── */
+.et {
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--mute);
+}
+.fuego .et,
+.fuego .pie {
+  color: color-mix(in oklab, var(--acento-tinta) 68%, transparent);
+}
+.fuegoNota {
+  color: color-mix(in oklab, var(--acento-tinta) 68%, transparent);
+}
+.pie {
+  margin-top: 10px;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--mute);
+}
+.cifra {
+  margin-top: 9px;
+  font-family: var(--font-logo);
+  font-size: clamp(44px, 4.8vw, 60px);
+  font-weight: 300;
+  line-height: 0.94;
+  letter-spacing: -0.02em;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 500;
+  white-space: nowrap;
+  color: var(--tinta-2);
+  background: var(--tile-2);
+}
+/* urgencia en tinta: el vencido es sólido e invertido */
+.chipVencido {
+  color: var(--acento-tinta);
+  background: var(--acento);
+}
+.chipCurso {
+  color: var(--tinta);
+  background: var(--tile-2);
+}
+.chipCola {
+  color: var(--mute);
+  background: var(--tile);
+}
+
+/* ── bandas y filas de la cola ───────────────────────────────── */
+.banda {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 18px 0 9px;
+}
+.banda h3 {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.bandaN {
+  border-radius: 999px;
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--mute);
+  background: var(--tile);
+}
+.regla {
+  flex: 1;
+  height: 1px;
+  background: var(--linea);
+}
+
+.fila {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  border-radius: 16px;
+  padding: 13px 15px;
+  margin-bottom: 7px;
+  background: color-mix(in oklab, var(--vidrio) 65%, transparent);
+  box-shadow: inset 0 0 0 1px var(--vidrio-linea);
+  transition: background 0.15s;
+}
+.fila:hover {
+  background: var(--vidrio);
+}
+/* la fila vencida carga un filete de tinta */
+.alerta {
+  box-shadow:
+    inset 3px 0 0 var(--acento),
+    inset 0 0 0 1px var(--vidrio-linea);
+}
+.punto {
+  width: 8px;
+  height: 8px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--galeria-300);
+}
+.aviso .punto {
+  background: var(--galeria-500);
+}
+.alerta .punto {
+  background: var(--acento);
+  box-shadow: 0 0 10px color-mix(in oklab, var(--acento) 55%, transparent);
+}
+
+.medidor {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-top: 8px;
+  max-width: 320px;
+}
+.pista {
+  flex: 1;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--tile-2);
+}
+.relleno {
+  height: 100%;
+  border-radius: 2px;
+  background: var(--galeria-300);
+}
+.aviso .relleno {
+  background: linear-gradient(90deg, var(--galeria-400), var(--galeria-600));
+}
+.alerta .relleno {
+  background: linear-gradient(90deg, var(--galeria-700), var(--acento));
+  box-shadow: 0 0 10px color-mix(in oklab, var(--acento) 30%, transparent);
+}
+.espera {
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  color: var(--mute);
+}
+.alerta .espera {
+  font-weight: 600;
+  color: var(--tinta);
+}
+
+/* ── línea de tiempo de la semana ─────────────────────────────── */
+.rejilla,
+.rejillaCab {
+  display: grid;
+  grid-template-columns: 52px repeat(7, minmax(0, 1fr));
+  gap: 6px;
+}
+.rejillaCab {
+  margin-bottom: 10px;
+}
+.rejillaCab div {
+  text-align: center;
+  font-size: 11.5px;
+  line-height: 1.35;
+  color: var(--mute);
+}
+.rejillaCab div b {
+  display: block;
+  margin-top: 2px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--tinta-2);
+}
+/* hoy: el número en píldora de tinta */
+.rejillaCab .hoy b {
+  display: inline-grid;
+  place-content: center;
+  min-width: 26px;
+  height: 26px;
+  margin-top: 2px;
+  border-radius: 999px;
+  color: var(--acento-tinta);
+  background: var(--acento);
+}
+.hora {
+  padding-top: 5px;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  color: var(--mute);
+}
+.celda {
+  position: relative;
+  min-height: 42px;
+  border-top: 1px solid var(--linea);
+}
+.celdaHoy {
+  background: color-mix(in oklab, var(--galeria-900) 3.5%, transparent);
+}
+.bloque {
+  position: absolute;
+  inset: 3px 1px auto;
+  overflow: hidden;
+  border-radius: 10px;
+  padding: 7px 10px;
+  font-size: 11px;
+  line-height: 1.3;
+}
+.bloque b {
+  display: block;
+  overflow: hidden;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.bloque span {
+  display: block;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  opacity: 0.75;
+}
+/* la gramática: TINTA sólida = vencido; tenue = asignado; punteado = en cola */
+.bVencido {
+  color: var(--acento-tinta);
+  background: linear-gradient(150deg, color-mix(in oklab, var(--acento) 82%, var(--acento-tinta)), var(--acento));
+  box-shadow: 0 4px 14px color-mix(in oklab, var(--galeria-900) 25%, transparent);
+}
+.bHecho {
+  color: var(--mute);
+  background: var(--tile);
+  box-shadow: inset 0 0 0 1px var(--linea);
+}
+.bHecho span {
+  opacity: 0.62;
+}
+.bCola {
+  color: var(--tinta-2);
+  background: color-mix(in oklab, var(--vidrio) 50%, transparent);
+  border: 1px dashed var(--galeria-300);
+}
+
+/* ── waffle (vive en la tarjeta de acento) ────────────────────── */
+.waffle {
+  display: grid;
+  grid-template-columns: repeat(8, 16px);
+  gap: 6px;
+  margin-top: 16px;
+}
+.waffle i {
+  display: block;
+  width: 16px;
+  height: 16px;
+  border-radius: 5px;
+  background: currentColor;
+}
+
+/* ── arco ─────────────────────────────────────────────────────── */
+.arco {
+  position: relative;
+  margin-top: 4px;
+}
+.arco svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+.arcoCentro {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  padding-bottom: 16px;
+  text-align: center;
+}
+.v {
+  font-family: var(--font-logo);
+  font-size: 34px;
+  font-weight: 300;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+.n {
+  margin-top: 5px;
+  font-size: 11.5px;
+  color: var(--mute);
+}
+
+/* ── leyenda ──────────────────────────────────────────────────── */
+.leyenda {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px 15px;
+  margin-top: 12px;
+  font-size: 12px;
+  color: var(--tinta-2);
+}
+.leyenda span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.leyenda i {
+  display: block;
+  width: 9px;
+  height: 9px;
+  flex: none;
+  border-radius: 3px;
+}
+
+/* AsignarLead ya es del sistema y el sistema ya es camaleón: no se toca. */
+.asignar {
+  position: relative;
+}
+
+/* CTA sobre la tarjeta de acento: invertido respecto a ella. */
+.cta button {
+  width: 100%;
+  border-radius: 999px;
+  background: var(--acento-tinta);
+  color: var(--acento);
+  font-weight: 600;
+  transition: opacity 0.15s;
+}
+.cta button:hover {
+  opacity: 0.9;
+}

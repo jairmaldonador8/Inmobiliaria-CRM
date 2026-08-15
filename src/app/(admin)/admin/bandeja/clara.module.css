@@ -1,0 +1,423 @@
+/*
+  Estilo «Clara» de la bandeja: la MISMA información y estructura del panel
+  Ascua, pero con los colores y el lenguaje del resto del sistema (blanco,
+  slate, tarjetas con ring) — pedido de Jair 2026-08-14 tras ver Ascua en
+  producción.
+
+  Reglas de color que se conservan de Ascua, traducidas al sistema claro:
+
+  1. UN color significa «atiéndelo ahora»: el rosa/ámbar encendido. Solo lo
+     llevan lo vencido y el tope de carga. El resto es slate.
+  2. Los degradados y difuminados van sobre las MARCAS de dato (barras,
+     arco, bloques), nunca detrás de texto.
+  3. Una sola tarjeta de acento (regla del bento aprobado): la de
+     «Esperando asignación», en el negro editorial de la marca.
+*/
+
+.raiz {
+  --tinta: #0f172a; /* slate-900 */
+  --tinta-2: #475569; /* slate-600 */
+  --mute: #64748b; /* slate-500 */
+  --suave: #94a3b8; /* slate-400 */
+  --linea: #e2e8f0; /* slate-200 */
+  --tile: #f8fafc; /* slate-50 */
+  --tile-2: #f1f5f9; /* slate-100 */
+
+  --alerta: #e11d48; /* rose-600 */
+  --alerta-alto: #fb7185; /* rose-400 */
+  --aviso: #d97706; /* amber-600 */
+  --aviso-suave: #f59e0b; /* amber-500 */
+  --ok: #047857; /* emerald-700 */
+
+  --acento: #0f172a; /* negro editorial de la marca */
+
+  /* marcas de dato (el componente las lee con var()) */
+  --arco-1: #475569;
+  --arco-2: #0f172a;
+  --arco-pista: #e2e8f0;
+  --arco-halo: #64748b;
+  --arco-punto: #ffffff;
+  --arco-meta: #94a3b8;
+  --sw-ahora: linear-gradient(90deg, #475569, #0f172a);
+  --sem-vencido: linear-gradient(150deg, #f59e0b, #e11d48);
+  --sem-hecho: #f1f5f9;
+  --sem-cola: #ffffff;
+  --sem-cola-ring: #e2e8f0;
+  --waffle-on: #f8fafc;
+  --waffle-off: rgb(248 250 252 / 0.22);
+  --carga-libre: #cbd5e1;
+  --carga-cargado: linear-gradient(90deg, #fbbf24, #f59e0b);
+  --carga-tope: linear-gradient(90deg, #f59e0b, #e11d48);
+  --carga-tope-glow: 0 0 12px rgb(225 29 72 / 0.35);
+
+  position: relative;
+  min-height: calc(100dvh - 3rem);
+  color: var(--tinta);
+  /* lavado suave arriba: el difuminado que pide el estilo, sin oscurecer */
+  background:
+    radial-gradient(90% 34% at 50% -4%, rgb(226 232 240 / 0.9), transparent 70%),
+    #f8fafc;
+  padding: 26px 26px 40px;
+}
+
+/* ── tarjetas ─────────────────────────────────────────────────── */
+.card {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  border-radius: 24px;
+  padding: 20px 22px;
+  background-color: #ffffff;
+  box-shadow:
+    inset 0 0 0 1px var(--linea),
+    0 1px 2px rgb(15 23 42 / 0.04);
+}
+
+/* rayado diagonal finísimo desvaneciéndose: la misma textura de Ascua,
+   en tinta clara */
+.rayada::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: repeating-linear-gradient(135deg, rgb(15 23 42 / 0.03) 0 1px, transparent 1px 11px);
+  mask-image: linear-gradient(160deg, #000 0%, transparent 62%);
+}
+.card > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* La única tarjeta de acento: negro editorial con bloom sutil arriba a la
+   izquierda, como la lámpara de Ascua pero en tinta. */
+.fuego {
+  color: #f8fafc;
+  background-color: var(--acento);
+  background-image:
+    radial-gradient(78% 62% at 16% 6%, rgb(148 163 184 / 0.35), transparent 62%),
+    linear-gradient(158deg, #1e293b 0%, #0f172a 55%, #020617 100%);
+  box-shadow:
+    inset 0 0 0 1px rgb(148 163 184 / 0.12),
+    0 18px 40px rgb(15 23 42 / 0.22);
+}
+
+/* ── piezas ───────────────────────────────────────────────────── */
+.et {
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--mute);
+}
+.fuego .et,
+.fuego .pie {
+  color: rgb(226 232 240 / 0.72);
+}
+.fuegoNota {
+  color: rgb(226 232 240 / 0.72);
+}
+.pie {
+  margin-top: 10px;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--mute);
+}
+.cifra {
+  margin-top: 9px;
+  font-size: clamp(38px, 4.4vw, 54px);
+  font-weight: 600;
+  line-height: 0.94;
+  letter-spacing: -0.045em;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 500;
+  white-space: nowrap;
+  color: var(--tinta-2);
+  background: var(--tile-2);
+}
+.chipVencido {
+  color: var(--alerta);
+  background: rgb(225 29 72 / 0.09);
+}
+.chipCurso {
+  color: var(--aviso);
+  background: rgb(217 119 6 / 0.1);
+}
+.chipCola {
+  color: var(--ok);
+  background: rgb(4 120 87 / 0.09);
+}
+
+/* ── bandas y filas de la cola ───────────────────────────────── */
+.banda {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 18px 0 9px;
+}
+.banda h3 {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.bandaN {
+  border-radius: 999px;
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--mute);
+  background: var(--tile-2);
+}
+.regla {
+  flex: 1;
+  height: 1px;
+  background: var(--linea);
+}
+
+.fila {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  border-radius: 16px;
+  padding: 13px 15px;
+  margin-bottom: 7px;
+  background: var(--tile);
+  transition: background 0.15s;
+}
+.fila:hover {
+  background: var(--tile-2);
+}
+.punto {
+  width: 8px;
+  height: 8px;
+  flex: none;
+  border-radius: 50%;
+  background: #cbd5e1;
+}
+.aviso .punto {
+  background: var(--aviso-suave);
+}
+/* el único punto encendido de la lista */
+.alerta .punto {
+  background: var(--alerta);
+  box-shadow: 0 0 10px rgb(225 29 72 / 0.55);
+}
+
+.medidor {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-top: 8px;
+  max-width: 320px;
+}
+.pista {
+  flex: 1;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--tile-2);
+}
+.relleno {
+  height: 100%;
+  border-radius: 2px;
+  background: #cbd5e1;
+}
+.aviso .relleno {
+  background: linear-gradient(90deg, #fbbf24, var(--aviso-suave));
+}
+.alerta .relleno {
+  background: linear-gradient(90deg, var(--aviso-suave), var(--alerta));
+  box-shadow: 0 0 12px rgb(225 29 72 / 0.35);
+}
+.espera {
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  color: var(--mute);
+}
+.alerta .espera {
+  font-weight: 600;
+  color: var(--alerta);
+}
+
+/* ── línea de tiempo de la semana ─────────────────────────────── */
+.rejilla,
+.rejillaCab {
+  display: grid;
+  grid-template-columns: 52px repeat(7, minmax(0, 1fr));
+  gap: 6px;
+}
+.rejillaCab {
+  margin-bottom: 10px;
+}
+.rejillaCab div {
+  text-align: center;
+  font-size: 11.5px;
+  line-height: 1.35;
+  color: var(--mute);
+}
+.rejillaCab div b {
+  display: block;
+  margin-top: 2px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--tinta-2);
+}
+.rejillaCab .hoy b {
+  color: var(--tinta);
+}
+.hora {
+  padding-top: 5px;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  color: var(--mute);
+}
+.celda {
+  position: relative;
+  min-height: 34px;
+  border-top: 1px solid var(--linea);
+}
+.celdaHoy {
+  background: rgb(15 23 42 / 0.03);
+}
+.bloque {
+  position: absolute;
+  inset: 3px 0 auto;
+  overflow: hidden;
+  border-radius: 9px;
+  padding: 6px 9px;
+  font-size: 11px;
+  line-height: 1.25;
+}
+.bloque b {
+  display: block;
+  overflow: hidden;
+  font-size: 11.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.bloque span {
+  display: block;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  opacity: 0.7;
+}
+/* lo vencido es lo único encendido de toda la rejilla */
+.bVencido {
+  color: #ffffff;
+  background: linear-gradient(150deg, var(--aviso-suave), var(--alerta));
+  box-shadow:
+    0 0 20px rgb(225 29 72 / 0.28),
+    0 3px 10px rgb(15 23 42 / 0.12);
+}
+.bHecho {
+  color: var(--tinta-2);
+  background: var(--tile-2);
+}
+.bHecho span {
+  opacity: 0.62;
+}
+.bCola {
+  color: var(--tinta-2);
+  background: #ffffff;
+  box-shadow: inset 0 0 0 1px var(--linea);
+}
+
+/* ── waffle (vive en la tarjeta de acento oscura) ─────────────── */
+.waffle {
+  display: grid;
+  grid-template-columns: repeat(8, 16px);
+  gap: 6px;
+  margin-top: 16px;
+}
+.waffle i {
+  display: block;
+  width: 16px;
+  height: 16px;
+  border-radius: 5px;
+  background: currentColor;
+}
+
+/* ── arco ─────────────────────────────────────────────────────── */
+.arco {
+  position: relative;
+  margin-top: 4px;
+}
+.arco svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+.arcoCentro {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  padding-bottom: 16px;
+  text-align: center;
+}
+.v {
+  font-size: 31px;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.035em;
+}
+.n {
+  margin-top: 5px;
+  font-size: 11.5px;
+  color: var(--mute);
+}
+
+/* ── leyenda ──────────────────────────────────────────────────── */
+.leyenda {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px 15px;
+  margin-top: 12px;
+  font-size: 12px;
+  color: var(--tinta-2);
+}
+.leyenda span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.leyenda i {
+  display: block;
+  width: 9px;
+  height: 9px;
+  flex: none;
+  border-radius: 3px;
+}
+
+/* AsignarLead ya trae los colores del sistema: aquí no se toca nada. */
+.asignar {
+  position: relative;
+}
+
+/* El disparador de «Registrar lead» vive sobre la tarjeta negra: invertido
+   (blanco sobre tinta) para que no sea negro sobre negro. Solo afecta al
+   botón del trigger — el dialog se porta fuera de la tarjeta. */
+.cta button {
+  width: 100%;
+  border-radius: 999px;
+  background: #f8fafc;
+  color: #0f172a;
+  font-weight: 600;
+  transition: background 0.15s;
+}
+.cta button:hover {
+  background: #e2e8f0;
+}
