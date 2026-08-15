@@ -1,0 +1,283 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Klo-Ser · Semana 2 — el sistema cobró vida</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500;600&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --fondo:#0b0b0c; --carbon:#151517; --humo:#1e1e21; --tinta:#f5f4f2;
+    --tinta2:#b9b9bd; --mute:#8e8e93; --linea:rgb(245 244 242/.09);
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{background:var(--fondo);color:var(--tinta);font-family:'Poppins',sans-serif;font-weight:300;line-height:1.55;-webkit-font-smoothing:antialiased}
+  body::before{content:'';position:fixed;inset:0;z-index:-1;pointer-events:none;
+    background:radial-gradient(50% 30% at 50% -5%,rgb(245 244 242/.06),transparent 70%),
+               radial-gradient(30% 22% at 90% 60%,rgb(245 244 242/.035),transparent 70%)}
+  .lienzo{max-width:1080px;margin:0 auto;padding:0 30px 120px}
+  h1,h2,h3,.num{font-family:'Jost',sans-serif}
+  h2{display:flex;align-items:center;gap:18px;font-size:14px;font-weight:500;letter-spacing:.3em;text-transform:uppercase;color:var(--tinta)}
+  h2::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,var(--linea),transparent)}
+  h2 .n{color:var(--mute);font-size:12px}
+  .seccion{margin-top:110px}
+  .intro{max-width:66ch;margin-top:14px;color:var(--tinta2);font-size:15px}
+  .card{background:rgb(21 21 23/.7);border:1px solid var(--linea);border-radius:22px;backdrop-filter:blur(20px)}
+  .grano{position:fixed;inset:0;z-index:90;pointer-events:none;opacity:.045;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+
+  /* portada */
+  .portada{min-height:92vh;display:grid;align-content:center;position:relative}
+  .kicker{color:var(--mute);font-size:12px;letter-spacing:.4em;text-transform:uppercase;font-weight:500}
+  .portada h1{margin-top:16px;font-size:clamp(42px,7.5vw,92px);font-weight:300;line-height:1.02;letter-spacing:-.01em;max-width:14ch}
+  .portada h1 b{font-weight:600}
+  .portada .sub{margin-top:22px;max-width:60ch;color:var(--tinta2);font-size:16px}
+  .portada img.gallo{position:absolute;right:2%;bottom:10%;width:min(170px,20vw)}
+
+  /* titulares */
+  .titulares{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-top:32px}
+  .tit{padding:26px}
+  .tit .num-h{font-size:44px;font-weight:300;line-height:1;letter-spacing:-.02em}
+  .tit .num-h small{font-size:16px;color:var(--mute)}
+  .tit h3{font-weight:500;font-size:16px;margin-top:10px}
+  .tit p{font-size:13px;color:var(--mute);margin-top:6px}
+  .tit.estrella{background:linear-gradient(158deg,#fcfcfa,#e8e8ea);color:#0b0b0c;border:none}
+  .tit.estrella p{color:rgb(11 11 12/.6)}
+
+  /* números git */
+  .datos{display:flex;flex-wrap:wrap;gap:34px;margin-top:30px;padding:26px 30px}
+  .dato .v{font-family:'Jost';font-size:38px;font-weight:300}
+  .dato .k{font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--mute)}
+
+  /* historias con captura */
+  .historia{display:grid;grid-template-columns:0.9fr 1.4fr;gap:28px;align-items:center;margin-top:34px}
+  .historia.voltea{grid-template-columns:1.4fr 0.9fr}
+  .historia .texto h3{font-size:24px;font-weight:400;letter-spacing:-.01em}
+  .historia .texto h3 b{font-weight:600}
+  .historia .texto p{margin-top:12px;font-size:14px;color:var(--tinta2)}
+  .historia .texto ul{margin:14px 0 0 0;list-style:none;display:grid;gap:8px}
+  .historia .texto li{font-size:13px;color:var(--tinta2);padding-left:18px;position:relative}
+  .historia .texto li::before{content:'—';position:absolute;left:0;color:var(--mute)}
+  .marco{padding:10px;overflow:hidden}
+  .marco img{display:block;width:100%;border-radius:14px}
+  .pie-img{margin-top:10px;text-align:center;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--mute)}
+  .metrica-hero{margin-top:18px;padding:18px 22px;display:inline-block}
+  .metrica-hero .v{font-family:'Jost';font-size:34px;font-weight:300}
+  .metrica-hero .k{font-size:11px;color:var(--mute);letter-spacing:.1em;text-transform:uppercase}
+
+  /* marca */
+  .marca-fila{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-top:30px}
+  .marca-card{display:grid;place-content:center;min-height:230px;padding:24px;text-align:center;gap:10px}
+  .marca-card img{max-height:170px;margin:0 auto}
+  .marca-card.blanca{background:#fcfcfa;border:none}
+  .marca-card span{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--mute)}
+  .marca-card.blanca span{color:rgb(11 11 12/.5)}
+
+  /* roadmap */
+  .ruta{display:grid;gap:10px;margin-top:30px}
+  .paso-r{display:grid;grid-template-columns:52px 1fr;gap:16px;padding:18px 22px;align-items:center}
+  .paso-r .n{font-family:'Jost';font-size:22px;font-weight:300;color:var(--mute)}
+  .paso-r b{font-weight:500}
+  .paso-r p{font-size:12.5px;color:var(--mute)}
+  .paso-r.ya .n{color:var(--tinta)}
+  .paso-r.ya{border-color:rgb(245 244 242/.22)}
+
+  .firma{margin-top:100px;padding-top:22px;border-top:1px solid var(--linea);display:flex;justify-content:space-between;font-family:'Jost';font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--mute)}
+
+  @media (max-width:860px){
+    .titulares,.marca-fila{grid-template-columns:1fr}
+    .historia,.historia.voltea{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+<div class="grano" aria-hidden="true"></div>
+<div class="lienzo">
+
+  <!-- ═══ PORTADA ═══ -->
+  <header class="portada">
+    <span class="kicker">Klo-Ser · Reporte semanal · 11–15 de agosto 2026</span>
+    <h1>Semana 2:<br>el sistema <b>cobró vida</b></h1>
+    <p class="sub">
+      Hace siete días, Klo-Ser era un CRM que registraba. Hoy es una máquina que
+      <b style="font-weight:500;color:var(--tinta)">caza leads en menos de un minuto</b>, califica
+      captaciones como los portales, se viste con un sistema de diseño propio y recibe a cada
+      asesor nuevo de la mano. Esto es lo que se construyó — y todo está en producción.
+    </p>
+    <img class="gallo" src="../public/marca/gallo-camina.webp" alt="Klo">
+  </header>
+
+  <!-- ═══ TITULARES ═══ -->
+  <section class="seccion">
+    <h2><span class="n">01</span>Los cuatro titulares</h2>
+    <div class="titulares">
+      <div class="card tit estrella">
+        <div class="num-h num">15 min <small>→</small> ≤60 s</div>
+        <h3>Ningún lead se enfría</h3>
+        <p>El tiempo entre que un cliente pregunta por una casa y el sistema lo tiene listo para asignar se desplomó. En bienes raíces, el que contesta primero, gana.</p>
+      </div>
+      <div class="card tit">
+        <div class="num-h num">1 clic</div>
+        <h3>De captación a portales</h3>
+        <p>El asesor sube su captación, un score estilo Inmuebles24 la califica en vivo, y la dirección la publica en EasyBroker y los portales con un solo clic.</p>
+      </div>
+      <div class="card tit">
+        <div class="num-h num">2<small> temas, 1 sistema</small></div>
+        <h3>PLUMA, diseño propio</h3>
+        <p>Un sistema de diseño monocromo camaleón —blanco galería / negro grafito— con vidrio cristal, aplicado a TODA la plataforma. Identidad de producto, no plantilla.</p>
+      </div>
+      <div class="card tit">
+        <div class="num-h num">5<small> pasos</small></div>
+        <h3>Onboarding que enamora</h3>
+        <p>Cada asesor nuevo entra por una introducción guiada: su perfil, su contraseña, su tema, sus notificaciones y la app instalada. Adopción por diseño.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ NÚMEROS ═══ -->
+  <section class="seccion">
+    <h2><span class="n">02</span>La semana en números</h2>
+    <div class="card datos">
+      <div class="dato"><div class="v num">24</div><div class="k">commits a producción</div></div>
+      <div class="dato"><div class="v num">123</div><div class="k">archivos tocados</div></div>
+      <div class="dato"><div class="v num">+17,376</div><div class="k">líneas nuevas</div></div>
+      <div class="dato"><div class="v num">12</div><div class="k">migraciones de base</div></div>
+      <div class="dato"><div class="v num">606</div><div class="k">tests en verde</div></div>
+      <div class="dato"><div class="v num">3</div><div class="k">PRs al sitio público</div></div>
+    </div>
+  </section>
+
+  <!-- ═══ HISTORIA 1: VELOCIDAD ═══ -->
+  <section class="seccion">
+    <h2><span class="n">03</span>Historia uno · La máquina de leads</h2>
+    <div class="historia">
+      <div class="texto">
+        <h3>Cada lead llega <b>caliente</b></h3>
+        <p>Se cerraron las tres fugas por donde se escapaban clientes:</p>
+        <ul>
+          <li>EasyBroker ahora se revisa <b>cada 60 segundos</b> (antes: cada 15 minutos).</li>
+          <li>El sitio oficial de Montana manda cada formulario <b>directo al sistema, al instante</b> — incluso descubrimos y reparamos un formulario que llevaba semanas tirando leads a la basura.</li>
+          <li>Los botones de WhatsApp del sitio ahora <b>capturan al cliente antes de abrir el chat</b>.</li>
+        </ul>
+        <div class="card metrica-hero">
+          <div class="v num">&lt; 1 min</div>
+          <div class="k">mediana real de primera respuesta esta semana</div>
+        </div>
+      </div>
+      <div>
+        <div class="card marco"><img src="assets/semana2/bandeja.png" alt="La bandeja de dirección"></div>
+        <p class="pie-img">La bandeja real: cola por urgencia, semana de entrada, primera respuesta</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ HISTORIA 2: CAPTACIONES ═══ -->
+  <section class="seccion">
+    <h2><span class="n">04</span>Historia dos · La fábrica de inventario</h2>
+    <div class="historia voltea">
+      <div>
+        <div class="card marco"><img src="assets/semana2/captaciones.png" alt="Módulo de captaciones"></div>
+        <p class="pie-img">Captaciones: el equipo sube, el score califica, la dirección publica</p>
+      </div>
+      <div class="texto">
+        <h3>Captaciones con <b>control de calidad</b></h3>
+        <p>El inventario es el producto de una inmobiliaria. Ahora tiene línea de producción:</p>
+        <ul>
+          <li>El asesor sube su captación con fotos y ve <b>su score de calidad en vivo</b> — las mismas reglas que premian los portales mexicanos (10+ fotos, título correcto, descripción completa, geolocalización).</li>
+          <li>La dirección revisa un dashboard con el porcentaje y el checklist regla por regla.</li>
+          <li>Aprobada = <b>un clic y está en EasyBroker</b>, sindicada a Inmuebles24 y los demás portales, firmada con las iniciales del asesor.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ HISTORIA 3: PLUMA ═══ -->
+  <section class="seccion">
+    <h2><span class="n">05</span>Historia tres · PLUMA, la piel del producto</h2>
+    <div class="historia">
+      <div class="texto">
+        <h3>Un sistema de diseño <b>propio</b></h3>
+        <p>Los productos que se ven genéricos se venden como genéricos. PLUMA es la identidad
+        visual de Klo-Ser hecha ley:</p>
+        <ul>
+          <li><b>Monocromo camaleón:</b> blanco galería para trabajar, negro grafito para el drama — y cada persona elige el suyo, que la sigue a cualquier dispositivo.</li>
+          <li><b>Vidrio cristal:</b> tarjetas translúcidas con profundidad real, en toda la plataforma.</li>
+          <li><b>El número es el héroe:</b> métricas que se leen desde el otro lado de la sala.</li>
+        </ul>
+      </div>
+      <div>
+        <div class="card marco"><img src="assets/semana2/dashboard.png" alt="Dashboard con PLUMA"></div>
+        <p class="pie-img">Toda la plataforma re-vestida — el mismo código, dos mundos</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ HISTORIA 4: BIENVENIDA ═══ -->
+  <section class="seccion">
+    <h2><span class="n">06</span>Historia cuatro · La puerta de entrada</h2>
+    <div class="historia voltea">
+      <div style="max-width:340px;justify-self:center">
+        <div class="card marco"><img src="assets/semana2/bienvenida.png" alt="La bienvenida del asesor"></div>
+        <p class="pie-img">El primer login: Klo en persona recibe al asesor</p>
+      </div>
+      <div class="texto">
+        <h3>El equipo entra <b>solo</b></h3>
+        <p>El costo oculto de todo software es enseñarlo. Klo-Ser se enseña a sí mismo: en su
+        primer login, cada asesor pasa por una introducción de cinco pasos donde Klo lo recibe
+        por su nombre.</p>
+        <ul>
+          <li>Hace suya la cuenta: foto de perfil, su nombre, su propia contraseña.</li>
+          <li>Elige su tema (y lo ve cambiar en vivo).</li>
+          <li>Activa sus notificaciones e <b>instala la app guiado paso a paso</b> — con instrucciones visuales hasta en iPhone.</li>
+          <li>Y si un día olvida su contraseña, el ciclo de recuperación completo ya existe.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ KLO, LA MARCA ═══ -->
+  <section class="seccion">
+    <h2><span class="n">07</span>Klo, la cara de todo esto</h2>
+    <p class="intro">El gallito no es decoración: es el diferenciador de marca en una industria de
+    logos genéricos. Esta semana quedó listo su arsenal completo — vectorizado, en alta
+    resolución y animado — sin tocar un solo trazo del diseño original.</p>
+    <div class="marca-fila">
+      <div class="card marca-card blanca">
+        <img src="assets/logo/gallo-frontal-blanco-4k.png" alt="Klo frontal">
+        <span>Frontal · 4K sobre blanco</span>
+      </div>
+      <div class="card marca-card blanca">
+        <img src="assets/logo/gallo-lateral-blanco-4k.png" alt="Klo caminando">
+        <span>Lateral · 4K sobre blanco</span>
+      </div>
+      <div class="card marca-card">
+        <img src="assets/logo/gallo-camina.apng.png" alt="Klo animado">
+        <span>Animado · PNG sin fondo</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ LO QUE SIGUE ═══ -->
+  <section class="seccion">
+    <h2><span class="n">08</span>Lo que sigue — el plan de 90 días</h2>
+    <p class="intro">La meta declarada: el segundo brokerage como primer cliente pagando en
+    noviembre. La tecnología ya corre; lo que sigue es operación y expansión.</p>
+    <div class="ruta">
+      <div class="card paso-r ya"><span class="n num">✓</span><div><b>Infraestructura de leads en tiempo real</b><p>Hecho esta semana — sitio, portales y WhatsApp del sitio, todo cae al sistema.</p></div></div>
+      <div class="card paso-r ya"><span class="n num">✓</span><div><b>Captaciones + PLUMA + Bienvenida</b><p>Hecho esta semana — la plataforma está lista para recibir al equipo.</p></div></div>
+      <div class="card paso-r"><span class="n num">1</span><div><b>El equipo adentro</b><p>Alta de los 4 asesores, guardias capturadas → el teléfono empieza a sonar. Es el paso que enciende todo lo construido.</p></div></div>
+      <div class="card paso-r"><span class="n num">2</span><div><b>Operar y medir</b><p>Semanas de uso real en Montana: mediana de respuesta, % dentro del compromiso, cierres — los números del caso de estudio.</p></div></div>
+      <div class="card paso-r"><span class="n num">3</span><div><b>Klo, el asistente</b><p>El chatbot entrenado con la operación real de Montana — el moat que nadie puede copiar.</p></div></div>
+      <div class="card paso-r"><span class="n num">4</span><div><b>Brokerage #2</b><p>Primer cliente de pago con onboarding de una semana. De proyecto interno a empresa.</p></div></div>
+    </div>
+  </section>
+
+  <div class="firma">
+    <span>KLO-SER · Semana 2 · Todo en producción</span>
+    <span>Jair Maldonado + Klo 🐓 · Montana Realty</span>
+  </div>
+</div>
+</body>
+</html>
