@@ -3,6 +3,7 @@ import { PantallaCarga } from '@/components/marca/pantalla-carga'
 import { Wordmark } from '@/components/marca/wordmark'
 import { CambiarVista } from '@/components/nav/cambiar-vista'
 import { CambiarTema } from '@/components/nav/cambiar-tema'
+import { SincronizarTema } from '@/components/nav/sincronizar-tema'
 import { BarraMovilAdmin, NavAdmin, PieSesion } from '@/components/nav/nav-admin'
 import { TabBarAdmin } from '@/components/nav/tab-bar-admin'
 import { Campana } from '@/components/notificaciones/campana'
@@ -33,6 +34,7 @@ export default async function AdminLayout({
         } as React.CSSProperties
       }
     >
+      <SincronizarTema tema={usuario.tema} />
       <PantallaCarga />
       <RegistroPush />
       <BannerInstalacion />

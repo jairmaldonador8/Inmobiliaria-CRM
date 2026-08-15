@@ -95,7 +95,14 @@ export function PantallaCarga() {
         algún día el desmontaje volviera a fallar, una capa invisible jamás
         debe poder bloquear el sistema.
       */
-      className={`fixed inset-0 z-[120] flex flex-col items-center justify-center gap-5 bg-slate-50 transition-opacity duration-[260ms] ease-out ${
+      /*
+        Fondo FIJO en blanco galería (no `bg-slate-50`): el gallo es negro y
+        con el tema camaleón `slate-50` se vuelve grafito — desaparecería.
+        Además `bg-slate-50` carga las veladuras globales de PLUMA, que aquí
+        se veían como un marco raro alrededor del gallo en el teléfono. La
+        pantalla de arranque es un momento de marca: siempre clara, limpia.
+      */
+      className={`fixed inset-0 z-[120] flex flex-col items-center justify-center gap-5 bg-[#F7F6F3] transition-opacity duration-[260ms] ease-out ${
         fase === 'saliendo' ? 'pointer-events-none opacity-0' : 'opacity-100'
       }`}
     >
@@ -117,7 +124,7 @@ export function PantallaCarga() {
         que le cuelga a la derecha de la última letra y descentraba el texto
         respecto al gallo.
       */}
-      <Wordmark className="pl-[0.42em] text-[18px] text-slate-900 sm:text-[20px]" />
+      <Wordmark className="pl-[0.42em] text-[18px] text-[#141414] sm:text-[20px]" />
       <span className="sr-only">Cargando…</span>
     </div>
   )

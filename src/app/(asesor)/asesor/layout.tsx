@@ -1,8 +1,11 @@
+import { redirect } from 'next/navigation'
+
 import { requireAsesor } from '@/lib/auth/usuario-actual'
 import { PantallaCarga } from '@/components/marca/pantalla-carga'
 import { Wordmark } from '@/components/marca/wordmark'
 import { CambiarVista } from '@/components/nav/cambiar-vista'
 import { CambiarTema } from '@/components/nav/cambiar-tema'
+import { SincronizarTema } from '@/components/nav/sincronizar-tema'
 import { NavAsesor, NavAsesorSidebar, PieSesionAsesor } from '@/components/nav/nav-asesor'
 import { Campana } from '@/components/notificaciones/campana'
 import BannerInstalacion from '@/components/push/banner-instalacion'
@@ -13,6 +16,12 @@ export default async function AsesorLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   const usuario = await requireAsesor()
+
+  // Primera vez de un asesor: su introduccion (elige tema, activa avisos).
+  // Los admin en vista de asesor no se redirigen: la bienvenida es del equipo.
+  if (usuario.rol === 'asesor' && !usuario.bienvenida_completada) {
+    redirect('/bienvenida')
+  }
 
   return (
     <div
@@ -31,6 +40,7 @@ export default async function AsesorLayout({
       }
     >
       <PantallaCarga />
+      <SincronizarTema tema={usuario.tema} />
       <RegistroPush />
       <BannerInstalacion />
 

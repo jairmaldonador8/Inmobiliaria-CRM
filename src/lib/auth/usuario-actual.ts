@@ -15,6 +15,10 @@ export type UsuarioActual = {
   telefono: string | null
   foto: string | null
   activo: boolean
+  /** Tema PLUMA elegido ('blanco' | 'negro'); la cookie es solo transporte. */
+  tema: 'blanco' | 'negro'
+  /** false hasta que el asesor pasa por /bienvenida (el layout lo redirige). */
+  bienvenida_completada: boolean
 }
 
 /**
@@ -39,7 +43,7 @@ export const usuarioActual = cache(async (): Promise<UsuarioActual | null> => {
 
   const { data: usuario } = await supabase
     .from('usuarios')
-    .select('user_id, agencia_id, rol, nombre, telefono, foto, activo')
+    .select('user_id, agencia_id, rol, nombre, telefono, foto, activo, tema, bienvenida_completada')
     .eq('user_id', data.claims.sub)
     .maybeSingle()
 

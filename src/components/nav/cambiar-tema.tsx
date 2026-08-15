@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { Moon, Sun } from 'lucide-react'
 
+import { guardarTema } from '@/lib/bienvenida/acciones'
 import { cn } from '@/lib/utils'
 
 /**
@@ -29,7 +30,11 @@ export function CambiarTema({ className }: { className?: string }) {
   function alternar() {
     const activado = document.documentElement.classList.toggle('dark')
     setOscuro(activado)
-    document.cookie = `tema=${activado ? 'negro' : 'blanco'}; path=/; max-age=31536000; samesite=lax`
+    const tema = activado ? 'negro' : 'blanco'
+    document.cookie = `tema=${tema}; path=/; max-age=31536000; samesite=lax`
+    // La preferencia sigue al usuario entre dispositivos: se guarda en su
+    // perfil, best-effort (si falla, la cookie local sigue mandando aquí).
+    void guardarTema(tema).catch(() => {})
   }
 
   return (
