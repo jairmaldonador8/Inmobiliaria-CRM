@@ -15,6 +15,7 @@ import {
 } from 'lucide-react'
 
 import { activarAvisos } from '@/lib/push/cliente'
+import { Wordmark } from '@/components/marca/wordmark'
 import { completarBienvenida, type TemaPluma } from '@/lib/bienvenida/acciones'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -31,13 +32,11 @@ const PASOS = ['Bienvenida', 'Tu tema', 'Tus avisos', 'Listo'] as const
  */
 function KloAnfitrion({ volteado }: { volteado: boolean }) {
   return (
-    // Disco perla FIJO (no camaleón): el gallo es negro y debe verse igual
-    // de bien cuando el asesor elige el tema oscuro en el paso del tema.
-    <div
-      aria-hidden
-      className="mx-auto grid h-28 w-28 place-content-center rounded-full bg-[#F7F6F3] shadow-[inset_0_0_0_1px_rgb(20_20_20/0.08),0_10px_30px_rgb(0_0_0/0.12)]"
-    >
-      <div className="relative h-20 w-20">
+    <div aria-hidden className="relative mx-auto flex flex-col items-center">
+      {/* Resplandor difuso (SIN contorno): invisible en claro; en oscuro le
+          da piso de luz al gallo negro para que nunca desaparezca. */}
+      <div className="absolute top-1 left-1/2 h-28 w-36 -translate-x-1/2 rounded-full bg-[radial-gradient(closest-side,rgb(247_246_243/0.85),transparent)] blur-md" />
+      <div className="relative h-28 w-28">
         {volteado ? (
           <span className="gallo-carga gallo-carga--voltea" />
         ) : (
@@ -47,6 +46,8 @@ function KloAnfitrion({ volteado }: { volteado: boolean }) {
           </>
         )}
       </div>
+      {/* La firma de la casa, como en la pantalla de carga */}
+      <Wordmark className="relative mt-1 pl-[0.42em] text-[13px] text-slate-900" />
     </div>
   )
 }
@@ -185,6 +186,16 @@ export function FlujoBienvenida({
       if ('error' in resultado) {
         toast.error(resultado.error)
         return
+      }
+      // La bienvenida YA pidió avisos e instalación: los banners antiguos
+      // del área del asesor quedan descartados para no pedir doble.
+      try {
+        window.localStorage.setItem(
+          'kloser-push-banner',
+          JSON.stringify({ descartadoInstalarEn: Date.now(), descartadoAvisosEn: Date.now() })
+        )
+      } catch {
+        /* almacenamiento bloqueado: el banner viejo sabrá comportarse */
       }
       router.replace('/asesor')
       router.refresh()
@@ -333,29 +344,30 @@ export function FlujoBienvenida({
                 </>
               )}
 
-              <div className="mt-4 border-t border-slate-200 pt-4">
-                <p className="text-xs font-semibold tracking-wide text-slate-500 uppercase">
-                  Y para tenerla como app
+            </div>
+
+            <div className="mt-3 rounded-xl bg-white p-5 ring-1 ring-slate-200">
+              <p className="text-sm font-semibold text-slate-900">Instala Klo-Ser como app</p>
+              <p className="mt-1 text-xs leading-relaxed text-slate-500">
+                Así vive en tu pantalla de inicio, abre al instante y los avisos llegan como de
+                cualquier app.
+              </p>
+              {promptInstalar ? (
+                <Button size="lg" className="mt-3 w-full" onClick={() => void promptInstalar.prompt()}>
+                  Instalar Klo-Ser
+                </Button>
+              ) : esIos ? (
+                <p className="mt-3 flex items-start gap-2 rounded-lg bg-slate-100 p-3 text-xs leading-relaxed text-slate-600">
+                  <Share className="mt-0.5 size-4 shrink-0" aria-hidden />
+                  En iPhone: toca el botón Compartir de Safari y elige «Agregar a pantalla de
+                  inicio».
                 </p>
-                {promptInstalar ? (
-                  <Button
-                    variant="outline"
-                    className="mt-2 w-full"
-                    onClick={() => void promptInstalar.prompt()}
-                  >
-                    Instalar Klo-Ser
-                  </Button>
-                ) : esIos ? (
-                  <p className="mt-2 flex items-start gap-2 text-xs leading-relaxed text-slate-500">
-                    <Share className="mt-0.5 size-3.5 shrink-0" aria-hidden />
-                    En iPhone: toca Compartir y luego «Agregar a pantalla de inicio».
-                  </p>
-                ) : (
-                  <p className="mt-2 text-xs leading-relaxed text-slate-500">
-                    En el menú de tu navegador busca «Instalar aplicación».
-                  </p>
-                )}
-              </div>
+              ) : (
+                <p className="mt-3 rounded-lg bg-slate-100 p-3 text-xs leading-relaxed text-slate-600">
+                  En el menú de tu navegador (⋮) busca «Instalar aplicación» o «Agregar a
+                  pantalla de inicio».
+                </p>
+              )}
             </div>
 
             <div className="mt-auto pt-8">
