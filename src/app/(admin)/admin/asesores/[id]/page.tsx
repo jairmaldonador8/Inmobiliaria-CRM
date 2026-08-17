@@ -59,9 +59,44 @@ export default async function PaginaPipelineAsesor({
   const activos = leads.filter(
     (lead) => lead.etapa !== 'cerrado_ganado' && lead.etapa !== 'cerrado_perdido'
   )
-  const ganados = leads.filter((lead) => lead.etapa === 'cerrado_ganado').length
-  const perdidos = leads.filter((lead) => lead.etapa === 'cerrado_perdido').length
+  const ganados = leads.filter((lead) => lead.etapa === 'cerrado_ganado')
+  const perdidos = leads.filter((lead) => lead.etapa === 'cerrado_perdido')
   const segmentos = agruparPorEtapa(activos)
+
+  // Última actividad por lead (seguimientos): es lo que revela un lead
+  // muerto — cuánto lleva parado, no cuándo llegó. Mismo patrón del home:
+  // consulta ordenada desc, el primer registro visto por lead es el último.
+  const ultimaActividad = new Map<string, string>()
+  if (leads.length > 0) {
+    const { data: seguimientos } = await supabase
+      .from('seguimientos')
+      .select('lead_id, creado_en')
+      .in(
+        'lead_id',
+        leads.map((lead) => lead.id)
+      )
+      .order('creado_en', { ascending: false })
+    for (const s of seguimientos ?? []) {
+      if (!ultimaActividad.has(s.lead_id)) ultimaActividad.set(s.lead_id, s.creado_en)
+    }
+  }
+
+  const DIA_MS = 24 * 60 * 60 * 1000
+  const ahora = Date.now()
+
+  function metaActividad(lead: LeadGlobal): { texto: string; parado: boolean } {
+    const referencia = ultimaActividad.get(lead.id)
+    if (!referencia) {
+      return {
+        texto: `sin actividad · llegó ${formatDistanceToNow(new Date(lead.creado_en), { addSuffix: true, locale: es })}`,
+        parado: ahora - new Date(lead.creado_en).getTime() > 3 * DIA_MS,
+      }
+    }
+    return {
+      texto: `actividad ${formatDistanceToNow(new Date(referencia), { addSuffix: true, locale: es })}`,
+      parado: ahora - new Date(referencia).getTime() > 3 * DIA_MS,
+    }
+  }
 
   const porEtapa = new Map<EtapaLead, LeadGlobal[]>()
   for (const etapa of ETAPAS_KANBAN) {
@@ -73,8 +108,8 @@ export default async function PaginaPipelineAsesor({
 
   const stats = [
     { etiqueta: 'Activos', valor: activos.length },
-    { etiqueta: 'Ganados', valor: ganados },
-    { etiqueta: 'Perdidos', valor: perdidos },
+    { etiqueta: 'Ganados', valor: ganados.length },
+    { etiqueta: 'Perdidos', valor: perdidos.length },
     { etiqueta: 'Total', valor: leads.length },
   ] as const
 
@@ -168,30 +203,33 @@ export default async function PaginaPipelineAsesor({
               <span className="text-xs text-slate-400">{grupo.length}</span>
             </div>
             <ul className="flex flex-col gap-2">
-              {grupo.map((lead) => (
-                <li key={lead.id}>
-                  <Link
-                    href={`/admin/leads/${lead.id}`}
-                    className="flex items-center justify-between gap-3 rounded-xl bg-white p-3.5 ring-1 ring-slate-200 transition-colors hover:ring-slate-300"
-                  >
-                    <div className="min-w-0">
-                      <p className="truncate font-medium text-slate-900">{lead.nombre}</p>
-                      <p className="truncate text-sm text-slate-500">
-                        {lead.propiedad?.titulo ?? formatearTelefono(lead.telefono)}
-                      </p>
-                    </div>
-                    <span
-                      suppressHydrationWarning
-                      className="shrink-0 text-xs text-slate-400"
+              {grupo.map((lead) => {
+                const actividad = metaActividad(lead)
+                return (
+                  <li key={lead.id}>
+                    <Link
+                      href={`/admin/leads/${lead.id}`}
+                      className="flex items-center justify-between gap-3 rounded-xl bg-white p-3.5 ring-1 ring-slate-200 transition-colors hover:ring-slate-300"
                     >
-                      {formatDistanceToNow(new Date(lead.creado_en), {
-                        addSuffix: true,
-                        locale: es,
-                      })}
-                    </span>
-                  </Link>
-                </li>
-              ))}
+                      <div className="min-w-0">
+                        <p className="truncate font-medium text-slate-900">{lead.nombre}</p>
+                        <p className="truncate text-sm text-slate-500">
+                          {lead.propiedad?.titulo ?? formatearTelefono(lead.telefono)}
+                        </p>
+                      </div>
+                      <span
+                        suppressHydrationWarning
+                        className={cn(
+                          'shrink-0 text-right text-xs',
+                          actividad.parado ? 'font-medium text-amber-600' : 'text-slate-400'
+                        )}
+                      >
+                        {actividad.texto}
+                      </span>
+                    </Link>
+                  </li>
+                )
+              })}
             </ul>
           </section>
         )
@@ -204,6 +242,49 @@ export default async function PaginaPipelineAsesor({
           </p>
         </div>
       ) : null}
+
+      {/* Cerrados: el final de la historia también se supervisa */}
+      {([
+        ['cerrado_ganado', ganados],
+        ['cerrado_perdido', perdidos],
+      ] as const).map(([etapa, grupo]) => {
+        if (grupo.length === 0) return null
+        return (
+          <section key={etapa}>
+            <div className="mb-2 flex items-center gap-2">
+              <span
+                className={cn(
+                  'rounded-full px-2 py-0.5 text-[0.6875rem] font-medium',
+                  claseBadgeEtapa(etapa)
+                )}
+              >
+                {etiquetaEtapa(etapa)}
+              </span>
+              <span className="text-xs text-slate-400">{grupo.length}</span>
+            </div>
+            <ul className="flex flex-col gap-2">
+              {grupo.map((lead) => (
+                <li key={lead.id}>
+                  <Link
+                    href={`/admin/leads/${lead.id}`}
+                    className="flex items-center justify-between gap-3 rounded-xl bg-white/70 p-3.5 ring-1 ring-slate-200 transition-colors hover:ring-slate-300"
+                  >
+                    <div className="min-w-0">
+                      <p className="truncate font-medium text-slate-700">{lead.nombre}</p>
+                      <p className="truncate text-sm text-slate-500">
+                        {lead.propiedad?.titulo ?? formatearTelefono(lead.telefono)}
+                      </p>
+                    </div>
+                    <span suppressHydrationWarning className="shrink-0 text-xs text-slate-400">
+                      {metaActividad(lead).texto}
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )
+      })}
     </div>
   )
 }
