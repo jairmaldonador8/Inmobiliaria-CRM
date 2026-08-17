@@ -80,7 +80,24 @@ select cron.schedule('easybroker-leads-1min', '* * * * *', $$
 $$);
 ```
 
-(**No ejecutado todavía** — se programa en el Supabase de producción cuando este código llegue a main/producción.)
+(Programado en producción desde 2026-08-14.)
+
+#### Catálogo casi en tiempo real (`easybroker-propiedades-2min`)
+
+Pedido del Live test (2026-08-17): las ediciones de propiedades en EasyBroker — **fotos incluidas** — deben verse en el CRM en minutos, no en 15. La misma ruta acepta `?fase=propiedades`: corre solo la fase de propiedades (cursor incremental por `updated_after`, y las existentes ahora **re-piden el detalle** para refrescar fotos/descripción/ubicación) más un **barrido de respaldo** que refresca el detalle de las 5 propiedades activas con la `ultima_sync` más vieja por corrida — cubre el caso de que EasyBroker no bumpee `updated_at` cuando solo cambian fotos. Sin leads (tienen su poll de 1 min) ni `listing_statuses` (la parte cara, sigue en el sync de 15 min).
+
+```sql
+select cron.schedule('easybroker-propiedades-2min', '*/2 * * * *', $$
+  select net.http_get(
+    url := 'https://www.klo-ser.com/api/cron/easybroker-sync?fase=propiedades',
+    headers := jsonb_build_object('Authorization', 'Bearer ' ||
+      (select decrypted_secret from vault.decrypted_secrets where name = 'cron_secret_easybroker')),
+    timeout_milliseconds := 120000
+  )
+$$);
+```
+
+(Programado en producción el 2026-08-17.)
 
 ### Cron de reintento del espejo a Google Calendar (`gcal-retry`)
 
