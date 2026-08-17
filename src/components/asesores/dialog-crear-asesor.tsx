@@ -7,6 +7,7 @@ import { UserPlus } from 'lucide-react'
 import { crearAsesor } from '@/lib/asesores/acciones'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { InputPassword } from '@/components/ui/input-password'
 import { Label } from '@/components/ui/label'
 import {
   Dialog,
@@ -93,10 +94,9 @@ export function DialogCrearAsesor() {
 
           <div className="grid gap-2">
             <Label htmlFor="password">Contraseña</Label>
-            <Input
+            <InputPassword
               id="password"
               name="password"
-              type="password"
               autoComplete="new-password"
               required
               minLength={8}

@@ -5,6 +5,7 @@ import { useActionState } from 'react'
 import { iniciarSesion, type EstadoLogin } from '@/lib/auth/acciones'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { InputPassword } from '@/components/ui/input-password'
 import { Label } from '@/components/ui/label'
 
 export function FormLogin() {
@@ -30,10 +31,9 @@ export function FormLogin() {
 
       <div className="grid gap-2">
         <Label htmlFor="password">Contraseña</Label>
-        <Input
+        <InputPassword
           id="password"
           name="password"
-          type="password"
           autoComplete="current-password"
           required
           className="h-11"

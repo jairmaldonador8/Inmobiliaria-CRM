@@ -28,6 +28,7 @@ import {
 } from '@/lib/bienvenida/acciones'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { InputPassword } from '@/components/ui/input-password'
 import { Label } from '@/components/ui/label'
 import { cn } from '@/lib/utils'
 
@@ -428,9 +429,8 @@ export function FlujoBienvenida({
               <div className="mt-3 grid gap-3">
                 <div className="grid gap-2">
                   <Label htmlFor="pass1">Contraseña nueva</Label>
-                  <Input
+                  <InputPassword
                     id="pass1"
-                    type="password"
                     autoComplete="new-password"
                     value={pass1}
                     onChange={(e) => setPass1(e.target.value)}
@@ -439,9 +439,8 @@ export function FlujoBienvenida({
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="pass2">Repítela</Label>
-                  <Input
+                  <InputPassword
                     id="pass2"
-                    type="password"
                     autoComplete="new-password"
                     value={pass2}
                     onChange={(e) => setPass2(e.target.value)}

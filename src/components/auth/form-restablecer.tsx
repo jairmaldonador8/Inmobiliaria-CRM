@@ -7,7 +7,7 @@ import { toast } from 'sonner'
 
 import { clienteRecuperacion } from '@/components/auth/form-recuperar'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
+import { InputPassword } from '@/components/ui/input-password'
 import { Label } from '@/components/ui/label'
 
 type Estado = 'verificando' | 'listo' | 'guardando' | 'invalido'
@@ -95,9 +95,8 @@ export function FormRestablecer() {
     <form onSubmit={alGuardar} className="grid gap-4">
       <div className="grid gap-2">
         <Label htmlFor="pass1">Contraseña nueva</Label>
-        <Input
+        <InputPassword
           id="pass1"
-          type="password"
           autoComplete="new-password"
           required
           minLength={8}
@@ -108,9 +107,8 @@ export function FormRestablecer() {
       </div>
       <div className="grid gap-2">
         <Label htmlFor="pass2">Repítela</Label>
-        <Input
+        <InputPassword
           id="pass2"
-          type="password"
           autoComplete="new-password"
           required
           minLength={8}
