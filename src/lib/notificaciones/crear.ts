@@ -50,6 +50,33 @@ export async function crearNotificacion(
  * aisla cada promesa y enviarPush nunca lanza por contrato. Devuelve cuantas
  * notificaciones se crearon.
  */
+/**
+ * Notifica al DESARROLLADOR (clave `desarrollador_user_id` en configuracion,
+ * migracion 0023): las sugerencias del chat de Klo son material de
+ * desarrollo, no de operacion, asi que no deben sonar la campanita de todos
+ * los admins. Si la clave no esta configurada (null), cae al comportamiento
+ * anterior de notificar a todos los admins para no perder avisos.
+ */
+export async function notificarDesarrollador(
+  supabase: SupabaseClient,
+  datos: Omit<DatosNotificacion, 'destinatarioId'>
+): Promise<number> {
+  const { data, error } = await supabase
+    .from('configuracion')
+    .select('valor')
+    .eq('clave', 'desarrollador_user_id')
+    .maybeSingle()
+  if (error) {
+    throw new Error(`No se pudo leer desarrollador_user_id: ${error.message}`)
+  }
+
+  const destinatarioId = typeof data?.valor === 'string' ? data.valor : null
+  if (!destinatarioId) return notificarAdmins(supabase, datos)
+
+  await crearNotificacion(supabase, { ...datos, destinatarioId })
+  return 1
+}
+
 export async function notificarAdmins(
   supabase: SupabaseClient,
   { tipo, texto, url }: Omit<DatosNotificacion, 'destinatarioId'>

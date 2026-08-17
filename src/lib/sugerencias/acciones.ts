@@ -14,7 +14,7 @@ import { revalidatePath } from 'next/cache'
 import { requireAdmin, usuarioActual } from '@/lib/auth/usuario-actual'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { notificarAdmins } from '@/lib/notificaciones/crear'
+import { notificarDesarrollador } from '@/lib/notificaciones/crear'
 
 export type ResultadoAccionSugerencia = { ok: true } | { error: string }
 
@@ -54,21 +54,22 @@ export async function crearSugerencia(
 
   if (error) return { error: 'No se pudo registrar la sugerencia' }
 
-  // Aviso a la dirección (campanita + push, pedido de Jair 2026-08-17): las
-  // sugerencias llegan por el chat de Klo y nadie vive metido en
-  // /admin/sugerencias. Best-effort con cliente admin (la notificación es
-  // PARA otro usuario; la RLS de sesión no deja insertársela) — la
-  // sugerencia ya quedó guardada y eso es lo que importa.
+  // Aviso al DESARROLLADOR (campanita + push): el feedback del chat de Klo
+  // es material de desarrollo, no de operación — los demás admins no deben
+  // recibirlo (pedido de Jair 2026-08-17, primer testeo real). Best-effort
+  // con cliente admin (la notificación es PARA otro usuario; la RLS de
+  // sesión no deja insertársela) — la sugerencia ya quedó guardada y eso es
+  // lo que importa.
   try {
     const recorte =
       textoLimpio.length > 120 ? `${textoLimpio.slice(0, 120)}…` : textoLimpio
-    await notificarAdmins(createAdminClient(), {
+    await notificarDesarrollador(createAdminClient(), {
       tipo: 'sugerencia',
       texto: `💡 ${usuario.nombre}: «${recorte}»`,
       url: '/admin/sugerencias',
     })
   } catch (err) {
-    console.error('crearSugerencia: falló el aviso a admins, se omite', err)
+    console.error('crearSugerencia: falló el aviso al desarrollador, se omite', err)
   }
 
   revalidatePath('/admin/sugerencias')
