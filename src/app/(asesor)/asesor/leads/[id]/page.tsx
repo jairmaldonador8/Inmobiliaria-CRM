@@ -140,10 +140,14 @@ export default async function PaginaDetalleLeadAsesor({
       // ⚠️ `.limit(1)`, NUNCA `.maybeSingle()`: el dedupe de
       // `registrarSalidaWhatsapp` acepta una carrera que puede dejar dos
       // filas pendientes, y `maybeSingle()` reventaría con PGRST116.
+      // Por AUTOR: desde que el admin también contacta leads (2026-08-17),
+      // cada quien reporta SUS toques — un pendiente del admin en este lead
+      // no debe abrirle la hoja al asesor.
       supabase
         .from('contactos')
         .select('id, resultado, canal')
         .eq('lead_id', id)
+        .eq('autor_id', usuario.user_id)
         .order('creado_en', { ascending: false })
         .limit(1),
       // Mismo cliente de sesión: la RLS ya oculta al asesor los tipos de

@@ -10,7 +10,7 @@ import { NavAsesor, NavAsesorSidebar, PieSesionAsesor } from '@/components/nav/n
 import { Campana } from '@/components/notificaciones/campana'
 import BannerInstalacion from '@/components/push/banner-instalacion'
 import RegistroPush from '@/components/push/registro-push'
-import { BotonSugerencia } from '@/components/sugerencias/boton-sugerencia'
+import { ChatKlo } from '@/components/sugerencias/chat-klo'
 
 export default async function AsesorLayout({
   children,
@@ -81,9 +81,9 @@ export default async function AsesorLayout({
         teléfono también en pantallas grandes; ya no aplica, el dueño del
         producto quiere aprovechar el ancho). pb-52/lg:pb-40: espacio para
         que NINGÚN contenido quede detrás de los botones flotantes (barra
-        de pestañas + «Registrar lead» + BotonSugerencia en móvil;
-        BotonSugerencia, y «Registrar lead» en el kanban, en escritorio —
-        ver boton-sugerencia.tsx y sheet-captura-rapida.tsx).
+        de pestañas + «Registrar lead» + el chat de Klo en móvil;
+        el chat de Klo, y «Registrar lead» en el kanban, en escritorio —
+        ver chat-klo.tsx y sheet-captura-rapida.tsx).
       */}
       {/*
         SIN `w-full`: junto con `lg:ml-60` daba 100% del viewport MÁS los
@@ -108,7 +108,7 @@ export default async function AsesorLayout({
         </div>
       </main>
 
-      <BotonSugerencia className="lg:bottom-6" />
+      <ChatKlo className="lg:bottom-6" />
       <NavAsesor />
     </div>
   )

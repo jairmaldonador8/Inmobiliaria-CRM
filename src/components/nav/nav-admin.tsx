@@ -62,8 +62,8 @@ export function NavAdmin({ onNavigate }: { onNavigate?: () => void }) {
                 className={cn(
                   'flex min-h-11 items-center gap-3 rounded-full px-4 text-sm font-medium transition-colors lg:min-h-9',
                   activo
-                    ? 'bg-white font-semibold text-slate-900'
-                    : 'text-slate-400 hover:bg-slate-900 hover:text-slate-100'
+                    ? 'bg-[#FCFCFA] font-semibold text-[#141414]'
+                    : 'text-slate-400 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
                 )}
               >
                 <Icono className="size-4 shrink-0" aria-hidden />
@@ -80,14 +80,14 @@ export function NavAdmin({ onNavigate }: { onNavigate?: () => void }) {
 /** Bloque inferior con el nombre del usuario y el botón «Salir». */
 export function PieSesion({ nombre }: { nombre: string }) {
   return (
-    <div className="border-t border-slate-800 p-3">
-      <p className="truncate px-3 py-1 text-sm font-medium text-slate-200" title={nombre}>
+    <div className="border-t border-sidebar-border p-3">
+      <p className="truncate px-3 py-1 text-sm font-medium text-sidebar-foreground" title={nombre}>
         {nombre}
       </p>
       <form action={cerrarSesion}>
         <button
           type="submit"
-          className="flex min-h-11 w-full items-center gap-3 rounded-lg px-3 text-sm font-medium text-slate-400 transition-colors hover:bg-slate-900 hover:text-slate-100 lg:min-h-9"
+          className="flex min-h-11 w-full items-center gap-3 rounded-lg px-3 text-sm font-medium text-slate-400 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground lg:min-h-9"
         >
           <LogOut className="size-4 shrink-0" aria-hidden />
           Salir
@@ -110,8 +110,11 @@ export function PieSesion({ nombre }: { nombre: string }) {
  * directo (es un Server Component que lee Supabase con 'server-only').
  */
 export function BarraMovilAdmin({ campana }: { campana?: React.ReactNode }) {
+  // Tokens `sidebar` y no slate: esta barra es negro editorial en LOS DOS
+  // temas. Con slate, el camaleón la invertía a blanca en modo noche y el
+  // wordmark crema desaparecía sobre ella.
   return (
-    <header className="sticky top-0 z-40 flex min-h-14 items-center gap-2 border-b border-slate-800 bg-slate-950 px-2 pt-[env(safe-area-inset-top)] text-slate-100 lg:hidden">
+    <header className="sticky top-0 z-40 flex min-h-14 items-center gap-2 border-b border-sidebar-border bg-sidebar px-2 pt-[env(safe-area-inset-top)] text-sidebar-foreground lg:hidden">
       <span className="flex-1 truncate">
         <Wordmark
           className="text-[14px] text-[#EFE9DD]"

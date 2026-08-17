@@ -126,3 +126,145 @@ export async function leadsGlobal(filtros: FiltrosLeads): Promise<LeadGlobal[]> 
   if (error) throw new Error(`No se pudieron cargar los leads: ${error.message}`)
   return (data ?? []) as unknown as LeadGlobal[]
 }
+
+/**
+ * Etapas que cuentan como «en conversación»: ya hubo primer contacto y el
+ * lead sigue vivo. 'nuevo' queda fuera (aún no se le habla) y los cerrados
+ * también (la conversación terminó).
+ */
+export const ETAPAS_EN_CONVERSACION = [
+  'contactado',
+  'cita_agendada',
+  'visita_realizada',
+  'negociacion',
+  'apartado',
+] as const
+
+export type LeadEnConversacion = {
+  id: string
+  nombre: string
+  telefono: string | null
+  etapa: string
+  creado_en: string
+  asesor: { nombre: string } | null
+  propiedad: { titulo: string } | null
+  /** Último toque de salida (WhatsApp/llamada) y cómo terminó. */
+  ultimoContacto: {
+    canal: string
+    resultado: string
+    creado_en: string
+    autorNombre: string | null
+  } | null
+  /** Última nota humana (se excluyen las de sistema: no son conversación). */
+  ultimoSeguimiento: {
+    tipo: string
+    nota: string
+    creado_en: string
+    autorNombre: string | null
+  } | null
+  /** La más reciente entre contacto y seguimiento; ordena la vista. */
+  ultimaActividad: string | null
+}
+
+/**
+ * Vista «En conversación» del admin (pedido de Jair 2026-08-17): con quién
+ * ya se habló y cómo va el tema, ordenado por la conversación más reciente.
+ *
+ * Tres consultas y la fusión en JS: PostgREST no trae «la última fila por
+ * lead» en un solo select, y el volumen (decenas de leads activos) no
+ * justifica una RPC.
+ */
+export async function leadsEnConversacion(): Promise<LeadEnConversacion[]> {
+  const supabase = createAdminClient()
+
+  const { data: leads, error } = await supabase
+    .from('leads')
+    .select(
+      'id, nombre, telefono, etapa, creado_en, asesor:usuarios(nombre), propiedad:propiedades(titulo)'
+    )
+    .in('etapa', ETAPAS_EN_CONVERSACION as unknown as string[])
+    .eq('archivado', false)
+
+  if (error) throw new Error(`No se pudieron cargar los leads en conversación: ${error.message}`)
+  if (!leads || leads.length === 0) return []
+
+  const ids = leads.map((l) => l.id)
+
+  const [{ data: contactos }, { data: seguimientos }] = await Promise.all([
+    supabase
+      .from('contactos')
+      .select('lead_id, canal, resultado, creado_en, autor:usuarios(nombre)')
+      .in('lead_id', ids)
+      .order('creado_en', { ascending: false }),
+    supabase
+      .from('seguimientos')
+      .select('lead_id, tipo, nota, creado_en, autor:usuarios(nombre)')
+      .in('lead_id', ids)
+      .neq('tipo', 'sistema')
+      .order('creado_en', { ascending: false }),
+  ])
+
+  // Vienen ordenados del más nuevo al más viejo: el primero por lead gana.
+  type FilaContacto = {
+    lead_id: string
+    canal: string
+    resultado: string
+    creado_en: string
+    autor: { nombre: string } | null
+  }
+  type FilaSeguimiento = {
+    lead_id: string
+    tipo: string
+    nota: string
+    creado_en: string
+    autor: { nombre: string } | null
+  }
+  const contactoPorLead = new Map<string, FilaContacto>()
+  for (const c of (contactos ?? []) as unknown as FilaContacto[]) {
+    if (!contactoPorLead.has(c.lead_id)) contactoPorLead.set(c.lead_id, c)
+  }
+  const seguimientoPorLead = new Map<string, FilaSeguimiento>()
+  for (const s of (seguimientos ?? []) as unknown as FilaSeguimiento[]) {
+    if (!seguimientoPorLead.has(s.lead_id)) seguimientoPorLead.set(s.lead_id, s)
+  }
+
+  const filas = (leads as unknown as Omit<
+    LeadEnConversacion,
+    'ultimoContacto' | 'ultimoSeguimiento' | 'ultimaActividad'
+  >[]).map((lead) => {
+    const c = contactoPorLead.get(lead.id)
+    const s = seguimientoPorLead.get(lead.id)
+    const ultimaActividad =
+      [c?.creado_en, s?.creado_en].filter((f): f is string => Boolean(f)).sort().at(-1) ?? null
+    return {
+      ...lead,
+      ultimoContacto: c
+        ? {
+            canal: c.canal,
+            resultado: c.resultado,
+            creado_en: c.creado_en,
+            autorNombre: c.autor?.nombre ?? null,
+          }
+        : null,
+      ultimoSeguimiento: s
+        ? {
+            tipo: s.tipo,
+            nota: s.nota,
+            creado_en: s.creado_en,
+            autorNombre: s.autor?.nombre ?? null,
+          }
+        : null,
+      ultimaActividad,
+    }
+  })
+
+  // Conversación más reciente primero; sin actividad registrada, al final
+  // (más viejos al fondo).
+  return filas.sort((a, b) => {
+    const fa = a.ultimaActividad ?? a.creado_en
+    const fb = b.ultimaActividad ?? b.creado_en
+    if (a.ultimaActividad && !b.ultimaActividad) return -1
+    if (!a.ultimaActividad && b.ultimaActividad) return 1
+    return fb.localeCompare(fa)
+  })
+}

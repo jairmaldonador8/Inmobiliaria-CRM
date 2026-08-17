@@ -9,7 +9,7 @@ import { TabBarAdmin } from '@/components/nav/tab-bar-admin'
 import { Campana } from '@/components/notificaciones/campana'
 import BannerInstalacion from '@/components/push/banner-instalacion'
 import RegistroPush from '@/components/push/registro-push'
-import { BotonSugerencia } from '@/components/sugerencias/boton-sugerencia'
+import { ChatKlo } from '@/components/sugerencias/chat-klo'
 
 export default async function AdminLayout({
   children,
@@ -38,8 +38,10 @@ export default async function AdminLayout({
       <PantallaCarga />
       <RegistroPush />
       <BannerInstalacion />
-      {/* Sidebar de escritorio */}
-      <aside className="fixed inset-y-0 left-0 z-40 hidden w-60 flex-col bg-slate-950 text-slate-100 lg:flex">
+      {/* Sidebar de escritorio. Tokens `sidebar` y no slate: es negro
+          editorial en LOS DOS temas — con slate, el camaleón lo invertía a
+          blanco en modo noche y el wordmark crema desaparecía. */}
+      <aside className="fixed inset-y-0 left-0 z-40 hidden w-60 flex-col bg-sidebar text-sidebar-foreground lg:flex">
         <div className="flex items-center justify-between gap-2 px-6 pt-6 pb-4">
           <div className="min-w-0">
             <Wordmark
@@ -50,10 +52,10 @@ export default async function AdminLayout({
             </p>
           </div>
           <div className="flex items-center">
-            <CambiarTema className="text-slate-400 hover:bg-slate-900 hover:text-white" />
+            <CambiarTema className="text-slate-400 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground" />
             <Campana
               href="/admin/notificaciones"
-              className="text-slate-400 hover:bg-slate-900 hover:text-white"
+              className="text-slate-400 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
             />
           </div>
         </div>
@@ -65,10 +67,10 @@ export default async function AdminLayout({
       <BarraMovilAdmin
         campana={
           <>
-            <CambiarTema className="text-slate-300 hover:bg-slate-900 hover:text-white" />
+            <CambiarTema className="text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground" />
             <Campana
               href="/admin/notificaciones"
-              className="text-slate-300 hover:bg-slate-900 hover:text-white"
+              className="text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
             />
           </>
         }
@@ -81,7 +83,7 @@ export default async function AdminLayout({
 
       {/* El admin no tiene el FAB «+ Registrar lead» encima, así que va
           pegado a la píldora de pestañas y no un piso más arriba. */}
-      <BotonSugerencia className="bottom-[calc(var(--alto-nav,4rem)+0.75rem)] lg:bottom-6" />
+      <ChatKlo className="bottom-[calc(var(--alto-nav,4rem)+0.75rem)] lg:bottom-6" />
       <TabBarAdmin nombre={usuario.nombre} />
     </div>
   )

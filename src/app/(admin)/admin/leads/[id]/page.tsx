@@ -14,6 +14,8 @@ import {
 import { visitasDelLead } from '@/lib/visitas/consultas'
 import { Badge } from '@/components/ui/badge'
 import { EtiquetaClasificacionEB } from '@/components/leads/etiqueta-clasificacion-eb'
+import { BotonLlamar } from '@/components/contactos/boton-llamar'
+import { HojaDesenlace } from '@/components/contactos/hoja-desenlace'
 import { BotonWhatsApp, type PlantillaWhatsApp } from '@/components/leads/boton-whatsapp'
 import { ReasignarLead } from '@/components/leads/reasignar-lead'
 import {
@@ -26,10 +28,7 @@ import {
   SheetSeguimiento,
   type OpcionPropiedadSeguimiento,
 } from '@/components/seguimientos/sheet-seguimiento'
-import {
-  HojaAgendarVisita,
-  type OpcionPropiedadVisita,
-} from '@/components/visitas/hoja-agendar-visita'
+import { type OpcionPropiedadVisita } from '@/components/visitas/hoja-agendar-visita'
 import { ListaVisitasLead } from '@/components/visitas/lista-visitas-lead'
 import { eventosDeLead, fusionarHistoria } from '@/lib/eventos/consultas'
 import { TimelineEventos } from '@/components/eventos/timeline-eventos'
@@ -81,6 +80,7 @@ export default async function PaginaDetalleLeadAdmin({
     { data: propiedades },
     visitas,
     eventos,
+    { data: ultimoContacto },
   ] = await Promise.all([
     supabase
       .from('seguimientos')
@@ -109,6 +109,17 @@ export default async function PaginaDetalleLeadAdmin({
     // Mismo cliente de sesión: el admin pasa private.is_admin() y ve además
     // los tipos de supervisión — la RLS decide, la UI no filtra.
     eventosDeLead(supabase, id),
+    // El admin también atiende leads (2026-08-17): su último contacto, por
+    // AUTOR — el pendiente del asesor asignado no es asunto de esta hoja.
+    // ⚠️ `.limit(1)`, NUNCA `.maybeSingle()`: el dedupe acepta una carrera
+    // que puede dejar dos filas pendientes.
+    supabase
+      .from('contactos')
+      .select('id, resultado, canal')
+      .eq('lead_id', id)
+      .eq('autor_id', admin.user_id)
+      .order('creado_en', { ascending: false })
+      .limit(1),
   ])
 
   const historia = fusionarHistoria(
@@ -129,6 +140,19 @@ export default async function PaginaDetalleLeadAdmin({
     addSuffix: true,
     locale: es,
   })
+
+  // Misma mecánica que el detalle del asesor: si el último contacto DEL
+  // ADMIN sigue pendiente, al volver de WhatsApp/llamada la hoja pregunta
+  // cómo le fue.
+  const filaUltimoContacto = (ultimoContacto ?? [])[0]
+  const contactoPendienteId =
+    filaUltimoContacto?.resultado === 'pendiente' ? filaUltimoContacto.id : null
+  const canalPendiente =
+    filaUltimoContacto?.canal === 'llamada' ? ('llamada' as const) : ('whatsapp' as const)
+  const motivoVisitaDeshabilitada =
+    leadDetalle.asesor_id === null
+      ? 'Asigna el lead a un asesor antes de agendar una visita'
+      : null
 
   return (
     <section className="mx-auto flex w-full max-w-2xl flex-col gap-4">
@@ -177,14 +201,11 @@ export default async function PaginaDetalleLeadAdmin({
       </div>
 
       <div className="grid grid-cols-2 gap-2">
+        {/* Llamar/WhatsApp instrumentados igual que en el detalle del asesor
+            (2026-08-17): el dueño también atiende leads, y su toque deja
+            pendiente para que la hoja de abajo pregunte cómo le fue. */}
         {leadDetalle.telefono ? (
-          <a
-            href={`tel:+${leadDetalle.telefono}`}
-            className="flex h-14 flex-col items-center justify-center gap-1 rounded-xl border border-input bg-white text-xs font-medium text-slate-900 shadow-xs transition-colors hover:bg-slate-50 active:translate-y-px"
-          >
-            <Phone aria-hidden className="size-5" />
-            Llamar
-          </a>
+          <BotonLlamar leadId={leadDetalle.id} telefono={leadDetalle.telefono} />
         ) : (
           <span className="flex h-14 flex-col items-center justify-center gap-1 rounded-xl border border-input bg-slate-50 text-xs font-medium text-slate-400">
             <Phone aria-hidden className="size-5" />
@@ -202,7 +223,11 @@ export default async function PaginaDetalleLeadAdmin({
           propiedadLeadId={leadDetalle.propiedad_id}
           propiedades={opcionesPropiedad}
         />
-        <HojaAgendarVisita
+        {/* Monta el botón «Agendar visita» de la rejilla y, encima, la hoja
+            de desenlace al volver de WhatsApp o de una llamada. */}
+        <HojaDesenlace
+          contactoPendienteId={contactoPendienteId}
+          canalPendiente={canalPendiente}
           leadId={leadDetalle.id}
           leadNombre={leadDetalle.nombre}
           telefono={leadDetalle.telefono}
@@ -211,11 +236,7 @@ export default async function PaginaDetalleLeadAdmin({
           propiedadLeadId={leadDetalle.propiedad_id}
           propiedadLeadTitulo={leadDetalle.propiedad?.titulo ?? null}
           propiedades={opcionesPropiedad as OpcionPropiedadVisita[]}
-          deshabilitadoMotivo={
-            leadDetalle.asesor_id === null
-              ? 'Asigna el lead a un asesor antes de agendar una visita'
-              : null
-          }
+          deshabilitadoMotivo={motivoVisitaDeshabilitada}
         />
       </div>
 

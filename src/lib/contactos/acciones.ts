@@ -25,13 +25,17 @@ export type ResultadoContactoAccion = { ok: true } | { error: string }
 /** Dos toques en este lapso son el mismo contacto, no dos. */
 const VENTANA_DEDUPE_MS = 5 * 60 * 1000
 
-function revalidarAsesor(leadId: string) {
+function revalidarSegunRol(leadId: string, rol: string) {
   // `registrarSeguimiento` NO revalida /asesor ni /asesor/leads, y esta
   // acción sí mueve la etapa y alimenta la cola del día: sin estas dos, la
   // lista «Sin respuesta» no aparece hasta una recarga dura.
   revalidatePath('/asesor')
   revalidatePath('/asesor/leads')
   revalidatePath(`/asesor/leads/${leadId}`)
+  if (rol === 'admin') {
+    revalidatePath('/admin/leads')
+    revalidatePath(`/admin/leads/${leadId}`)
+  }
 }
 
 export async function registrarSalidaWhatsapp(
@@ -81,14 +85,11 @@ async function registrarSalida(
     }
   }
 
-  // El comportamiento instrumentado es SOLO del asesor dueño del lead. Un
-  // admin revisando un lead ajeno no le deja pendientes a nadie ni le mueve
-  // el pipeline. La regla vive aquí, no duplicada en los componentes.
-  if (usuario.rol !== 'asesor') {
-    revalidatePath(`/admin/leads/${leadId}`)
-    revalidatePath('/admin/leads')
-    return { ok: true }
-  }
+  // Instrumenta también al ADMIN (2026-08-17): el dueño atiende leads en
+  // persona, así que su toque deja pendiente, pregunta desenlace y mueve el
+  // pipeline igual que el del asesor. Todo el ciclo se acota por AUTOR: cada
+  // quien reporta SUS contactos — el pendiente que un admin deja en un lead
+  // ajeno jamás le aparece al asesor, ni al revés.
 
   // Dedupe: se lee y luego se escribe, sin transacción. Dos toques
   // simultáneos pueden crear dos filas; se acepta (ver spec). Nada aguas
@@ -98,6 +99,7 @@ async function registrarSalida(
     .select('id, creado_en')
     .eq('lead_id', leadId)
     .eq('canal', datos.canal)
+    .eq('autor_id', usuario.user_id)
     .eq('resultado', 'pendiente')
 
   const ahora = Date.now()
@@ -114,6 +116,7 @@ async function registrarSalida(
         .update({ resultado: 'sin_reporte', resuelto_en: new Date().toISOString() })
         .eq('lead_id', leadId)
         .eq('canal', datos.canal)
+        .eq('autor_id', usuario.user_id)
         .eq('resultado', 'pendiente')
         .select('id')
       for (const contacto of degradados ?? []) {
@@ -166,7 +169,7 @@ async function registrarSalida(
     })
   }
 
-  revalidarAsesor(leadId)
+  revalidarSegunRol(leadId, usuario.rol)
   return { ok: true }
 }
 
@@ -183,23 +186,20 @@ export async function resolverContacto(
   }
   const valor = desenlace as DesenlaceElegible
 
-  // Guard simétrico al de registrarSalidaWhatsapp: sin él, un admin que
-  // llegara aquí actualizaría el contacto y DESPUÉS `cambiarEtapa` lo
-  // mandaría a /login por requireAsesor(), dejando el dato a medias.
-  if (usuario.rol !== 'asesor') {
-    return { error: 'Solo el asesor del lead puede reportar cómo le fue' }
-  }
-
   const supabase = await createClient()
 
-  // POR LEAD, no por contacto: el dedupe acepta una carrera que puede dejar
-  // dos filas pendientes. Si se resolviera solo una, la hoja reaparecería
-  // con la otra.
+  // POR LEAD Y AUTOR, no por contacto: el dedupe acepta una carrera que
+  // puede dejar dos filas pendientes del mismo autor — si se resolviera solo
+  // una, la hoja reaparecería con la otra. El filtro por autor es lo que
+  // permite que admin y asesor contacten al mismo lead sin pisarse el
+  // reporte (el admin también atiende leads desde 2026-08-17; `cambiarEtapa`
+  // y la RLS de leads/contactos ya lo admiten).
   const { data: resueltos, error } = await supabase
     .from('contactos')
     .update({ resultado: valor, resuelto_en: new Date().toISOString() })
     .eq('lead_id', leadId)
     .eq('canal', canal)
+    .eq('autor_id', usuario.user_id)
     .eq('resultado', 'pendiente')
     .select('id')
 
@@ -228,6 +228,6 @@ export async function resolverContacto(
   // visita. 'contesto' y 'no_contesto' dejan el lead en «Contactado», donde
   // ya está.
 
-  revalidarAsesor(leadId)
+  revalidarSegunRol(leadId, usuario.rol)
   return { ok: true }
 }

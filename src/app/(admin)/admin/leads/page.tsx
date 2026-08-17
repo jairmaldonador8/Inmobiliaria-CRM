@@ -30,6 +30,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { FiltrosLeads } from '@/components/leads/filtros-leads'
+import { TabsLeadsAdmin } from '@/components/leads/tabs-leads-admin'
 
 export default async function PaginaLeadsAdmin({
   searchParams,
@@ -72,6 +73,8 @@ export default async function PaginaLeadsAdmin({
         variante="escritorio"
         metricas={{ embudo, medianaMin, fuentes, actividad }}
       />
+
+      <TabsLeadsAdmin activa="todos" />
 
       <FiltrosLeads asesores={opcionesAsesor} />
 

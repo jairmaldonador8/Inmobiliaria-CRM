@@ -21,6 +21,7 @@ import {
 } from 'lucide-react'
 
 import { cerrarSesion } from '@/lib/auth/acciones'
+import { VERSION, NOMBRE_VERSION } from '@/lib/version'
 import { cn } from '@/lib/utils'
 import {
   Sheet,
@@ -164,6 +165,9 @@ export function TabBarAdmin({ nombre }: { nombre: string }) {
                   Cerrar sesión
                 </button>
               </form>
+              <p className="px-3 pt-2 text-center text-[10px] text-slate-400">
+                Klo-Ser v{VERSION} «{NOMBRE_VERSION}»
+              </p>
             </div>
           </SheetContent>
         </Sheet>

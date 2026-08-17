@@ -89,8 +89,8 @@ const HACE_2_HORAS = new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString()
 /**
  * Stub chainable del flujo completo de `registrarSalidaWhatsapp`:
  *   seguimientos:       insert()                      (awaited directo)
- *   contactos: select().eq().eq()            (awaited directo)
- *   contactos: update().eq().eq()            (awaited directo)
+ *   contactos: select().eq().eq().eq().eq()  (lead, canal, autor, resultado)
+ *   contactos: update().eq().eq().eq().eq().select('id')
  *   contactos: insert()                      (awaited directo)
  *   leads:              select('etapa').eq().maybeSingle()
  *   leads:              update({etapa}).eq().eq().eq().select('id')  — avance
@@ -109,21 +109,23 @@ function crearSupabaseFake(opts: {
     .fn<(valores: Record<string, unknown>) => Promise<{ error: ErrorFake | null }>>()
     .mockResolvedValue({ error: opts.seguimientoError ?? null })
 
-  // select de pendientes: .select().eq().eq() → resuelve
+  // select de pendientes: .select().eq(lead).eq(canal).eq(autor).eq(resultado) → resuelve
   const eqSelectResultado = vi
     .fn()
     .mockResolvedValue({ data: opts.pendientes ?? [], error: null })
-  const eqSelectCanal = vi.fn(() => ({ eq: eqSelectResultado }))
+  const eqSelectAutor = vi.fn(() => ({ eq: eqSelectResultado }))
+  const eqSelectCanal = vi.fn(() => ({ eq: eqSelectAutor }))
   const eqSelectLead = vi.fn(() => ({ eq: eqSelectCanal }))
   const selectContactos = vi.fn(() => ({ eq: eqSelectLead }))
 
-  // update de pendientes viejos: .update().eq().eq().select('id') → resuelve
+  // update de pendientes: .update().eq(lead).eq(canal).eq(autor).eq(resultado).select('id')
   const selectUpdateContactos = vi.fn().mockResolvedValue({
     data: opts.updateContactoError ? null : (opts.filasUpdateContactos ?? [{ id: 'contacto-1' }]),
     error: opts.updateContactoError ?? null,
   })
   const eqUpdateResultado = vi.fn(() => ({ select: selectUpdateContactos }))
-  const eqUpdateCanal = vi.fn(() => ({ eq: eqUpdateResultado }))
+  const eqUpdateAutor = vi.fn(() => ({ eq: eqUpdateResultado }))
+  const eqUpdateCanal = vi.fn(() => ({ eq: eqUpdateAutor }))
   const eqUpdateLead = vi.fn(() => ({ eq: eqUpdateCanal }))
   const updateContactos = vi.fn<
     (valores: Record<string, unknown>) => { eq: typeof eqUpdateLead }
@@ -176,9 +178,11 @@ function crearSupabaseFake(opts: {
     insertSeguimiento,
     selectContactos,
     eqSelectLead,
+    eqSelectAutor,
     eqSelectResultado,
     updateContactos,
     eqUpdateLead,
+    eqUpdateAutor,
     eqUpdateResultado,
     insertContacto,
     insertEvento,
@@ -337,8 +341,8 @@ describe('registrarSalidaWhatsapp — nota del seguimiento', () => {
   })
 })
 
-describe('registrarSalidaWhatsapp — corte por rol', () => {
-  it('un admin deja seguimiento pero NO crea contacto pendiente ni mueve la etapa', async () => {
+describe('registrarSalidaWhatsapp — el admin también queda instrumentado (2026-08-17)', () => {
+  it('un admin deja seguimiento, contacto pendiente a su nombre y mueve la etapa', async () => {
     usuarioActualMock.mockResolvedValue(USUARIO_ADMIN)
     const fake = crearSupabaseFake({ pendientes: [], etapaLead: 'nuevo' })
     createClientMock.mockResolvedValue(fake.supabase)
@@ -349,9 +353,25 @@ describe('registrarSalidaWhatsapp — corte por rol', () => {
     expect(fake.insertSeguimiento).toHaveBeenCalledWith(
       expect.objectContaining({ tipo: 'whatsapp', autor_id: 'admin-1' })
     )
-    expect(fake.selectContactos).not.toHaveBeenCalled()
-    expect(fake.insertContacto).not.toHaveBeenCalled()
-    expect(fake.updateLead).not.toHaveBeenCalled()
+    expect(fake.insertContacto).toHaveBeenCalledWith({
+      lead_id: 'lead-1',
+      autor_id: 'admin-1',
+      canal: 'whatsapp',
+    })
+    expect(fake.updateLead).toHaveBeenCalledWith({ etapa: 'contactado' })
+  })
+
+  it('el ciclo entero se acota por autor: dedupe y degradación no tocan pendientes ajenos', async () => {
+    const fake = crearSupabaseFake({
+      pendientes: [{ id: 'contacto-viejo', creado_en: HACE_2_HORAS }],
+      etapaLead: 'contactado',
+    })
+    createClientMock.mockResolvedValue(fake.supabase)
+
+    await registrarSalidaWhatsapp('lead-1', {})
+
+    expect(fake.eqSelectAutor).toHaveBeenCalledWith('autor_id', 'asesor-1')
+    expect(fake.eqUpdateAutor).toHaveBeenCalledWith('autor_id', 'asesor-1')
   })
 })
 
@@ -452,17 +472,24 @@ describe('resolverContacto — validación y corte por rol', () => {
     expect(cambiarEtapaMock).not.toHaveBeenCalled()
   })
 
-  it('un admin no reporta por el asesor y no deja el dato a medias', async () => {
+  it('un admin resuelve SUS contactos (2026-08-17): el update se ancla a su autor_id', async () => {
     usuarioActualMock.mockResolvedValue(USUARIO_ADMIN)
-    const fake = crearSupabaseFake({})
+    const fake = crearSupabaseFake({ filasUpdateContactos: [{ id: 'contacto-admin' }] })
     createClientMock.mockResolvedValue(fake.supabase)
 
     const resultado = await resolverContacto('lead-1', 'contesto')
 
-    expect(resultado).toEqual({
-      error: 'Solo el asesor del lead puede reportar cómo le fue',
-    })
-    expect(fake.from).not.toHaveBeenCalled()
+    expect(resultado).toEqual({ ok: true })
+    expect(fake.eqUpdateLead).toHaveBeenCalledWith('lead_id', 'lead-1')
+    expect(fake.eqUpdateAutor).toHaveBeenCalledWith('autor_id', 'admin-1')
+    expect(fake.insertEvento).toHaveBeenCalledWith(
+      expect.objectContaining({
+        tipo: 'whatsapp_desenlace',
+        actor_id: 'admin-1',
+        payload: { contacto_id: 'contacto-admin', desenlace: 'contesto' },
+      })
+    )
+    // 'contesto' no cierra nada: cambiarEtapa solo entra con 'no_interesa'.
     expect(cambiarEtapaMock).not.toHaveBeenCalled()
   })
 

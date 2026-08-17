@@ -22,11 +22,12 @@ import {
 
 /**
  * Todo lo que `HojaAgendarVisita` necesita, menos lo que ESTE componente
- * controla. `deshabilitadoMotivo` queda fuera a propósito: hace que la hoja
- * salga por un `return` temprano ANTES de montar su `Sheet`, así que un
- * `open` en true se ignoraría en silencio (ver el comentario en
- * `hoja-agendar-visita.tsx`). El asesor nunca lo manda; el admin sí, pero el
- * admin no usa esta hoja.
+ * controla. `deshabilitadoMotivo` se re-declara aparte (abajo) en vez de
+ * pasar en el spread: con motivo, la hoja de visita sale por un `return`
+ * temprano ANTES de montar su `Sheet` y un `open` en true se ignoraría en
+ * silencio — por eso aquí «Agendé una cita» lo intercepta con un toast en
+ * vez de intentar abrirla (caso admin con lead aún en bandeja, desde que el
+ * admin también usa esta hoja, 2026-08-17).
  */
 type PropsVisita = Omit<
   ComponentProps<typeof HojaAgendarVisita>,
@@ -34,6 +35,8 @@ type PropsVisita = Omit<
 >
 
 type Props = PropsVisita & {
+  /** Ver el comentario de PropsVisita. `null`/`undefined` = habilitado. */
+  deshabilitadoMotivo?: string | null
   /**
    * `id` del contacto de WhatsApp sin reportar, o `null` si no hay. Lo
    * decide el SERVIDOR en cada render. El cliente nunca lo inventa: así una
@@ -76,6 +79,7 @@ const OPCIONES: {
 export function HojaDesenlace({
   contactoPendienteId,
   canalPendiente = 'whatsapp',
+  deshabilitadoMotivo,
   ...propsVisita
 }: Props) {
   const { leadId, leadNombre } = propsVisita
@@ -123,6 +127,12 @@ export function HojaDesenlace({
     // cuando la visita se guardó de verdad. Si el asesor abandona el
     // formulario, el contacto sigue pendiente — porque no hubo cita.
     if (desenlace === 'cita') {
+      // Con la visita deshabilitada su hoja ignoraría el open en silencio
+      // (return temprano): mejor decir por qué y dejar el contacto pendiente.
+      if (deshabilitadoMotivo) {
+        toast.error(deshabilitadoMotivo)
+        return
+      }
       setPospuesto(true)
       setVisitaAbierta(true)
       return
@@ -160,19 +170,24 @@ export function HojaDesenlace({
   return (
     <>
       {/* El botón de la rejilla: el mismo que traía `HojaAgendarVisita`
-          antes de pasar a modo controlado. */}
-      <Button
-        type="button"
-        variant="outline"
-        className="h-14 flex-col gap-1 rounded-xl bg-white text-xs font-medium"
-        onClick={() => setVisitaAbierta(true)}
-      >
-        <CalendarClock aria-hidden className="size-5" />
-        Agendar visita
-      </Button>
+          antes de pasar a modo controlado. Deshabilitada, la hoja de visita
+          pinta ELLA su lugar en la rejilla (el span gris del return
+          temprano), así que aquí no va botón propio — habría dos. */}
+      {deshabilitadoMotivo ? null : (
+        <Button
+          type="button"
+          variant="outline"
+          className="h-14 flex-col gap-1 rounded-xl bg-white text-xs font-medium"
+          onClick={() => setVisitaAbierta(true)}
+        >
+          <CalendarClock aria-hidden className="size-5" />
+          Agendar visita
+        </Button>
+      )}
 
       <HojaAgendarVisita
         {...propsVisita}
+        deshabilitadoMotivo={deshabilitadoMotivo}
         open={visitaAbierta}
         onOpenChange={setVisitaAbierta}
         onAgendada={alAgendada}
