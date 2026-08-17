@@ -208,7 +208,7 @@ export default async function PaginaPipelineAsesor({
                 return (
                   <li key={lead.id}>
                     <Link
-                      href={`/admin/leads/${lead.id}`}
+                      href={`/admin/leads/${lead.id}?volver=/admin/asesores/${id}`}
                       className="flex items-center justify-between gap-3 rounded-xl bg-white p-3.5 ring-1 ring-slate-200 transition-colors hover:ring-slate-300"
                     >
                       <div className="min-w-0">
@@ -266,7 +266,7 @@ export default async function PaginaPipelineAsesor({
               {grupo.map((lead) => (
                 <li key={lead.id}>
                   <Link
-                    href={`/admin/leads/${lead.id}`}
+                    href={`/admin/leads/${lead.id}?volver=/admin/asesores/${id}`}
                     className="flex items-center justify-between gap-3 rounded-xl bg-white/70 p-3.5 ring-1 ring-slate-200 transition-colors hover:ring-slate-300"
                   >
                     <div className="min-w-0">

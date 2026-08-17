@@ -31,6 +31,7 @@ import { BotonLlamar } from '@/components/contactos/boton-llamar'
 import { ListaVisitasLead } from '@/components/visitas/lista-visitas-lead'
 import { eventosDeLead, fusionarHistoria } from '@/lib/eventos/consultas'
 import { TimelineEventos } from '@/components/eventos/timeline-eventos'
+import { ResumenHistorial } from '@/components/eventos/resumen-historial'
 
 type FilaSeguimiento = {
   id: string
@@ -268,6 +269,7 @@ export default async function PaginaDetalleLeadAsesor({
 
       <div className="flex flex-col gap-3">
         <h2 className="text-sm font-semibold text-slate-900">Historia del lead</h2>
+        <ResumenHistorial historia={historia} />
         <TimelineEventos eventos={historia} />
       </div>
     </section>

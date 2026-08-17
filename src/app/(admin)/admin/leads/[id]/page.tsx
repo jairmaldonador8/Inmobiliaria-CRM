@@ -32,6 +32,7 @@ import { type OpcionPropiedadVisita } from '@/components/visitas/hoja-agendar-vi
 import { ListaVisitasLead } from '@/components/visitas/lista-visitas-lead'
 import { eventosDeLead, fusionarHistoria } from '@/lib/eventos/consultas'
 import { TimelineEventos } from '@/components/eventos/timeline-eventos'
+import { ResumenHistorial } from '@/components/eventos/resumen-historial'
 
 type FilaSeguimiento = {
   id: string
@@ -52,11 +53,20 @@ type FilaSeguimiento = {
  */
 export default async function PaginaDetalleLeadAdmin({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>
+  searchParams: Promise<{ volver?: string }>
 }) {
   const admin = await requireAdmin()
   const { id } = await params
+  // Contexto de regreso: si se llegó desde el apartado de un asesor, el
+  // «atrás» debe devolver ahí y no a la tabla global. Solo se aceptan rutas
+  // internas de apartados (nada de redirecciones arbitrarias).
+  const { volver } = await searchParams
+  const vieneDeAsesor = typeof volver === 'string' && /^\/admin\/asesores\/[\w-]+$/.test(volver)
+  const volverHref = vieneDeAsesor ? volver : '/admin/leads'
+  const volverTexto = vieneDeAsesor ? 'Volver al asesor' : 'Volver a leads'
   const supabase = await createClient()
 
   const { data: lead } = await supabase
@@ -158,11 +168,11 @@ export default async function PaginaDetalleLeadAdmin({
     <section className="mx-auto flex w-full max-w-2xl flex-col gap-4">
       <div>
         <Link
-          href="/admin/leads"
+          href={volverHref}
           className="inline-flex items-center gap-1.5 text-sm text-slate-500 transition-colors hover:text-slate-900"
         >
           <ArrowLeft aria-hidden className="size-4" />
-          Volver a leads
+          {volverTexto}
         </Link>
       </div>
 
@@ -268,6 +278,7 @@ export default async function PaginaDetalleLeadAdmin({
 
       <div className="flex flex-col gap-3">
         <h2 className="text-sm font-semibold text-slate-900">Historia del lead</h2>
+        <ResumenHistorial historia={historia} />
         <TimelineEventos eventos={historia} />
       </div>
     </section>
