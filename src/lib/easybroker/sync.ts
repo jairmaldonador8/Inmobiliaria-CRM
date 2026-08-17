@@ -82,7 +82,7 @@ function contadoresClasificacionVacios(): ContadoresClasificacionEB {
 }
 
 export interface ResultadoSync {
-  propiedades: { procesadas: number; nuevas: number; actualizadas: number }
+  propiedades: { procesadas: number; nuevas: number; actualizadas: number; refrescadas: number }
   leads: {
     procesados: number
     nuevos: number
@@ -123,6 +123,15 @@ export interface OpcionesSync {
    * completo ya trae la fase de leads incluida, asi que no se pierde nada.
    */
   soloLeads?: boolean
+  /**
+   * true = corre SOLO la fase de propiedades (job pg_cron
+   * `easybroker-propiedades-2min`): cursor incremental + barrido de refresco
+   * de detalles, SIN leads ni la pasada completa de listing_statuses (que es
+   * la parte cara y sigue a cargo del sync completo de 15 min). Es lo que
+   * acerca las ediciones y fotos del catalogo al "tiempo real" que pidio el
+   * equipo en el Live test 2026-08-17.
+   */
+  soloPropiedades?: boolean
 }
 
 export interface CtxPropiedades {
@@ -317,11 +326,27 @@ export async function procesarPaginaPropiedades(
         if (error) throw new Error(error.message)
         resultado.nuevas += 1
       } else {
-        const { fotos: _fotos, ...camposLista } = base
-        void _fotos
+        // Propiedad editada en EasyBroker: se re-pide el detalle para que
+        // fotos, descripcion y ubicacion tambien lleguen (Live test
+        // 2026-08-17 — antes solo se actualizaban los campos del listado y
+        // una foto nueva jamas aterrizaba en el CRM). El cursor
+        // updated_after acota el lote a lo realmente editado, asi que el
+        // request extra por item es barato.
+        await pausa(PAUSA_ENTRE_DETALLES_MS)
+        const detalle = mapearPropiedadDetalle(await ctx.obtenerDetalle(base.easybroker_id))
+        const { fotos: _fotosLista, ...camposLista } = base
+        void _fotosLista
+        // Sin imagenes en el detalle se conservan las fotos actuales: ni la
+        // sola portada del listado ni un [] deben pisar la galeria.
+        const { fotos: _fotosDetalle, ...detalleSinFotos } = detalle
+        void _fotosDetalle
+        const cambios =
+          detalle.fotos.length > 0
+            ? { ...camposLista, ...detalle, ultima_sync: ahora }
+            : { ...camposLista, ...detalleSinFotos, ultima_sync: ahora }
         const { error } = await supabase
           .from('propiedades')
-          .update({ ...camposLista, ultima_sync: ahora })
+          .update(cambios)
           .eq('easybroker_id', base.easybroker_id)
         if (error) throw new Error(error.message)
         resultado.actualizadas += 1
@@ -336,6 +361,59 @@ export async function procesarPaginaPropiedades(
     }
   }
   return resultado
+}
+
+/** Cuantas propiedades refresca el barrido de respaldo en cada corrida. */
+const BARRIDO_DETALLES_POR_CORRIDA = 5
+
+/**
+ * Barrido de respaldo: re-pide el detalle de las N propiedades activas con
+ * la `ultima_sync` mas vieja y refresca sus campos de detalle (fotos,
+ * descripcion, ubicacion, url publica). Cubre el hueco del cursor
+ * `updated_after`: si EasyBroker no bumpea `updated_at` cuando solo cambian
+ * las fotos, el cursor jamas devolveria esa propiedad — con el barrido todo
+ * el catalogo converge en catalogo/N corridas sin depender de ello.
+ */
+export async function refrescarDetallesViejos(
+  supabase: SupabaseClient,
+  ctx: CtxPropiedades,
+  limite: number = BARRIDO_DETALLES_POR_CORRIDA
+): Promise<{ refrescadas: number; errores: string[] }> {
+  const errores: string[] = []
+  let refrescadas = 0
+
+  const { data, error } = await supabase
+    .from('propiedades')
+    .select('easybroker_id')
+    .eq('agencia_id', ctx.agenciaId)
+    .eq('activa', true)
+    .order('ultima_sync', { ascending: true, nullsFirst: true })
+    .limit(limite)
+  if (error) {
+    return { refrescadas, errores: [`barrido de detalles: ${error.message}`] }
+  }
+
+  for (const fila of data ?? []) {
+    try {
+      await pausa(PAUSA_ENTRE_DETALLES_MS)
+      const detalle = mapearPropiedadDetalle(await ctx.obtenerDetalle(fila.easybroker_id))
+      const { fotos: _fotos, ...detalleSinFotos } = detalle
+      void _fotos
+      const cambios =
+        detalle.fotos.length > 0
+          ? { ...detalle, ultima_sync: new Date().toISOString() }
+          : { ...detalleSinFotos, ultima_sync: new Date().toISOString() }
+      const { error: errorUpdate } = await supabase
+        .from('propiedades')
+        .update(cambios)
+        .eq('easybroker_id', fila.easybroker_id)
+      if (errorUpdate) throw new Error(errorUpdate.message)
+      refrescadas += 1
+    } catch (error) {
+      errores.push(`refresco ${fila.easybroker_id}: ${mensajeDe(error)}`)
+    }
+  }
+  return { refrescadas, errores }
 }
 
 // ---------------------------------------------------------------------------
@@ -891,7 +969,7 @@ export async function sincronizarEasyBroker(
   const maxPaginas = deps.maxPaginas ?? Infinity
 
   const resultado: ResultadoSync = {
-    propiedades: { procesadas: 0, nuevas: 0, actualizadas: 0 },
+    propiedades: { procesadas: 0, nuevas: 0, actualizadas: 0, refrescadas: 0 },
     leads: { procesados: 0, nuevos: 0, duplicados: 0, porClasificacion: contadoresClasificacionVacios() },
     estatus: {
       procesadas: 0,
@@ -961,6 +1039,16 @@ export async function sincronizarEasyBroker(
         paginasLeidas += 1
       }
 
+      // Barrido de respaldo (fotos): refresca el detalle de las N propiedades
+      // con la sync mas vieja. SOLO en el job rapido de propiedades — el
+      // sync completo de 15 min se queda igual que siempre. No participa del
+      // cursor: si falla, se anota y la proxima corrida lo reintenta.
+      if (opciones.soloPropiedades) {
+        const barrido = await refrescarDetallesViejos(supabase, { agenciaId, obtenerDetalle })
+        resultado.propiedades.refrescadas += barrido.refrescadas
+        resultado.errores.push(...barrido.errores)
+      }
+
       if (falloEnPagina) {
         await marcarError(supabase, 'propiedades', resultado.errores.join('; '))
       } else {
@@ -973,7 +1061,9 @@ export async function sincronizarEasyBroker(
     }
 
     // --- Leads: cursor solo al final (el orden de contact_requests no esta garantizado) ---
-    try {
+    // Omitida en el job rapido de propiedades: los leads ya tienen su propio
+    // poll de cada minuto.
+    if (!opciones.soloPropiedades) try {
       const cursor = await leerCursor(supabase, 'leads')
       const params: ParamsEB = { limit: 50 }
       if (cursor) params.happened_after = cursor // filtro top-level, NO search[...]
@@ -1021,8 +1111,9 @@ export async function sincronizarEasyBroker(
     }
 
     // --- Estatus: pasada completa de listing_statuses, SIN cursor (ver jsdoc arriba) ---
-    // Omitida en el poll rapido (soloLeads), igual que propiedades.
-    if (!opciones.soloLeads) try {
+    // Es la parte cara: solo corre en el sync completo de 15 min (se omite
+    // tanto en el poll de leads como en el job rapido de propiedades).
+    if (!opciones.soloLeads && !opciones.soloPropiedades) try {
       const { estatusPorId, completo } = await obtenerMapaEstatusEB(obtenerPagina, maxPaginas)
 
       const propiedadesAgencia: PropiedadEstatusActual[] = []

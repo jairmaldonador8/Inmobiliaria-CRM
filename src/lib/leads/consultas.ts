@@ -55,8 +55,10 @@ export function filtroBusquedaLeads(q: string | undefined): string | null {
 }
 
 /**
- * Leads en bandeja (sin asesor, no archivados), más antiguos PRIMERO:
- * el que más lleva esperando es el más urgente de atender.
+ * Leads en bandeja (sin asesor, no archivados), más RECIENTES primero:
+ * pedido de Renata en el Live test 2026-08-17 — el que acaba de llegar va
+ * hasta arriba y los que llevan más tiempo van bajando. La urgencia de los
+ * viejos no se pierde: la señalan las bandas/badges de espera, no el orden.
  */
 export async function leadsBandeja(): Promise<LeadBandeja[]> {
   const supabase = createAdminClient()
@@ -68,7 +70,7 @@ export async function leadsBandeja(): Promise<LeadBandeja[]> {
     )
     .is('asesor_id', null)
     .eq('archivado', false)
-    .order('creado_en', { ascending: true })
+    .order('creado_en', { ascending: false })
 
   if (error) throw new Error(`No se pudieron cargar los leads de la bandeja: ${error.message}`)
   return (data ?? []) as unknown as LeadBandeja[]

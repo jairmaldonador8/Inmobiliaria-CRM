@@ -279,8 +279,10 @@ describe('Sync EasyBroker Fase 1: idempotencia + dedup (Supabase real)', () => {
     expect(r2.errores).toEqual([]);
     expect(r2.nuevas).toBe(0);
     expect(r2.actualizadas).toBe(2);
-    // Sin re-fetch de detalle para propiedades existentes.
-    expect(llamadasDetalle).toHaveLength(2);
+    // Desde el Live test 2026-08-17 las propiedades existentes TAMBIEN
+    // re-piden el detalle (para que fotos/descripcion editadas en EB
+    // aterricen): un request extra por item de la 2a corrida.
+    expect(llamadasDetalle).toHaveLength(4);
 
     const { data: p1, error } = await svc
       .from('propiedades')

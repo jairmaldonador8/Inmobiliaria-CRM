@@ -28,15 +28,18 @@ export async function GET(request: Request) {
     return new Response('No autorizado', { status: 401 })
   }
 
-  // ?fase=leads = poll rapido (job pg_cron de cada minuto): solo contact
-  // requests, sin propiedades ni estatus. Sin query string = sync completo
-  // (job de cada 15 min), igual que siempre.
-  const soloLeads = new URL(request.url).searchParams.get('fase') === 'leads'
+  // ?fase=leads = poll rapido de contact requests (job de cada minuto).
+  // ?fase=propiedades = catalogo casi en tiempo real (job de cada 2 min):
+  //   cursor incremental + barrido de fotos, sin leads ni listing_statuses.
+  // Sin query string = sync completo (job de cada 15 min), igual que siempre.
+  const fase = new URL(request.url).searchParams.get('fase')
+  const soloLeads = fase === 'leads'
+  const soloPropiedades = fase === 'propiedades'
 
   const supabase = createAdminClient()
-  const resultado = await sincronizarEasyBroker(supabase, {}, { soloLeads })
+  const resultado = await sincronizarEasyBroker(supabase, {}, { soloLeads, soloPropiedades })
 
-  console.log('[cron/easybroker-sync]', JSON.stringify({ soloLeads, ...resultado }))
+  console.log('[cron/easybroker-sync]', JSON.stringify({ fase, ...resultado }))
 
   return Response.json(
     { ok: resultado.errores.length === 0, ...resultado },

@@ -31,6 +31,7 @@ function crearSupabaseFake() {
     q.or = encadena
     q.range = encadena
     q.limit = encadena
+    q.order = encadena
     q.select = () => {
       conSelect = true
       return q
@@ -92,5 +93,20 @@ describe('sincronizarEasyBroker: fases', () => {
     expect(resultado.omitido).toBe(false)
     expect(resultado.errores).toEqual([])
     expect(rutas).toEqual(['/v1/contact_requests'])
+  })
+
+  it('soloPropiedades: true SOLO pega a /v1/properties (sin leads ni listing_statuses)', async () => {
+    const { rutas, obtenerPagina } = crearObtenerPagina()
+    const resultado = await sincronizarEasyBroker(
+      crearSupabaseFake(),
+      { obtenerPagina },
+      { soloPropiedades: true }
+    )
+
+    expect(resultado.omitido).toBe(false)
+    expect(resultado.errores).toEqual([])
+    expect(rutas).toEqual(['/v1/properties'])
+    // El barrido con la tabla vacia no refresca nada (y no truena).
+    expect(resultado.propiedades.refrescadas).toBe(0)
   })
 })

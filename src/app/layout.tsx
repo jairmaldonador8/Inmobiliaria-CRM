@@ -49,7 +49,11 @@ export default async function RootLayout({
       lang="es"
       className={`${poppins.variable} ${jost.variable} ${geistMono.variable} h-full antialiased${oscuro}`}
     >
-      <body className="min-h-full flex flex-col">
+      {/* overflow-x-clip: red de seguridad — ningún elemento pasado de ancho
+          debe convertirse en scroll horizontal de página en el teléfono
+          (reporte de Arturo, Live test 2026-08-17). clip no crea contenedor
+          de scroll, así que sticky/fixed siguen funcionando. */}
+      <body className="min-h-full flex flex-col overflow-x-clip">
         {children}
         <Toaster position="top-center" />
       </body>

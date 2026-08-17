@@ -112,7 +112,7 @@ export default async function PaginaDashboardAdmin() {
     // seguimiento (o asignado_en si no tiene ninguno) determina la urgencia.
     supabase
       .from('leads')
-      .select('id, nombre, etapa, asignado_en, asesor:usuarios!asesor_id(nombre)')
+      .select('id, nombre, etapa, asignado_en, asesor_id, asesor:usuarios!asesor_id(nombre)')
       .not('asesor_id', 'is', null)
       .eq('archivado', false)
       .not('etapa', 'in', `(${ETAPAS_CERRADAS.join(',')})`),
@@ -146,6 +146,20 @@ export default async function PaginaDashboardAdmin() {
   const opcionesAsesores = (asesoresParaReasignar ?? []).map((a) => ({
     userId: a.user_id,
     nombre: a.nombre,
+  }))
+
+  // «Equipo»: carga activa por asesor (gratis de leadsAsignados, ya traído)
+  // para abrir el apartado de cada quien (pedido de Renata, Live test
+  // 2026-08-17). Los ceros también se muestran: un asesor sin leads es dato.
+  const cargaPorAsesor = new Map<string, number>()
+  for (const fila of (leadsAsignados ?? []) as unknown as Array<{ asesor_id: string | null }>) {
+    if (fila.asesor_id) {
+      cargaPorAsesor.set(fila.asesor_id, (cargaPorAsesor.get(fila.asesor_id) ?? 0) + 1)
+    }
+  }
+  const equipo = opcionesAsesores.map((a) => ({
+    ...a,
+    abiertos: cargaPorAsesor.get(a.userId) ?? 0,
   }))
 
   if (errorLeads) {
@@ -326,6 +340,34 @@ export default async function PaginaDashboardAdmin() {
               )}
             </TarjetaGlass>
 
+            {/* Equipo: el apartado de cada asesor y su pipeline */}
+            <TarjetaGlass>
+              <div className="text-[11px] uppercase tracking-wide text-slate-500">Equipo</div>
+              {equipo.length === 0 ? (
+                <p className="py-3 text-sm text-slate-500">Sin asesores activos todavía</p>
+              ) : (
+                <ul className="mt-2 flex flex-col divide-y divide-[#141414]/5">
+                  {equipo.map((asesor) => (
+                    <li key={asesor.userId}>
+                      <Link
+                        href={`/admin/asesores/${asesor.userId}`}
+                        className="flex items-center justify-between gap-3 py-2.5"
+                      >
+                        <span className="min-w-0 truncate text-sm font-medium text-[#141414]">
+                          {asesor.nombre}
+                        </span>
+                        <span className="flex shrink-0 items-center gap-1 text-xs text-[#6E6C66]">
+                          <span className="font-semibold text-[#141414]">{asesor.abiertos}</span>
+                          {asesor.abiertos === 1 ? 'lead activo' : 'leads activos'}
+                          <ChevronRight aria-hidden className="size-3.5" />
+                        </span>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </TarjetaGlass>
+
             {/* Resumen «Cómo van los leads» → métricas completas en /admin/leads */}
             <ResumenComoVanLeads
               variante="movil"
@@ -467,6 +509,39 @@ export default async function PaginaDashboardAdmin() {
         medianaMin={medianaRespuesta}
         actividad={actividadContacto}
       />
+
+      {/* Equipo: el apartado de cada asesor y su pipeline */}
+      <div className="flex flex-col gap-3">
+        <div className="flex items-center gap-2">
+          <UserRound aria-hidden className="size-4 text-slate-500" />
+          <h2 className="text-base font-semibold text-slate-900">Equipo</h2>
+        </div>
+        {equipo.length === 0 ? (
+          <div className="flex min-h-24 items-center justify-center rounded-xl border border-dashed border-slate-300 bg-white/60">
+            <p className="text-sm text-slate-500">Sin asesores activos todavía</p>
+          </div>
+        ) : (
+          <ul className="grid gap-2 lg:grid-cols-2 xl:grid-cols-3">
+            {equipo.map((asesor) => (
+              <li key={asesor.userId}>
+                <Link
+                  href={`/admin/asesores/${asesor.userId}`}
+                  className="flex items-center justify-between gap-3 rounded-xl bg-white p-4 ring-1 ring-slate-200 transition-colors hover:ring-slate-300"
+                >
+                  <span className="min-w-0 truncate font-medium text-slate-900">
+                    {asesor.nombre}
+                  </span>
+                  <span className="flex shrink-0 items-center gap-1.5 text-sm text-slate-500">
+                    <span className="font-semibold text-slate-900">{asesor.abiertos}</span>
+                    {asesor.abiertos === 1 ? 'lead activo' : 'leads activos'}
+                    <ChevronRight aria-hidden className="size-4" />
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
 
       {/* Leads sin atender >24h */}
       <div className="flex flex-col gap-3">

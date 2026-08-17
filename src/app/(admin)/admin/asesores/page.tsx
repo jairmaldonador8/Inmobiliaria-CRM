@@ -1,3 +1,5 @@
+import Link from 'next/link'
+
 import { requireAdmin } from '@/lib/auth/usuario-actual'
 import { obtenerAsesores } from '@/lib/asesores/consultas'
 import { Badge } from '@/components/ui/badge'
@@ -47,7 +49,14 @@ export default async function PaginaAsesores() {
               <TableBody>
                 {asesores.map((asesor) => (
                   <TableRow key={asesor.userId}>
-                    <TableCell className="font-medium text-slate-900">{asesor.nombre}</TableCell>
+                    <TableCell className="font-medium text-slate-900">
+                      <Link
+                        href={`/admin/asesores/${asesor.userId}`}
+                        className="underline-offset-4 hover:underline"
+                      >
+                        {asesor.nombre}
+                      </Link>
+                    </TableCell>
                     <TableCell className="text-slate-600">{asesor.email}</TableCell>
                     <TableCell className="text-slate-600">{asesor.telefono ?? '—'}</TableCell>
                     <TableCell>
@@ -79,7 +88,12 @@ export default async function PaginaAsesores() {
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="truncate font-medium text-slate-900">{asesor.nombre}</p>
+                    <Link
+                      href={`/admin/asesores/${asesor.userId}`}
+                      className="block truncate font-medium text-slate-900 underline-offset-4 hover:underline"
+                    >
+                      {asesor.nombre}
+                    </Link>
                     <p className="truncate text-sm text-slate-500">{asesor.email}</p>
                   </div>
                   <MenuAccionesAsesor asesor={asesor} />

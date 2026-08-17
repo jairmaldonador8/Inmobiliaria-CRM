@@ -8,6 +8,7 @@ import { CambiarTema } from '@/components/nav/cambiar-tema'
 import { SincronizarTema } from '@/components/nav/sincronizar-tema'
 import { NavAsesor, NavAsesorSidebar, PieSesionAsesor } from '@/components/nav/nav-asesor'
 import { Campana } from '@/components/notificaciones/campana'
+import { PullToRefresh } from '@/components/ui/pull-to-refresh'
 import BannerInstalacion from '@/components/push/banner-instalacion'
 import RegistroPush from '@/components/push/registro-push'
 import { ChatKlo } from '@/components/sugerencias/chat-klo'
@@ -43,6 +44,7 @@ export default async function AsesorLayout({
       <SincronizarTema tema={usuario.tema} />
       <RegistroPush />
       <BannerInstalacion />
+      <PullToRefresh />
 
       {/*
         Sidebar de escritorio (desde `lg`): sustituye a la barra de pestañas

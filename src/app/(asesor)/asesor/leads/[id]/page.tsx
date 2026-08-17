@@ -197,8 +197,10 @@ export default async function PaginaDetalleLeadAsesor({
         </h1>
         <div className="flex flex-wrap items-center gap-2">
           <SelectorEtapa leadId={leadDetalle.id} etapa={leadDetalle.etapa} />
-          <Badge variant="secondary">
-            {etiquetaFuenteConDetalle(leadDetalle.fuente, leadDetalle.fuente_detalle)}
+          <Badge variant="secondary" className="min-w-0 shrink">
+            <span className="block max-w-48 truncate">
+              {etiquetaFuenteConDetalle(leadDetalle.fuente, leadDetalle.fuente_detalle)}
+            </span>
           </Badge>
           <EtiquetaClasificacionEB clasificacion={leadDetalle.clasificacion_eb} />
           <span suppressHydrationWarning className="text-xs text-slate-400">

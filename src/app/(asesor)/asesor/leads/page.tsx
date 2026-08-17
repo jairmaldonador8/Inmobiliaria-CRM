@@ -93,7 +93,9 @@ async function ListaLeadsCerrados({ asesorId }: { asesorId: string }) {
                   <div className="min-w-0">
                     <Link
                       href={`/asesor/leads/${lead.id}`}
-                      className="truncate font-medium text-slate-900 underline-offset-4 hover:underline"
+                      // `block` es obligatorio: truncate no aplica a un <a>
+                      // inline y un nombre largo desbordaba la pantalla.
+                      className="block truncate font-medium text-slate-900 underline-offset-4 hover:underline"
                     >
                       {lead.nombre}
                     </Link>

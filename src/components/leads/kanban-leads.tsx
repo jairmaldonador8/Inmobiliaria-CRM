@@ -264,8 +264,13 @@ function FilaLeadMovil({ lead, onMover }: { lead: LeadKanban; onMover: MoverLead
           >
             {etiquetaEtapa(lead.etapa)}
           </span>
-          <Badge variant="secondary" className="px-1.5 text-[0.6875rem]">
-            {etiquetaFuenteConDetalle(lead.fuente, lead.fuente_detalle)}
+          {/* max-w + truncate en el texto: fuente_detalle viene crudo de
+              EasyBroker y un source largo desbordaba la fila en el teléfono
+              (el Badge trae shrink-0 + nowrap y ni encoge ni parte). */}
+          <Badge variant="secondary" className="min-w-0 shrink px-1.5 text-[0.6875rem]">
+            <span className="block max-w-36 truncate">
+              {etiquetaFuenteConDetalle(lead.fuente, lead.fuente_detalle)}
+            </span>
           </Badge>
           <EtiquetaClasificacionEB
             clasificacion={lead.clasificacion_eb}

@@ -379,7 +379,7 @@ export function PanelAscua({
             <div>
               <h2 className="text-[16.5px] font-semibold tracking-[-0.02em]">La cola</h2>
               <p className="mt-1 max-w-[48ch] text-[12.5px] leading-[1.5] text-[var(--mute)]">
-                Ordenada por tiempo de espera, no por llegada.
+                Lo recién llegado hasta arriba; el color marca la urgencia.
               </p>
             </div>
           </div>
@@ -390,7 +390,9 @@ export function PanelAscua({
               <p className="text-[12.5px] text-[var(--mute)]">No hay leads esperando asignación</p>
             </div>
           ) : (
-            (['alerta', 'aviso', 'ok'] as const).map((banda) => {
+            // Recién llegados arriba, vencidos abajo (pedido de Renata,
+            // Live test 2026-08-17); el color del chip sigue gritando la urgencia.
+            (['ok', 'aviso', 'alerta'] as const).map((banda) => {
               const grupo = porBanda[banda]
               if (grupo.length === 0) return null
               const { titulo, chip, clase } = ETIQUETA_BANDA[banda]

@@ -7,6 +7,7 @@ import { SincronizarTema } from '@/components/nav/sincronizar-tema'
 import { BarraMovilAdmin, NavAdmin, PieSesion } from '@/components/nav/nav-admin'
 import { TabBarAdmin } from '@/components/nav/tab-bar-admin'
 import { Campana } from '@/components/notificaciones/campana'
+import { PullToRefresh } from '@/components/ui/pull-to-refresh'
 import BannerInstalacion from '@/components/push/banner-instalacion'
 import RegistroPush from '@/components/push/registro-push'
 import { ChatKlo } from '@/components/sugerencias/chat-klo'
@@ -38,6 +39,7 @@ export default async function AdminLayout({
       <PantallaCarga />
       <RegistroPush />
       <BannerInstalacion />
+      <PullToRefresh />
       {/* Sidebar de escritorio. Tokens `sidebar` y no slate: es negro
           editorial en LOS DOS temas — con slate, el camaleón lo invertía a
           blanco en modo noche y el wordmark crema desaparecía. */}
