@@ -9,6 +9,8 @@ import {
   formatearPrecio,
   formatearSuperficie,
 } from '@/lib/propiedades/formato'
+import { mensajeFichaTecnica } from '@/lib/propiedades/compartir'
+import { BotonCompartirFotos } from '@/components/propiedades/boton-compartir-fotos'
 import { GaleriaFotos } from '@/components/propiedades/galeria-fotos'
 import {
   BarraAccionesMovil,
@@ -65,15 +67,17 @@ export default async function PaginaDetallePropiedadAdmin({
   const fotos = (propiedad.fotos ?? []) as string[]
   const zona = [propiedad.colonia, propiedad.ciudad].filter(Boolean).join(', ')
 
-  // Mismo mensaje que comparte el asesor: título + precio + link público.
-  const textoCompartir = [
-    propiedad.titulo,
-    formatearPrecio(propiedad.precio, propiedad.moneda),
-    propiedad.url_publica,
-  ]
-    .filter(Boolean)
-    .join('\n')
+  // Mismo mensaje que comparte el asesor: ficha técnica formal (ronda 2).
+  const textoCompartir = mensajeFichaTecnica(propiedad)
   const enlaceWhatsApp = `https://wa.me/?text=${encodeURIComponent(textoCompartir)}`
+  const botonFotos = (
+    <BotonCompartirFotos
+      fotos={fotos}
+      titulo={propiedad.titulo}
+      urlPublica={propiedad.url_publica}
+      className="h-12 flex-1"
+    />
+  )
 
   // Los mismos datos de la lista de escritorio, en celdas para el teléfono.
   // Sin «Zona»: es la única de texto largo (se cortaba a «Del Valle, San
@@ -250,7 +254,11 @@ export default async function PaginaDetallePropiedadAdmin({
 
       {/* Se coloca sola encima de la píldora de pestañas leyendo `--alto-nav`
           del layout del admin. */}
-      <BarraAccionesMovil enlaceWhatsApp={enlaceWhatsApp} urlPublica={propiedad.url_publica} />
+      <BarraAccionesMovil
+        enlaceWhatsApp={enlaceWhatsApp}
+        urlPublica={propiedad.url_publica}
+        accionFotos={fotos.length > 0 ? botonFotos : undefined}
+      />
     </section>
   )
 }

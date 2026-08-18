@@ -9,6 +9,8 @@ import {
   formatearPrecio,
   formatearSuperficie,
 } from '@/lib/propiedades/formato'
+import { mensajeFichaTecnica } from '@/lib/propiedades/compartir'
+import { BotonCompartirFotos } from '@/components/propiedades/boton-compartir-fotos'
 import { GaleriaFotos } from '@/components/propiedades/galeria-fotos'
 import {
   BarraAccionesMovil,
@@ -51,16 +53,18 @@ export default async function PaginaDetallePropiedadAsesor({
   const zona = [propiedad.colonia, propiedad.ciudad].filter(Boolean).join(', ')
   const esTuya = propiedad.asesor_id === usuario.user_id
 
-  // Mensaje para compartir por WhatsApp: título + precio + link público.
-  // Sin teléfono: el asesor elige el contacto al abrir WhatsApp.
-  const textoCompartir = [
-    propiedad.titulo,
-    formatearPrecio(propiedad.precio, propiedad.moneda),
-    propiedad.url_publica,
-  ]
-    .filter(Boolean)
-    .join('\n')
+  // Ficha técnica formal para el cliente (ronda 2, ver compartir.ts). Sin
+  // teléfono: el asesor elige el contacto al abrir WhatsApp.
+  const textoCompartir = mensajeFichaTecnica(propiedad)
   const enlaceWhatsApp = `https://wa.me/?text=${encodeURIComponent(textoCompartir)}`
+  const botonFotos = (
+    <BotonCompartirFotos
+      fotos={fotos}
+      titulo={propiedad.titulo}
+      urlPublica={propiedad.url_publica}
+      className="h-12 flex-1"
+    />
+  )
 
   // Los mismos datos de la lista de escritorio, en celdas para el teléfono.
   // Sin «Zona»: es la única de texto largo (se cortaba a «Del Valle, San
@@ -174,16 +178,24 @@ export default async function PaginaDetallePropiedadAsesor({
 
           <DatosEnCeldas datos={celdas} />
 
-          {/* En el teléfono compartir vive en la barra fija de abajo. */}
-          <a
-            href={enlaceWhatsApp}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hidden h-11 items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-emerald-700 active:translate-y-px lg:inline-flex lg:self-start lg:px-6"
-          >
-            <MessageCircle aria-hidden className="size-4" />
-            Compartir por WhatsApp
-          </a>
+          {/* En el teléfono estas acciones viven en la barra fija de abajo. */}
+          <div className="hidden gap-2 lg:flex">
+            <a
+              href={enlaceWhatsApp}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-emerald-600 px-6 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-emerald-700 active:translate-y-px"
+            >
+              <MessageCircle aria-hidden className="size-4" />
+              Mandar ficha por WhatsApp
+            </a>
+            <BotonCompartirFotos
+              fotos={fotos}
+              titulo={propiedad.titulo}
+              urlPublica={propiedad.url_publica}
+              className="h-11 px-6"
+            />
+          </div>
 
           {propiedad.descripcion ? <DescripcionPlegable texto={propiedad.descripcion} /> : null}
         </div>
@@ -216,7 +228,11 @@ export default async function PaginaDetallePropiedadAsesor({
 
       {/* Se coloca sola encima de la barra de pestañas leyendo `--alto-nav`
           del layout del asesor. */}
-      <BarraAccionesMovil enlaceWhatsApp={enlaceWhatsApp} urlPublica={propiedad.url_publica} />
+      <BarraAccionesMovil
+        enlaceWhatsApp={enlaceWhatsApp}
+        urlPublica={propiedad.url_publica}
+        accionFotos={fotos.length > 0 ? botonFotos : undefined}
+      />
     </section>
   )
 }

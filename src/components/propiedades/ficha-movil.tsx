@@ -113,10 +113,13 @@ export function DescripcionPlegable({ texto }: { texto: string }) {
 export function BarraAccionesMovil({
   enlaceWhatsApp,
   urlPublica,
+  accionFotos,
   className,
 }: {
   enlaceWhatsApp: string
   urlPublica: string | null
+  /** Botón «Mandar fotos» (ronda 2) — lo arma la página con sus datos. */
+  accionFotos?: React.ReactNode
   className?: string
 }) {
   return (
@@ -133,9 +136,13 @@ export function BarraAccionesMovil({
         className="flex h-12 flex-1 items-center justify-center gap-2 rounded-xl bg-emerald-600 text-sm font-semibold text-white transition-colors active:translate-y-px"
       >
         <MessageCircle aria-hidden className="size-4" />
-        Compartir
+        Mandar ficha
       </a>
-      {urlPublica ? (
+      {accionFotos}
+      {/* Con el botón de fotos ya no cabían tres acciones: «Ver publicada»
+          solo se muestra si no hay fotos que mandar (la liga pública sigue
+          viva en la ficha técnica de escritorio y como fallback del share). */}
+      {!accionFotos && urlPublica ? (
         <a
           href={urlPublica}
           target="_blank"

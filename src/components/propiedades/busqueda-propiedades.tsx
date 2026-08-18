@@ -28,7 +28,13 @@ export function BusquedaPropiedades({ placeholder }: { placeholder: string }) {
     if (timeoutRef.current) clearTimeout(timeoutRef.current)
     timeoutRef.current = setTimeout(() => {
       const q = texto.trim()
-      router.replace(q ? `${pathname}?q=${encodeURIComponent(q)}` : pathname, { scroll: false })
+      // Se preservan los demás parámetros (p. ej. ?mias=1 del filtro
+      // «Mías», ronda 2): buscar no debe sacarte del filtro activo.
+      const params = new URLSearchParams(searchParams)
+      if (q) params.set('q', q)
+      else params.delete('q')
+      const query = params.toString()
+      router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false })
     }, DEBOUNCE_MS)
   }
 
