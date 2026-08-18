@@ -1,0 +1,622 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ronda 2 · Barrita de etapa, follow-ups y pipeline móvil</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --tinta:#0f172a;        /* slate-900 */
+    --gris:#64748b;         /* slate-500 */
+    --gris-suave:#94a3b8;   /* slate-400 */
+    --borde:#e2e8f0;        /* slate-200 */
+    --fondo:#eceae6;        /* greige bento */
+    --carta:#ffffff;
+
+    /* Colores de etapa — los MISMOS del sistema (formato.ts) */
+    --nuevo:#3b82f6;        --nuevo-suave:#dbeafe;      --nuevo-texto:#1d4ed8;
+    --contactado:#0ea5e9;   --contactado-suave:#e0f2fe; --contactado-texto:#0369a1;
+    --cita:#8b5cf6;         --cita-suave:#ede9fe;       --cita-texto:#6d28d9;
+    --visito:#6366f1;       --visito-suave:#e0e7ff;     --visito-texto:#4338ca;
+    --nego:#f59e0b;         --nego-suave:#fef3c7;       --nego-texto:#b45309;
+    --ganado:#10b981;       --ganado-suave:#d1fae5;     --ganado-texto:#047857;
+
+    /* Variante B: semáforo de avance (frío → verde) */
+    --b1:#94a3b8; --b2:#fbbf24; --b3:#f59e0b; --b4:#a3c34d; --b5:#10b981;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    font-family:'Poppins',system-ui,-apple-system,'Segoe UI',sans-serif;
+    background:var(--fondo);color:var(--tinta);
+    font-size:16px;line-height:1.45;
+    font-feature-settings:"kern" 1;text-rendering:optimizeLegibility;
+    padding:3rem 1.5rem 5rem;
+  }
+  header.pagina{max-width:65ch;margin:0 auto 3rem}
+  header.pagina h1{font-size:1.6rem;font-weight:600;letter-spacing:-0.01em;line-height:1.25}
+  header.pagina p{margin-top:.75em;color:var(--gris)}
+  .kicker{font-size:.75rem;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--gris-suave)}
+
+  section.bloque{max-width:1100px;margin:0 auto 4.5rem}
+  section.bloque > h2{font-size:1.2rem;font-weight:600;margin-bottom:.35em}
+  section.bloque > p.intro{color:var(--gris);max-width:65ch;margin-bottom:1.75rem}
+
+  .fila-phones{display:flex;flex-wrap:wrap;gap:2.5rem;align-items:flex-start}
+  .col-phone{display:flex;flex-direction:column;gap:.85rem}
+  .col-phone > h3{font-size:.95rem;font-weight:600}
+  .col-phone > h3 .tag{display:inline-block;margin-left:.5em;font-size:.7rem;font-weight:600;
+    letter-spacing:.07em;text-transform:uppercase;color:var(--gris-suave)}
+  .col-phone > p.nota{max-width:38ch;font-size:.85rem;color:var(--gris)}
+
+  /* ─── marco de teléfono ─── */
+  .phone{
+    width:390px;background:#fafafa;border-radius:2.4rem;
+    border:10px solid #16181d;box-shadow:0 24px 48px rgba(15,23,42,.18);
+    overflow:hidden;position:relative;flex-shrink:0;
+  }
+  .phone .pantalla{padding:1.1rem 1rem 4.6rem;min-height:520px}
+  .phone .statusbar{display:flex;justify-content:space-between;align-items:center;
+    padding:.55rem 1.4rem .2rem;font-size:.72rem;font-weight:600;color:var(--tinta)}
+  .tabbar{position:absolute;left:0;right:0;bottom:0;height:56px;background:#fff;
+    border-top:1px solid var(--borde);display:flex}
+  .tabbar span{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:2px;font-size:.65rem;font-weight:500;color:var(--gris-suave)}
+  .tabbar span.on{color:var(--tinta)}
+  .tabbar i{width:19px;height:19px;border-radius:5px;background:currentColor;opacity:.85;display:block;
+    mask:var(--icono) center/contain no-repeat;-webkit-mask:var(--icono) center/contain no-repeat}
+  .ic-casa{--icono:url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2"><path d="M3 10.5 12 3l9 7.5V21H3z"/></svg>')}
+  .ic-gente{--icono:url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6"/><circle cx="17" cy="9" r="2.6"/><path d="M16 14.4c3 .2 5.5 2.3 5.5 5.6"/></svg>')}
+  .ic-edif{--icono:url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2"><rect x="5" y="3" width="14" height="18" rx="1.5"/><path d="M9 7h2M13 7h2M9 11h2M13 11h2M9 15h2M13 15h2"/></svg>')}
+  .ic-lista{--icono:url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h4"/></svg>')}
+  .ic-perfil{--icono:url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-6.5 8-6.5s8 2.5 8 6.5"/></svg>')}
+
+  /* ─── piezas de UI de la app ─── */
+  .volver{font-size:.8rem;color:var(--gris);margin-bottom:.8rem}
+  .carta{background:var(--carta);border:1px solid var(--borde);border-radius:1rem;padding:1rem}
+  .badge{display:inline-flex;align-items:center;border-radius:999px;padding:.18em .7em;
+    font-size:.68rem;font-weight:500;white-space:nowrap}
+  .b-fuente{background:#f1f5f9;color:#475569}
+  .b-directo{background:var(--ganado-suave);color:var(--ganado-texto)}
+  .b-corredor{background:var(--nuevo-suave);color:var(--nuevo-texto)}
+  .b-nuevo{background:var(--nuevo-suave);color:var(--nuevo-texto)}
+  .b-contactado{background:var(--contactado-suave);color:var(--contactado-texto)}
+  .b-cita{background:var(--cita-suave);color:var(--cita-texto)}
+  .b-visito{background:var(--visito-suave);color:var(--visito-texto)}
+  .b-nego{background:var(--nego-suave);color:var(--nego-texto)}
+  .h-lead{font-size:1.15rem;font-weight:600;letter-spacing:-0.01em}
+  .sub{font-size:.8rem;color:var(--gris)}
+  .mini{font-size:.7rem;color:var(--gris-suave)}
+
+  /* ─── LA BARRITA DE ETAPA (con Klo caminando encima) ─── */
+  .barrita{display:flex;flex-direction:column;gap:.45rem;margin:.9rem 0 .2rem}
+  .pista{position:relative;height:44px}
+  .klo{position:absolute;bottom:-4px;width:44px;height:44px;object-fit:contain;
+    transform:translateX(-50%);transition:left .6s ease;
+    animation:klo-brinco 1.6s ease-in-out infinite}
+  .klo.mini{width:30px;height:30px;bottom:-3px}
+  .pista.chica{height:28px}
+  @keyframes klo-brinco{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-2px)}}
+  .burbuja{position:absolute;bottom:26px;transform:translateX(-105%);white-space:nowrap;
+    background:var(--tinta);color:#fff;font-size:.62rem;font-weight:500;
+    padding:.32em .75em;border-radius:999px}
+  .burbuja::after{content:'';position:absolute;right:10px;bottom:-4px;width:8px;height:8px;
+    background:var(--tinta);transform:rotate(45deg);border-radius:2px}
+  .barrita .segmentos{display:flex;gap:5px}
+  .barrita .seg{flex:1;height:7px;border-radius:999px;background:#e6e3de;position:relative}
+  .barrita .seg.on{background:var(--c)}
+  .barrita .seg.actual{box-shadow:0 0 0 3px color-mix(in srgb, var(--c) 25%, transparent)}
+  .barrita .leyenda{display:flex;justify-content:space-between;align-items:baseline}
+  .barrita .leyenda .etapa-actual{font-size:.78rem;font-weight:600;color:var(--c)}
+  .barrita .leyenda .paso{font-size:.68rem;color:var(--gris-suave)}
+
+  /* estados extra (tira comparativa) */
+  .tira-estados{display:flex;flex-direction:column;gap:.9rem;margin-top:.4rem}
+  .tira-estados .estado{background:var(--carta);border:1px solid var(--borde);border-radius:.8rem;padding:.7rem .9rem}
+  .tira-estados .estado p{font-size:.72rem;color:var(--gris);margin-bottom:.45rem}
+  .tira-estados .estado p b{color:var(--tinta);font-weight:600}
+
+  .acciones-lead{display:grid;grid-template-columns:1fr 1fr;gap:.6rem;margin-top:1rem}
+  .btn{border-radius:.8rem;padding:.7rem;text-align:center;font-size:.85rem;font-weight:500}
+  .btn-oscuro{background:var(--tinta);color:#fff}
+  .btn-claro{background:#fff;border:1px solid var(--borde);color:var(--tinta)}
+
+  /* ─── hoja de follow-up ─── */
+  .velo{position:absolute;inset:0;background:rgba(15,23,42,.35)}
+  .hoja{position:absolute;left:0;right:0;bottom:0;background:#fff;border-radius:1.4rem 1.4rem 0 0;
+    padding:1.2rem 1.2rem 1.5rem;box-shadow:0 -12px 40px rgba(15,23,42,.25)}
+  .hoja .asa{width:38px;height:4px;border-radius:999px;background:var(--borde);margin:0 auto .9rem}
+  .hoja h4{font-size:1rem;font-weight:600;line-height:1.3}
+  .hoja p.contexto{font-size:.78rem;color:var(--gris);margin-top:.25em}
+  .chips{display:flex;flex-wrap:wrap;gap:.5rem;margin:.9rem 0}
+  .chip{border:1px solid var(--borde);border-radius:999px;padding:.45em .95em;font-size:.78rem;
+    font-weight:500;color:var(--tinta);background:#fff}
+  .chip.on{background:var(--tinta);color:#fff;border-color:var(--tinta)}
+  .campo-nota{border:1px solid var(--borde);border-radius:.8rem;padding:.7rem .85rem;font-size:.82rem;
+    color:var(--tinta);background:#f8fafc}
+  .campo-nota .ph{color:var(--gris-suave)}
+  .fila-toggle{display:flex;justify-content:space-between;align-items:center;margin:.9rem 0}
+  .fila-toggle span{font-size:.82rem}
+  .toggle{width:40px;height:23px;border-radius:999px;background:var(--ganado);position:relative}
+  .toggle::after{content:'';position:absolute;top:2.5px;right:2.5px;width:18px;height:18px;border-radius:50%;background:#fff}
+  .hoja .btn-oscuro{display:block;width:100%}
+  .hoja .luego{display:block;text-align:center;font-size:.78rem;color:var(--gris);margin-top:.7rem}
+
+  /* ─── colas del inicio ─── */
+  .cola h5{display:flex;align-items:center;gap:.45rem;font-size:.82rem;font-weight:600;margin:1.1rem 0 .55rem}
+  .cola h5 .conteo{border-radius:999px;padding:.1em .6em;font-size:.68rem;font-weight:600}
+  .c-rojo{background:#fee2e2;color:#b91c1c}
+  .c-verde{background:var(--ganado-suave);color:var(--ganado-texto)}
+  .tarjeta-lead{display:flex;align-items:center;gap:.7rem;background:#fff;border:1px solid var(--borde);
+    border-radius:.9rem;padding:.7rem .85rem;margin-bottom:.5rem}
+  .tarjeta-lead .avatar{width:36px;height:36px;border-radius:50%;background:#f1f5f9;display:flex;
+    align-items:center;justify-content:center;font-size:.68rem;font-weight:600;color:#475569;flex-shrink:0}
+  .tarjeta-lead .cuerpo{min-width:0;flex:1}
+  .tarjeta-lead .nombre{font-size:.85rem;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .tarjeta-lead .detalle{font-size:.7rem;color:var(--gris);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .tarjeta-lead .meta{display:flex;gap:.4rem;align-items:center;margin-top:.25rem}
+  .punto{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+  .p-ambar{background:#f59e0b}.p-rojo{background:#ef4444}
+  .hora-rec{font-size:.72rem;font-weight:600;color:var(--tinta);flex-shrink:0}
+
+  /* ─── pipeline por secciones ─── */
+  .fila-chips{display:flex;gap:.45rem;overflow:hidden;margin:.7rem 0 .4rem}
+  .seccion-etapa{margin-top:1.1rem}
+  .seccion-etapa .cab{display:flex;align-items:center;gap:.55rem;margin-bottom:.55rem}
+  .seccion-etapa .cab .punto-etapa{width:9px;height:9px;border-radius:3px;background:var(--c)}
+  .seccion-etapa .cab h6{font-size:.72rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--c)}
+  .seccion-etapa .cab .linea{flex:1;height:1px;background:var(--borde)}
+  .seccion-etapa .cab .n{font-size:.72rem;font-weight:600;color:var(--gris)}
+
+  .aviso-eleccion{max-width:65ch;margin:0 auto;background:#fff;border:1px solid var(--borde);
+    border-radius:1rem;padding:1.2rem 1.4rem}
+  .aviso-eleccion h3{font-size:.95rem;font-weight:600;margin-bottom:.4em}
+  .aviso-eleccion p{font-size:.88rem;color:var(--gris)}
+</style>
+</head>
+<body>
+
+<header class="pagina">
+  <p class="kicker">Klo-Ser · Ronda 2 · propuesta visual</p>
+  <h1>Barrita de etapa, follow-ups con recordatorio y pipeline en el teléfono</h1>
+  <p>Tres piezas nuevas, montadas sobre las pantallas reales de la app. Todo es maqueta: nada de esto está construido todavía.</p>
+</header>
+
+<!-- ══════════════ 1 · LA BARRITA ══════════════ -->
+<section class="bloque">
+  <h2>1 · La barrita de etapa en la ficha del lead</h2>
+  <p class="intro">Vive arriba de la ficha, debajo del nombre: cinco segmentos, uno por etapa del pipeline, con <strong>Klo caminando encima</strong>. El gallito se para sobre la etapa actual y, cuando el lead avanza, camina hasta el siguiente segmento con su burbuja «Klo-ser to your dreams». Al cerrar ganado, la barra entera se pinta verde y Klo festeja. Hay dos formas de colorear los segmentos — elige una.</p>
+
+  <div class="fila-phones">
+
+    <!-- Variante A -->
+    <div class="col-phone">
+      <h3>Variante A <span class="tag">colores del sistema</span></h3>
+      <p class="nota">Cada etapa enciende su propio color — los mismos de los badges que el equipo ya conoce (azul nuevo, violeta cita, ámbar negociación).</p>
+      <div class="phone">
+        <div class="statusbar"><span>9:41</span><span>●●●</span></div>
+        <div class="pantalla">
+          <p class="volver">← Volver a leads</p>
+          <div class="carta">
+            <p class="h-lead">Diego Ramírez</p>
+            <p class="sub">811 234 5678 · inmuebles24</p>
+
+            <div class="barrita" style="--c:var(--nego)">
+              <div class="pista">
+                <span class="burbuja" style="left:90%">Klo-ser to your dreams</span>
+                <img class="klo" src="assets/logo/gallo-camina.apng.png" alt="Klo caminando" style="left:90%">
+              </div>
+              <div class="segmentos">
+                <span class="seg on" style="--c:var(--nuevo)"></span>
+                <span class="seg on" style="--c:var(--contactado)"></span>
+                <span class="seg on" style="--c:var(--cita)"></span>
+                <span class="seg on" style="--c:var(--visito)"></span>
+                <span class="seg on actual" style="--c:var(--nego)"></span>
+              </div>
+              <div class="leyenda">
+                <span class="etapa-actual">Negociación</span>
+                <span class="paso">etapa 5 de 5</span>
+              </div>
+            </div>
+
+            <div style="display:flex;gap:.4rem;flex-wrap:wrap;margin-top:.4rem">
+              <span class="badge b-fuente">inmuebles24</span>
+              <span class="badge b-directo">Cliente directo</span>
+            </div>
+            <div class="acciones-lead">
+              <span class="btn btn-oscuro">WhatsApp</span>
+              <span class="btn btn-claro">Llamar</span>
+            </div>
+          </div>
+
+          <div class="tira-estados">
+            <div class="estado">
+              <p>Recién asignado — <b>Nuevo</b></p>
+              <div class="barrita" style="margin:.1rem 0 0">
+                <div class="pista chica"><img class="klo mini" src="assets/logo/gallo-camina.apng.png" alt="" style="left:10%"></div>
+                <div class="segmentos">
+                  <span class="seg on actual" style="--c:var(--nuevo)"></span>
+                  <span class="seg"></span><span class="seg"></span><span class="seg"></span><span class="seg"></span>
+                </div>
+              </div>
+            </div>
+            <div class="estado">
+              <p>A mitad del camino — <b>Cita agendada</b></p>
+              <div class="barrita" style="margin:.1rem 0 0">
+                <div class="pista chica"><img class="klo mini" src="assets/logo/gallo-camina.apng.png" alt="" style="left:50%"></div>
+                <div class="segmentos">
+                  <span class="seg on" style="--c:var(--nuevo)"></span>
+                  <span class="seg on" style="--c:var(--contactado)"></span>
+                  <span class="seg on actual" style="--c:var(--cita)"></span>
+                  <span class="seg"></span><span class="seg"></span>
+                </div>
+              </div>
+            </div>
+            <div class="estado">
+              <p>Cerró — <b>Cerrado ganado</b> (la barrita completa se pinta verde)</p>
+              <div class="barrita" style="margin:.1rem 0 0">
+                <div class="pista chica">
+                  <span class="burbuja" style="left:90%;bottom:20px">¡Klo-ser than ever!</span>
+                  <img class="klo mini" src="assets/logo/gallo-camina.apng.png" alt="" style="left:90%">
+                </div>
+                <div class="segmentos">
+                  <span class="seg on" style="--c:var(--ganado)"></span>
+                  <span class="seg on" style="--c:var(--ganado)"></span>
+                  <span class="seg on" style="--c:var(--ganado)"></span>
+                  <span class="seg on" style="--c:var(--ganado)"></span>
+                  <span class="seg on" style="--c:var(--ganado)"></span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="tabbar">
+          <span><i class="ic-casa"></i>Inicio</span>
+          <span class="on"><i class="ic-gente"></i>Leads</span>
+          <span><i class="ic-edif"></i>Propiedades</span>
+          <span><i class="ic-lista"></i>Captaciones</span>
+          <span><i class="ic-perfil"></i>Perfil</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Variante B -->
+    <div class="col-phone">
+      <h3>Variante B <span class="tag">semáforo de avance</span></h3>
+      <p class="nota">Lo que describiste: la barra se va «calentando» hacia el verde. Gris al inicio, amarillos en medio, verde en negociación — de un vistazo se lee qué tan cerca está de cerrar.</p>
+      <div class="phone">
+        <div class="statusbar"><span>9:41</span><span>●●●</span></div>
+        <div class="pantalla">
+          <p class="volver">← Volver a leads</p>
+          <div class="carta">
+            <p class="h-lead">Diego Ramírez</p>
+            <p class="sub">811 234 5678 · inmuebles24</p>
+
+            <div class="barrita" style="--c:var(--b5)">
+              <div class="pista">
+                <span class="burbuja" style="left:90%">Klo-ser to your dreams</span>
+                <img class="klo" src="assets/logo/gallo-camina.apng.png" alt="Klo caminando" style="left:90%">
+              </div>
+              <div class="segmentos">
+                <span class="seg on" style="--c:var(--b1)"></span>
+                <span class="seg on" style="--c:var(--b2)"></span>
+                <span class="seg on" style="--c:var(--b3)"></span>
+                <span class="seg on" style="--c:var(--b4)"></span>
+                <span class="seg on actual" style="--c:var(--b5)"></span>
+              </div>
+              <div class="leyenda">
+                <span class="etapa-actual" style="color:var(--ganado-texto)">Negociación</span>
+                <span class="paso">etapa 5 de 5</span>
+              </div>
+            </div>
+
+            <div style="display:flex;gap:.4rem;flex-wrap:wrap;margin-top:.4rem">
+              <span class="badge b-fuente">inmuebles24</span>
+              <span class="badge b-directo">Cliente directo</span>
+            </div>
+            <div class="acciones-lead">
+              <span class="btn btn-oscuro">WhatsApp</span>
+              <span class="btn btn-claro">Llamar</span>
+            </div>
+          </div>
+
+          <div class="tira-estados">
+            <div class="estado">
+              <p>Recién asignado — <b>Nuevo</b></p>
+              <div class="barrita" style="margin:.1rem 0 0">
+                <div class="pista chica"><img class="klo mini" src="assets/logo/gallo-camina.apng.png" alt="" style="left:10%"></div>
+                <div class="segmentos">
+                  <span class="seg on actual" style="--c:var(--b1)"></span>
+                  <span class="seg"></span><span class="seg"></span><span class="seg"></span><span class="seg"></span>
+                </div>
+              </div>
+            </div>
+            <div class="estado">
+              <p>A mitad del camino — <b>Cita agendada</b></p>
+              <div class="barrita" style="margin:.1rem 0 0">
+                <div class="pista chica"><img class="klo mini" src="assets/logo/gallo-camina.apng.png" alt="" style="left:50%"></div>
+                <div class="segmentos">
+                  <span class="seg on" style="--c:var(--b1)"></span>
+                  <span class="seg on" style="--c:var(--b2)"></span>
+                  <span class="seg on actual" style="--c:var(--b3)"></span>
+                  <span class="seg"></span><span class="seg"></span>
+                </div>
+              </div>
+            </div>
+            <div class="estado">
+              <p>Cerró — <b>Cerrado ganado</b></p>
+              <div class="barrita" style="margin:.1rem 0 0">
+                <div class="pista chica">
+                  <span class="burbuja" style="left:90%;bottom:20px">¡Klo-ser than ever!</span>
+                  <img class="klo mini" src="assets/logo/gallo-camina.apng.png" alt="" style="left:90%">
+                </div>
+                <div class="segmentos">
+                  <span class="seg on" style="--c:var(--ganado)"></span>
+                  <span class="seg on" style="--c:var(--ganado)"></span>
+                  <span class="seg on" style="--c:var(--ganado)"></span>
+                  <span class="seg on" style="--c:var(--ganado)"></span>
+                  <span class="seg on" style="--c:var(--ganado)"></span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="tabbar">
+          <span><i class="ic-casa"></i>Inicio</span>
+          <span class="on"><i class="ic-gente"></i>Leads</span>
+          <span><i class="ic-edif"></i>Propiedades</span>
+          <span><i class="ic-lista"></i>Captaciones</span>
+          <span><i class="ic-perfil"></i>Perfil</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════ 2 · FOLLOW-UP ══════════════ -->
+<section class="bloque">
+  <h2>2 · «¿Cuándo es el siguiente follow-up?»</h2>
+  <p class="intro">Al registrar un contacto o seguimiento (por ejemplo: «preguntó por una casa, hay que verificar si está disponible»), la app pregunta cuándo retomarlo. Se guarda con nota y manda notificación push a la hora pactada. Los recordatorios del día aparecen en el inicio, en una cola nueva «Para hoy».</p>
+
+  <div class="fila-phones">
+
+    <div class="col-phone">
+      <h3>La hoja al salir del lead</h3>
+      <p class="nota">Opciones rápidas de un toque + fecha libre. La nota dice de qué trata para que el recordatorio llegue con contexto.</p>
+      <div class="phone">
+        <div class="statusbar"><span>9:41</span><span>●●●</span></div>
+        <div class="pantalla" style="filter:saturate(.9)">
+          <p class="volver">← Volver a leads</p>
+          <div class="carta">
+            <p class="h-lead">Diego Ramírez</p>
+            <p class="sub">811 234 5678 · inmuebles24</p>
+            <div class="barrita" style="--c:var(--contactado)">
+              <div class="pista">
+                <img class="klo" src="assets/logo/gallo-camina.apng.png" alt="Klo caminando" style="left:30%">
+              </div>
+              <div class="segmentos">
+                <span class="seg on" style="--c:var(--nuevo)"></span>
+                <span class="seg on actual" style="--c:var(--contactado)"></span>
+                <span class="seg"></span><span class="seg"></span><span class="seg"></span>
+              </div>
+              <div class="leyenda">
+                <span class="etapa-actual">Contactado</span>
+                <span class="paso">etapa 2 de 5</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="velo"></div>
+        <div class="hoja">
+          <div class="asa"></div>
+          <h4>¿Cuándo le das el siguiente seguimiento a Diego?</h4>
+          <p class="contexto">Acabas de registrar: «Preguntó por Casa Cumbres, verificar disponibilidad para cita».</p>
+          <div class="chips">
+            <span class="chip">Hoy en la tarde</span>
+            <span class="chip on">Mañana 9:00</span>
+            <span class="chip">En 3 días</span>
+            <span class="chip">Próxima semana</span>
+            <span class="chip">Elegir fecha…</span>
+          </div>
+          <div class="campo-nota">Confirmar con el dueño si Casa Cumbres sigue disponible y proponerle cita</div>
+          <div class="fila-toggle">
+            <span>Recordármelo con notificación</span>
+            <span class="toggle"></span>
+          </div>
+          <span class="btn btn-oscuro">Guardar recordatorio</span>
+          <span class="luego">Ahora no</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-phone">
+      <h3>El inicio con la cola «Para hoy»</h3>
+      <p class="nota">Los recordatorios que vencen hoy, con su hora y su nota, arriba de las colas de siempre. Vencido sin atender = se queda en rojo, no desaparece.</p>
+      <div class="phone">
+        <div class="statusbar"><span>9:41</span><span>●●●</span></div>
+        <div class="pantalla">
+          <p class="h-lead" style="font-size:1.2rem">Hola, Arturo</p>
+          <p class="mini">Martes, 18 de agosto de 2026</p>
+
+          <div class="cola">
+            <h5>⏰ Para hoy <span class="conteo c-verde">2</span></h5>
+            <div class="tarjeta-lead">
+              <span class="avatar">DR</span>
+              <div class="cuerpo">
+                <p class="nombre">Diego Ramírez</p>
+                <p class="detalle">Confirmar disponibilidad de Casa Cumbres y proponer cita</p>
+              </div>
+              <span class="hora-rec">9:00</span>
+            </div>
+            <div class="tarjeta-lead">
+              <span class="avatar">MG</span>
+              <div class="cuerpo">
+                <p class="nombre">Marcela Garza</p>
+                <p class="detalle">Le prometiste fotos del depto en Valle</p>
+              </div>
+              <span class="hora-rec">16:30</span>
+            </div>
+          </div>
+
+          <div class="cola">
+            <h5>🔥 Atiende ahora <span class="conteo c-rojo">1</span></h5>
+            <div class="tarjeta-lead">
+              <span class="avatar">AT</span>
+              <div class="cuerpo">
+                <p class="nombre">Ana Torres</p>
+                <p class="detalle">Depto Valle Oriente · Asignado hace 12 min</p>
+                <div class="meta">
+                  <span class="badge b-nuevo">Nuevo</span>
+                  <span class="badge b-directo">Cliente directo</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="cola">
+            <h5>⚠️ Necesitan seguimiento <span class="conteo" style="background:#fef3c7;color:#b45309">1</span></h5>
+            <div class="tarjeta-lead">
+              <span class="punto p-ambar" style="margin-left:.2rem"></span>
+              <div class="cuerpo">
+                <p class="nombre">Luis Cantú</p>
+                <p class="detalle">Casa Contry · último contacto hace 2 días</p>
+                <div class="meta"><span class="badge b-contactado">Contactado</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="tabbar">
+          <span class="on"><i class="ic-casa"></i>Inicio</span>
+          <span><i class="ic-gente"></i>Leads</span>
+          <span><i class="ic-edif"></i>Propiedades</span>
+          <span><i class="ic-lista"></i>Captaciones</span>
+          <span><i class="ic-perfil"></i>Perfil</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════ 3 · PIPELINE MÓVIL ══════════════ -->
+<section class="bloque">
+  <h2>3 · El pipeline en el teléfono: secciones por etapa</h2>
+  <p class="intro">La pestaña «Leads» en el teléfono: la lista se agrupa en secciones verticales, una por etapa, con su color y conteo — el pipeline completo se lee bajando con el dedo, sin scroll horizontal. Los chips de arriba siguen filtrando, los más nuevos van arriba dentro de cada sección, y cada tarjeta trae más contexto (propiedad, fuente, clasificación y su próximo recordatorio).</p>
+
+  <div class="fila-phones">
+    <div class="col-phone">
+      <h3>Pestaña Leads <span class="tag">agrupada por etapa</span></h3>
+      <div class="phone">
+        <div class="statusbar"><span>9:41</span><span>●●●</span></div>
+        <div class="pantalla">
+          <div style="display:flex;justify-content:space-between;align-items:baseline">
+            <p class="h-lead" style="font-size:1.2rem">Leads</p>
+            <span class="mini" style="text-decoration:underline;text-underline-offset:2px">Ver cerrados</span>
+          </div>
+          <p class="mini" style="margin-top:.15rem">7 activos · 2 sin seguimiento</p>
+
+          <div class="fila-chips">
+            <span class="chip on">Todos 7</span>
+            <span class="chip">Nuevo 2</span>
+            <span class="chip">Contactado 2</span>
+            <span class="chip">Cita 1</span>
+            <span class="chip">Visitó&nbsp;…</span>
+          </div>
+
+          <div class="seccion-etapa" style="--c:var(--nuevo)">
+            <div class="cab"><span class="punto-etapa"></span><h6>Nuevo</h6><span class="linea"></span><span class="n">2</span></div>
+            <div class="tarjeta-lead">
+              <span class="avatar">AT</span>
+              <div class="cuerpo">
+                <p class="nombre">Ana Torres</p>
+                <p class="detalle">Depto Valle Oriente · hace 12 min</p>
+                <div class="meta"><span class="badge b-fuente">inmuebles24</span><span class="badge b-directo">Cliente directo</span></div>
+              </div>
+            </div>
+            <div class="tarjeta-lead">
+              <span class="punto p-rojo" style="margin-left:.2rem"></span>
+              <div class="cuerpo">
+                <p class="nombre">Jorge Peña</p>
+                <p class="detalle">Casa San Jerónimo · ayer</p>
+                <div class="meta"><span class="badge b-fuente">Sitio</span><span class="badge b-corredor">Corredor externo</span></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="seccion-etapa" style="--c:var(--contactado)">
+            <div class="cab"><span class="punto-etapa"></span><h6>Contactado</h6><span class="linea"></span><span class="n">2</span></div>
+            <div class="tarjeta-lead">
+              <span class="avatar">DR</span>
+              <div class="cuerpo">
+                <p class="nombre">Diego Ramírez</p>
+                <p class="detalle">Casa Cumbres · hace 2 h · ⏰ mañana 9:00</p>
+                <div class="meta"><span class="badge b-fuente">inmuebles24</span></div>
+              </div>
+            </div>
+            <div class="tarjeta-lead">
+              <span class="punto p-ambar" style="margin-left:.2rem"></span>
+              <div class="cuerpo">
+                <p class="nombre">Luis Cantú</p>
+                <p class="detalle">Casa Contry · hace 2 días</p>
+                <div class="meta"><span class="badge b-fuente">WhatsApp</span></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="seccion-etapa" style="--c:var(--cita)">
+            <div class="cab"><span class="punto-etapa"></span><h6>Cita agendada</h6><span class="linea"></span><span class="n">1</span></div>
+            <div class="tarjeta-lead">
+              <span class="avatar">MG</span>
+              <div class="cuerpo">
+                <p class="nombre">Marcela Garza</p>
+                <p class="detalle">Depto Valle · visita el jueves 12:00</p>
+                <div class="meta"><span class="badge b-fuente">Referido</span></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="seccion-etapa" style="--c:var(--nego)">
+            <div class="cab"><span class="punto-etapa"></span><h6>Negociación</h6><span class="linea"></span><span class="n">2</span></div>
+            <div class="tarjeta-lead">
+              <span class="avatar">RH</span>
+              <div class="cuerpo">
+                <p class="nombre">Raúl Hinojosa</p>
+                <p class="detalle">Casa Cumbres 3er sector · oferta enviada</p>
+                <div class="meta"><span class="badge b-nego">Negociación</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="tabbar">
+          <span><i class="ic-casa"></i>Inicio</span>
+          <span class="on"><i class="ic-gente"></i>Leads</span>
+          <span><i class="ic-edif"></i>Propiedades</span>
+          <span><i class="ic-lista"></i>Captaciones</span>
+          <span><i class="ic-perfil"></i>Perfil</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-phone" style="max-width:38ch">
+      <h3>Qué cambia respecto a hoy</h3>
+      <p class="nota" style="margin-bottom:.6rem">• La lista «Todos» deja de ser plana: cada etapa es una sección con su color y su conteo — el pipeline se ve completo de un scroll.</p>
+      <p class="nota" style="margin-bottom:.6rem">• Los más nuevos van arriba (dentro de cada sección), como pidió Renata.</p>
+      <p class="nota" style="margin-bottom:.6rem">• Cada tarjeta trae más contexto: propiedad de interés, fuente, clasificación, y el próximo recordatorio si lo tiene (⏰).</p>
+      <p class="nota" style="margin-bottom:.6rem">• Los puntos ámbar y rojo siguen marcando a los abandonados, ahora midiendo actividad real del asesor.</p>
+      <p class="nota">• Tocar un chip filtra a una sola etapa, igual que hoy.</p>
+    </div>
+  </div>
+</section>
+
+<section class="bloque">
+  <div class="aviso-eleccion">
+    <h3>Lo que hay que decidir</h3>
+    <p>1. Barrita: ¿variante A (colores del sistema) o B (semáforo hacia el verde)?<br>
+    2. Klo sobre la barra: ¿la burbuja «Klo-ser to your dreams» aparece solo al avanzar de etapa (unos segundos) o siempre visible?<br>
+    3. La hoja de follow-up: ¿aparece después de cada contacto/seguimiento registrado, o solo como botón «Recordatorio» siempre visible en la ficha?<br>
+    4. El pipeline por secciones: ¿va así?</p>
+  </div>
+</section>
+
+</body>
+</html>
