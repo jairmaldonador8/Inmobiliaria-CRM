@@ -22,6 +22,7 @@ import { SelectorAsesor } from '@/components/propiedades/selector-asesor'
 import { ToggleExclusiva } from '@/components/propiedades/toggle-exclusiva'
 import { ChipEstatus } from '@/components/propiedades/tarjeta-propiedad'
 import { cn } from '@/lib/utils'
+import { ROLES_QUE_ASESORAN } from '@/lib/asesores/roles'
 
 /** Fila de la ficha técnica de escritorio; se omite si no hay valor. */
 function Dato({ etiqueta, valor }: { etiqueta: string; valor: string | null }) {
@@ -54,7 +55,7 @@ export default async function PaginaDetallePropiedadAdmin({
     supabase
       .from('usuarios')
       .select('user_id, nombre')
-      .eq('rol', 'asesor')
+      .in('rol', ROLES_QUE_ASESORAN)
       .eq('activo', true)
       .order('nombre', { ascending: true }),
     supabase.from('propiedad_portales').select('portal').eq('propiedad_id', id),

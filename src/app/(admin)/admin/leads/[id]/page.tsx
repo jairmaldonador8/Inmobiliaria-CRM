@@ -31,6 +31,7 @@ import {
 import { type OpcionPropiedadVisita } from '@/components/visitas/hoja-agendar-visita'
 import { ListaVisitasLead } from '@/components/visitas/lista-visitas-lead'
 import { eventosDeLead, fusionarHistoria } from '@/lib/eventos/consultas'
+import { ROLES_QUE_ASESORAN } from '@/lib/asesores/roles'
 import { TimelineEventos } from '@/components/eventos/timeline-eventos'
 import { ResumenHistorial } from '@/components/eventos/resumen-historial'
 
@@ -105,7 +106,7 @@ export default async function PaginaDetalleLeadAdmin({
     supabase
       .from('usuarios')
       .select('user_id, nombre')
-      .eq('rol', 'asesor')
+      .in('rol', ROLES_QUE_ASESORAN)
       .eq('activo', true)
       .order('nombre', { ascending: true }),
     leadDetalle.propiedad_id

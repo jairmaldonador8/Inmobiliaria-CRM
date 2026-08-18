@@ -13,6 +13,7 @@ import { cargaAsesores, entradaSemana } from '@/lib/bandeja/ascua'
 import { guardiaActiva } from '@/lib/guardias/consultas'
 import { medianaPrimeraRespuesta7d } from '@/lib/dashboard/consultas'
 import { cn } from '@/lib/utils'
+import { ROLES_QUE_ASESORAN } from '@/lib/asesores/roles'
 import { EtiquetaClasificacionEB } from '@/components/leads/etiqueta-clasificacion-eb'
 import { HojaAsignarLead } from '@/components/leads/hoja-asignar-lead'
 import { DialogRegistrarLead } from '@/components/leads/dialog-registrar-lead'
@@ -51,7 +52,7 @@ export default async function PaginaBandeja({
     supabase
       .from('usuarios')
       .select('user_id, nombre')
-      .eq('rol', 'asesor')
+      .in('rol', ROLES_QUE_ASESORAN)
       .eq('activo', true)
       .order('nombre', { ascending: true }),
     supabase

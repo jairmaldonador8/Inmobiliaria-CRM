@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache'
 import { requireAdmin } from '@/lib/auth/usuario-actual'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { PORTALES_MANUALES } from '@/lib/propiedades/portales'
+import { ROLES_QUE_ASESORAN } from '@/lib/asesores/roles'
 
 export type ResultadoAccion = { ok: true } | { error: string }
 
@@ -35,7 +36,7 @@ export async function asignarAsesorPropiedad(
       .eq('user_id', asesorId)
       .maybeSingle()
     if (error) return { error: `No se pudo verificar al asesor: ${error.message}` }
-    if (!asesor || asesor.rol !== 'asesor' || !asesor.activo) {
+    if (!asesor || !ROLES_QUE_ASESORAN.includes(asesor.rol) || !asesor.activo) {
       return { error: 'El asesor seleccionado no existe o está inactivo' }
     }
   }

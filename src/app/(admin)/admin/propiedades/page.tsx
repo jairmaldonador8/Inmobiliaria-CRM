@@ -5,6 +5,7 @@ import { CloudDownload } from 'lucide-react'
 import { requireAdmin } from '@/lib/auth/usuario-actual'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { filtroBusqueda } from '@/lib/propiedades/consultas'
+import { ROLES_QUE_ASESORAN } from '@/lib/asesores/roles'
 import { BotonSincronizar } from '@/components/propiedades/boton-sincronizar'
 import { FiltrosPropiedades } from '@/components/propiedades/filtros-propiedades'
 import {
@@ -65,7 +66,7 @@ export default async function PaginaPropiedadesAdmin({
     supabase
       .from('usuarios')
       .select('user_id, nombre, activo')
-      .eq('rol', 'asesor')
+      .in('rol', ROLES_QUE_ASESORAN)
       .order('nombre', { ascending: true }),
     // Valores de estatus realmente presentes, para el filtro.
     supabase.from('propiedades').select('estatus').eq('activa', true),

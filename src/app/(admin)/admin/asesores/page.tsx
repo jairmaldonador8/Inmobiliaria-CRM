@@ -64,6 +64,7 @@ export default async function PaginaAsesores() {
                         <Badge variant={asesor.activo ? 'secondary' : 'outline'}>
                           {asesor.activo ? 'Activo' : 'Inactivo'}
                         </Badge>
+                        {asesor.rol === 'admin' && <Badge variant="outline">Admin</Badge>}
                         {asesor.activo && !asesor.tienePush && (
                           <Badge className="bg-amber-100 text-amber-700">Sin notificaciones</Badge>
                         )}
@@ -71,7 +72,9 @@ export default async function PaginaAsesores() {
                     </TableCell>
                     <TableCell className="text-slate-600">{asesor.leadsActivos}</TableCell>
                     <TableCell>
-                      <MenuAccionesAsesor asesor={asesor} />
+                      {/* Una cuenta admin no se desactiva desde aquí: le quitaría
+                          todo el acceso, no solo su faceta de asesor. */}
+                      {asesor.rol === 'asesor' && <MenuAccionesAsesor asesor={asesor} />}
                     </TableCell>
                   </TableRow>
                 ))}
@@ -96,12 +99,13 @@ export default async function PaginaAsesores() {
                     </Link>
                     <p className="truncate text-sm text-slate-500">{asesor.email}</p>
                   </div>
-                  <MenuAccionesAsesor asesor={asesor} />
+                  {asesor.rol === 'asesor' && <MenuAccionesAsesor asesor={asesor} />}
                 </div>
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-slate-600">
                   <Badge variant={asesor.activo ? 'secondary' : 'outline'}>
                     {asesor.activo ? 'Activo' : 'Inactivo'}
                   </Badge>
+                  {asesor.rol === 'admin' && <Badge variant="outline">Admin</Badge>}
                   {asesor.activo && !asesor.tienePush && (
                     <Badge className="bg-amber-100 text-amber-700">Sin notificaciones</Badge>
                   )}

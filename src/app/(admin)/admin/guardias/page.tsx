@@ -8,6 +8,7 @@ import { ConfiguracionGuardiasForm } from '@/components/guardias/configuracion-g
 export const dynamic = 'force-dynamic'
 
 import { mesRelativo, RE_MES, ultimoDiaDelMes } from '@/lib/guardias/calendario'
+import { ROLES_QUE_ASESORAN } from '@/lib/asesores/roles'
 
 /**
  * Admin → Guardias: calendario del mes (tap en día → asignar turnos),
@@ -45,7 +46,7 @@ export default async function PaginaGuardias({
   // Los admins también ejercen de asesores (modelo admin-operador), así que
   // entran al rol de guardias con su misma cuenta.
   const asesores = usuarios
-    .filter((u) => u.rol === 'asesor' || u.rol === 'admin')
+    .filter((u) => ROLES_QUE_ASESORAN.includes(u.rol))
     .map((u) => ({ userId: u.user_id, nombre: u.nombre }))
 
   return (

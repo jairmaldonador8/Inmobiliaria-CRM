@@ -19,6 +19,7 @@ import {
   serieLeads30Dias,
 } from '@/lib/dashboard/consultas'
 import { agruparPorEtapa } from '@/lib/dashboard/pipeline'
+import { ROLES_QUE_ASESORAN } from '@/lib/asesores/roles'
 import { ResumenComoVanLeads } from '@/components/dashboard/panel-como-van-leads'
 import FondoFintech from '@/components/fintech/fondo-fintech'
 import TarjetaGlass from '@/components/fintech/tarjeta-glass'
@@ -102,7 +103,7 @@ export default async function PaginaDashboardAdmin() {
     supabase
       .from('usuarios')
       .select('user_id', { count: 'exact', head: true })
-      .eq('rol', 'asesor')
+      .in('rol', ROLES_QUE_ASESORAN)
       .eq('activo', true),
     supabase
       .from('propiedades')
@@ -139,7 +140,7 @@ export default async function PaginaDashboardAdmin() {
     adminDb
       .from('usuarios')
       .select('user_id, nombre')
-      .eq('rol', 'asesor')
+      .in('rol', ROLES_QUE_ASESORAN)
       .eq('activo', true)
       .order('nombre'),
   ])

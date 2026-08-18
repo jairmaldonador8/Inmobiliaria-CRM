@@ -10,6 +10,7 @@ import { crearNotificacion } from '@/lib/notificaciones/crear'
 import { leadEnEscalamientoAbierto } from '@/lib/guardias/consultas'
 import { normalizarTelefono } from '@/lib/easybroker/mapeo'
 import { FUENTES_LEAD, type FuenteLead } from '@/lib/leads/formato'
+import { ROLES_QUE_ASESORAN } from '@/lib/asesores/roles'
 
 export type ResultadoAccion = { ok: true } | { error: string }
 
@@ -32,7 +33,7 @@ async function obtenerAsesorActivo(
     .from('usuarios')
     .select('nombre')
     .eq('user_id', asesorId)
-    .eq('rol', 'asesor')
+    .in('rol', ROLES_QUE_ASESORAN)
     .eq('activo', true)
     .maybeSingle()
 

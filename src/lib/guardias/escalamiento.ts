@@ -27,6 +27,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 
 import { esLeadVip, leerConfiguracion, type ConfiguracionGuardias } from '@/lib/guardias/consultas'
+import { ROLES_QUE_ASESORAN } from '@/lib/asesores/roles'
 import { registrarEvento } from '@/lib/eventos/registrar'
 import { crearNotificacion, notificarAdmins } from '@/lib/notificaciones/crear'
 import { enviarPush } from '@/lib/push/enviar'
@@ -249,7 +250,7 @@ async function enviarDigestAbiertos(supabase: SupabaseClient, abiertos: LeadPend
   const { data, error } = await supabase
     .from('usuarios')
     .select('user_id')
-    .eq('rol', 'asesor')
+    .in('rol', ROLES_QUE_ASESORAN)
     .eq('activo', true)
   if (error) throw new Error(`consulta de asesores activos: ${error.message}`)
 

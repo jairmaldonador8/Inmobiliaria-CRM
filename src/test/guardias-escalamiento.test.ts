@@ -73,7 +73,7 @@ function crearTabla(resolver: (filtros: unknown[][]) => { data: unknown; error: 
     then: (res: (v: unknown) => unknown, rej?: (e: unknown) => unknown) =>
       Promise.resolve(resolver(filtros)).then(res, rej),
   }
-  for (const m of ['select', 'eq', 'neq', 'not', 'gt', 'lte', 'limit']) {
+  for (const m of ['select', 'eq', 'neq', 'in', 'not', 'gt', 'lte', 'limit']) {
     c[m] = (...args: unknown[]) => {
       filtros.push([m, ...args])
       return c

@@ -26,8 +26,8 @@ vi.mock('@/lib/supabase/admin', () => ({
 import { obtenerAsesores } from '@/lib/asesores/consultas'
 
 const USUARIOS = [
-  { user_id: 'a1', nombre: 'Ana', telefono: '5511', activo: true, creado_en: '2024-01-01' },
-  { user_id: 'a2', nombre: 'Beto', telefono: null, activo: false, creado_en: '2024-01-02' },
+  { user_id: 'a1', nombre: 'Ana', telefono: '5511', rol: 'asesor', activo: true, creado_en: '2024-01-01' },
+  { user_id: 'a2', nombre: 'Beto', telefono: null, rol: 'admin', activo: false, creado_en: '2024-01-02' },
 ]
 
 type Usuario = (typeof USUARIOS)[number]
@@ -52,8 +52,8 @@ function crearSupabaseFake({
   const selectLeadsMock = vi.fn(() => ({ in: inLeadsMock }))
 
   const orderUsuariosMock = vi.fn().mockResolvedValue({ data: usuarios, error: null })
-  const eqUsuariosMock = vi.fn(() => ({ order: orderUsuariosMock }))
-  const selectUsuariosMock = vi.fn(() => ({ eq: eqUsuariosMock }))
+  const inUsuariosMock = vi.fn(() => ({ order: orderUsuariosMock }))
+  const selectUsuariosMock = vi.fn(() => ({ in: inUsuariosMock }))
 
   const from = vi.fn((tabla: string) => {
     if (tabla === 'usuarios') return { select: selectUsuariosMock }
@@ -79,7 +79,7 @@ function crearSupabaseFake({
     eqLeadsMock,
     notLeadsMock,
     selectUsuariosMock,
-    eqUsuariosMock,
+    inUsuariosMock,
     orderUsuariosMock,
     listUsersMock,
   }
@@ -108,6 +108,7 @@ describe('obtenerAsesores', () => {
         nombre: 'Ana',
         email: 'ana@klo-ser.mx',
         telefono: '5511',
+        rol: 'asesor',
         activo: true,
         leadsActivos: 2,
         tienePush: false,
@@ -117,6 +118,7 @@ describe('obtenerAsesores', () => {
         nombre: 'Beto',
         email: 'beto@klo-ser.mx',
         telefono: null,
+        rol: 'admin',
         activo: false,
         leadsActivos: 0,
         tienePush: false,
@@ -125,12 +127,12 @@ describe('obtenerAsesores', () => {
   })
 
   it('respeta el orden por creado_en ascendente pedido a la consulta de usuarios', async () => {
-    const { supabase, eqUsuariosMock, orderUsuariosMock } = crearSupabaseFake()
+    const { supabase, inUsuariosMock, orderUsuariosMock } = crearSupabaseFake()
     createAdminClientMock.mockReturnValue(supabase)
 
     await obtenerAsesores()
 
-    expect(eqUsuariosMock).toHaveBeenCalledWith('rol', 'asesor')
+    expect(inUsuariosMock).toHaveBeenCalledWith('rol', ['asesor', 'admin'])
     expect(orderUsuariosMock).toHaveBeenCalledWith('creado_en', { ascending: true })
   })
 

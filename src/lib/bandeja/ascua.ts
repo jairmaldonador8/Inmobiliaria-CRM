@@ -12,6 +12,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 
 import { diaMonterrey } from '@/lib/fechas/monterrey'
 import { HORA_MS } from '@/lib/leads/urgencia'
+import { ROLES_QUE_ASESORAN } from '@/lib/asesores/roles'
 
 /** Un lead debería quedar atendido en 15 min y asignado en 6 h. */
 export const COMPROMISO_MIN = 15
@@ -59,7 +60,7 @@ export async function cargaAsesores(
     supabase
       .from('usuarios')
       .select('user_id, nombre')
-      .eq('rol', 'asesor')
+      .in('rol', ROLES_QUE_ASESORAN)
       .eq('activo', true)
       .order('nombre'),
     supabase

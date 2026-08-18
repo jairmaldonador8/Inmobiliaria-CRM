@@ -16,6 +16,7 @@ import {
   type EtapaLead,
 } from '@/lib/leads/formato'
 import { cn } from '@/lib/utils'
+import { ROLES_QUE_ASESORAN } from '@/lib/asesores/roles'
 
 /** Mismos colores del pipeline de cápsulas del home admin. */
 const COLORES_PIPELINE = [
@@ -50,7 +51,7 @@ export default async function PaginaPipelineAsesor({
     .from('usuarios')
     .select('user_id, nombre, telefono, activo, rol')
     .eq('user_id', id)
-    .eq('rol', 'asesor')
+    .in('rol', ROLES_QUE_ASESORAN)
     .maybeSingle()
 
   if (!asesor) notFound()

@@ -5,6 +5,7 @@ import { es } from 'date-fns/locale'
 import { requireAdmin } from '@/lib/auth/usuario-actual'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { leadsGlobal, type FiltrosLeads as Filtros } from '@/lib/leads/consultas'
+import { ROLES_QUE_ASESORAN } from '@/lib/asesores/roles'
 import {
   actividadContacto7d,
   embudoPorEtapa,
@@ -46,7 +47,7 @@ export default async function PaginaLeadsAdmin({
     supabase
       .from('usuarios')
       .select('user_id, nombre, activo')
-      .eq('rol', 'asesor')
+      .in('rol', ROLES_QUE_ASESORAN)
       .order('nombre', { ascending: true }),
     // Métricas «Cómo van los leads»: best-effort, mismo criterio que el
     // resumen del dashboard — la lista de leads nunca se cae por ellas.

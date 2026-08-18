@@ -7,6 +7,7 @@
 import 'server-only'
 
 import { createAdminClient } from '@/lib/supabase/admin'
+import { ROLES_QUE_ASESORAN } from '@/lib/asesores/roles'
 
 /** Etapas que ya no cuentan como trabajo activo del asesor. */
 const ETAPAS_CERRADAS = ['cerrado_ganado', 'cerrado_perdido']
@@ -16,6 +17,7 @@ export type FilaAsesor = {
   nombre: string
   email: string
   telefono: string | null
+  rol: string
   activo: boolean
   leadsActivos: number
   tienePush: boolean
@@ -32,8 +34,8 @@ export async function obtenerAsesores(): Promise<FilaAsesor[]> {
 
   const { data: usuarios } = await supabase
     .from('usuarios')
-    .select('user_id, nombre, telefono, activo, creado_en')
-    .eq('rol', 'asesor')
+    .select('user_id, nombre, telefono, rol, activo, creado_en')
+    .in('rol', ROLES_QUE_ASESORAN)
     .order('creado_en', { ascending: true })
 
   const asesores = usuarios ?? []
@@ -76,6 +78,7 @@ export async function obtenerAsesores(): Promise<FilaAsesor[]> {
     nombre: a.nombre,
     email: emailPorId.get(a.user_id) ?? '—',
     telefono: a.telefono,
+    rol: a.rol,
     activo: a.activo,
     leadsActivos: conteoPorAsesor.get(a.user_id) ?? 0,
     tienePush: idsConPush.has(a.user_id),

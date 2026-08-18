@@ -13,6 +13,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { leerConfiguracion, type ConfiguracionGuardias } from '@/lib/guardias/consultas'
 import type { ResultadoAccion } from '@/lib/leads/acciones'
+import { ROLES_QUE_ASESORAN } from '@/lib/asesores/roles'
 
 const RUTA_GUARDIAS = '/admin/guardias'
 const RE_FECHA = /^\d{4}-\d{2}-\d{2}$/
@@ -28,7 +29,7 @@ async function asesorActivo(supabase: SupabaseClient, asesorId: string): Promise
     .from('usuarios')
     .select('user_id')
     .eq('user_id', asesorId)
-    .in('rol', ['asesor', 'admin'])
+    .in('rol', ROLES_QUE_ASESORAN)
     .eq('activo', true)
     .maybeSingle()
   return data !== null
