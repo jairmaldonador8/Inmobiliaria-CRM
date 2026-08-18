@@ -521,6 +521,21 @@
   from { background-position-x: 0%; }
   to { background-position-x: 100%; }
 }
+
+/* Klo caminando sobre la barrita de etapa del lead (ronda 2): la misma tira
+   de 12 cuadros del splash, en miniatura. El tamaño lo pone el componente
+   (BarritaEtapa); aquí solo el sprite y su paso. */
+.gallo-barrita {
+  background-image: url('/marca/gallo-camina.webp');
+  background-repeat: no-repeat;
+  background-size: auto 100%;
+  animation: gallo-camina 500ms steps(12, jump-none) infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .gallo-barrita {
+    animation: none !important;
+  }
+}
 @keyframes gallo-voltea {
   from { background-position-x: 0%; }
   to { background-position-x: 100%; }

@@ -1,9 +1,5 @@
 'use client'
 
-/* eslint-disable @next/next/no-img-element -- gallo-camina.webp es animado:
-   next/image lo recodificaría a un frame estático. Mismo criterio que el
-   splash (globals.css lo usa como background por la misma razón). */
-
 import { useEffect, useRef, useState } from 'react'
 
 import { ETAPAS_KANBAN, etiquetaEtapa } from '@/lib/leads/formato'
@@ -78,12 +74,13 @@ export function BarritaEtapa({ etapa }: { etapa: string }) {
                 {burbuja}
               </span>
             ) : null}
-            <img
-              src="/marca/gallo-camina.webp"
-              alt=""
-              width={36}
-              height={36}
-              className="absolute -bottom-1 size-9 -translate-x-1/2 object-contain motion-safe:transition-[left] motion-safe:duration-700"
+            {/* gallo-camina.webp es una TIRA de 12 cuadros (2400×200), la
+                misma del splash: se anima con steps() sobre background-
+                position (ver .gallo-barrita en globals.css), no con <img>.
+                En tema oscuro el gallo negro se invierte a blanco. */}
+            <span
+              aria-hidden
+              className="gallo-barrita absolute -bottom-1 size-9 -translate-x-1/2 motion-safe:transition-[left] motion-safe:duration-700 dark:invert"
               style={{ left: centroKlo }}
             />
           </>

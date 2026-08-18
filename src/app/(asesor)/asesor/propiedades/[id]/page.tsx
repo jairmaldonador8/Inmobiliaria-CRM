@@ -59,6 +59,7 @@ export default async function PaginaDetallePropiedadAsesor({
   const enlaceWhatsApp = `https://wa.me/?text=${encodeURIComponent(textoCompartir)}`
   const botonFotos = (
     <BotonCompartirFotos
+      key="mandar-fotos"
       fotos={fotos}
       titulo={propiedad.titulo}
       urlPublica={propiedad.url_publica}
