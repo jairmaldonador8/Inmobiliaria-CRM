@@ -53,12 +53,14 @@ function fakeAdmin(opciones: {
   const upserts: { tabla: string; payload: unknown; conflicto?: string }[] = []
   const inserts: { tabla: string; payload: unknown }[] = []
   const deletes: { tabla: string; filtros: unknown[][] }[] = []
+  const consultasUsuarios: Record<string, unknown>[] = []
   let llamadasSelectGuardias = 0
 
   const from = vi.fn((tabla: string) => {
     if (tabla === 'usuarios') {
       const consulta: Record<string, unknown> = {}
-      for (const m of ['select', 'eq']) consulta[m] = vi.fn(() => consulta)
+      for (const m of ['select', 'eq', 'in']) consulta[m] = vi.fn(() => consulta)
+      consultasUsuarios.push(consulta)
       consulta.maybeSingle = vi.fn(() =>
         Promise.resolve({
           data: (opciones.asesorExiste ?? opciones.usuarioExiste ?? true) ? { user_id: 'x' } : null,
@@ -116,7 +118,7 @@ function fakeAdmin(opciones: {
   })
 
   createAdminClientMock.mockReturnValue({ from })
-  return { upserts, inserts, deletes }
+  return { upserts, inserts, deletes, consultasUsuarios }
 }
 
 beforeEach(() => {
@@ -140,6 +142,14 @@ describe('guardarGuardia', () => {
     expect(await guardarGuardia('2026-08-10', 'manana', 'fantasma')).toEqual({
       error: 'El asesor no está disponible',
     })
+  })
+
+  it('valida al asesor aceptando también rol admin (modelo admin-operador)', async () => {
+    const { consultasUsuarios } = fakeAdmin({ asesorExiste: true })
+    const r = await guardarGuardia('2026-08-10', 'manana', 'admin-renata')
+
+    expect(r).toEqual({ ok: true })
+    expect(consultasUsuarios[0].in).toHaveBeenCalledWith('rol', ['asesor', 'admin'])
   })
 
   it('upsert por fecha+turno con las horas default del turno', async () => {

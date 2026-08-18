@@ -23,11 +23,12 @@ function esFechaValida(fecha: string): boolean {
 }
 
 async function asesorActivo(supabase: SupabaseClient, asesorId: string): Promise<boolean> {
+  // Admins incluidos: ejercen también de asesores y pueden cubrir guardias.
   const { data } = await supabase
     .from('usuarios')
     .select('user_id')
     .eq('user_id', asesorId)
-    .eq('rol', 'asesor')
+    .in('rol', ['asesor', 'admin'])
     .eq('activo', true)
     .maybeSingle()
   return data !== null

@@ -42,8 +42,10 @@ export default async function PaginaGuardias({
   ])
 
   const usuarios = usuariosActivos ?? []
+  // Los admins también ejercen de asesores (modelo admin-operador), así que
+  // entran al rol de guardias con su misma cuenta.
   const asesores = usuarios
-    .filter((u) => u.rol === 'asesor')
+    .filter((u) => u.rol === 'asesor' || u.rol === 'admin')
     .map((u) => ({ userId: u.user_id, nombre: u.nombre }))
 
   return (
