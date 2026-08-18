@@ -32,6 +32,8 @@ import { ListaVisitasLead } from '@/components/visitas/lista-visitas-lead'
 import { eventosDeLead, fusionarHistoria } from '@/lib/eventos/consultas'
 import { TimelineEventos } from '@/components/eventos/timeline-eventos'
 import { ResumenHistorial } from '@/components/eventos/resumen-historial'
+import { proximoRecordatorioPorLead } from '@/lib/recordatorios/consultas'
+import { CardRecordatorio } from '@/components/recordatorios/card-recordatorio'
 
 type FilaSeguimiento = {
   id: string
@@ -156,6 +158,11 @@ export default async function PaginaDetalleLeadAsesor({
       eventosDeLead(supabase, id),
     ])
 
+  // Próximo follow-up pactado POR ESTE USUARIO sobre el lead (los
+  // recordatorios son personales; el de un admin no le aparece al asesor).
+  const recordatorios = await proximoRecordatorioPorLead(supabase, usuario.user_id, [id])
+  const proximoRecordatorio = recordatorios.get(id) ?? null
+
   // El asesor solo puede leer SU fila de usuarios (RLS): un autor ajeno
   // (p. ej. un admin) llega sin nombre → el timeline muestra «Sistema».
   const historia = fusionarHistoria(
@@ -246,6 +253,14 @@ export default async function PaginaDetalleLeadAsesor({
           propiedades={opcionesPropiedad as OpcionPropiedadVisita[]}
         />
       </div>
+
+      {/* El follow-up pactado (ronda 2): visible o por pactar. También abre
+          su hoja cuando otra hoja lo sugiere al terminar de reportar. */}
+      <CardRecordatorio
+        leadId={leadDetalle.id}
+        leadNombre={leadDetalle.nombre}
+        recordatorio={proximoRecordatorio}
+      />
 
       {leadDetalle.propiedad ? (
         <CardPropiedadInteres

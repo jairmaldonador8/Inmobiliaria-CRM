@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { format, formatDistanceToNow } from 'date-fns'
 import { es } from 'date-fns/locale'
 import {
+  AlarmClock,
   AlertTriangle,
   CalendarDays,
   ChevronRight,
@@ -22,7 +23,13 @@ import {
 } from '@/lib/leads/formato'
 import { cn } from '@/lib/utils'
 import { EtiquetaClasificacionEB } from '@/components/leads/etiqueta-clasificacion-eb'
-import { fechaHoyMonterrey, formatearFechaHoraMonterrey } from '@/lib/fechas/monterrey'
+import {
+  fechaHoyMonterrey,
+  formatearFechaHoraMonterrey,
+  formatearHoraMonterrey,
+} from '@/lib/fechas/monterrey'
+import { recordatoriosParaHoy } from '@/lib/recordatorios/consultas'
+import { estaVencido } from '@/lib/recordatorios/formato'
 import { horaCorta } from '@/lib/guardias/calendario'
 import {
   CardConexionGoogle,
@@ -128,6 +135,7 @@ export default async function PaginaInicioAsesor({
     visitasProximas,
     { data: conexionGoogle },
     { data: guardiasHoyData },
+    paraHoy,
   ] = await Promise.all([
       // Leads activos (no cerrados, no archivados): base de ambas listas y
       // del chip «leads activos».
@@ -181,6 +189,8 @@ export default async function PaginaInicioAsesor({
         .eq('fecha', fechaHoyMonterrey())
         .eq('asesor_id', usuario.user_id)
         .order('hora_inicio'),
+      // Follow-ups pactados que vencen hoy (o ya vencieron): cola «Para hoy».
+      recordatoriosParaHoy(supabase, usuario.user_id, ahora),
     ])
 
   if (errorLeads) {
@@ -347,6 +357,59 @@ export default async function PaginaInicioAsesor({
           <ChevronRight aria-hidden className="size-3.5" />
         </Link>
       )}
+
+      {/* Para hoy: follow-ups pactados que vencen hoy (los vencidos, en rojo
+          y primero — la consulta ya viene ordenada por fecha). No desaparecen
+          solos: los resuelve la actividad real o el propio asesor. */}
+      {paraHoy.length > 0 ? (
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center gap-2">
+            <AlarmClock aria-hidden className="size-4 text-emerald-600" />
+            <h2 className="text-sm font-semibold text-slate-900">Para hoy</h2>
+            <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-700">
+              {paraHoy.length}
+            </span>
+          </div>
+          <ul className="flex flex-col gap-2 lg:grid lg:grid-cols-2 lg:gap-3 xl:grid-cols-3">
+            {paraHoy.map((recordatorio) => {
+              const vencido = estaVencido(recordatorio.fecha_hora, ahora)
+              return (
+                <li key={recordatorio.id}>
+                  <Link
+                    href={`/asesor/leads/${recordatorio.lead_id}`}
+                    className={
+                      vencido
+                        ? 'flex items-center justify-between gap-2 rounded-xl bg-red-50 p-3 shadow-xs ring-1 ring-red-200 transition-colors active:bg-red-100'
+                        : 'flex items-center justify-between gap-2 rounded-xl bg-white p-3 shadow-xs ring-1 ring-slate-200 transition-colors active:bg-slate-50'
+                    }
+                  >
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium text-slate-900">
+                        {recordatorio.lead?.nombre ?? 'Lead'}
+                      </p>
+                      {recordatorio.nota ? (
+                        <p className="mt-0.5 truncate text-xs text-slate-500">
+                          {recordatorio.nota}
+                        </p>
+                      ) : null}
+                    </div>
+                    <span
+                      suppressHydrationWarning
+                      className={
+                        vencido
+                          ? 'shrink-0 text-xs font-semibold text-red-700'
+                          : 'shrink-0 text-xs font-semibold text-slate-700'
+                      }
+                    >
+                      {formatearHoraMonterrey(recordatorio.fecha_hora)}
+                    </span>
+                  </Link>
+                </li>
+              )
+            })}
+          </ul>
+        </div>
+      ) : null}
 
       {/* Atiende ahora: nuevos sin atender */}
       <div className="flex flex-col gap-3">

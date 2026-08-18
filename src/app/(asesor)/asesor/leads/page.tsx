@@ -10,6 +10,8 @@ import { ETAPAS_CERRADAS, claseBadgeEtapa, etiquetaEtapa, formatearTelefono } fr
 import { Badge } from '@/components/ui/badge'
 import { BotonReactivarLead } from '@/components/leads/boton-reactivar-lead'
 import type { ClasificacionLeadEB } from '@/lib/easybroker/mapeo'
+import { proximoRecordatorioPorLead } from '@/lib/recordatorios/consultas'
+import { etiquetaFechaRecordatorio } from '@/lib/recordatorios/formato'
 
 type FilaLead = {
   id: string
@@ -196,17 +198,33 @@ export default async function PaginaLeadsAsesor({
     }
   }
 
-  const items: LeadKanban[] = filas.map((lead) => ({
-    id: lead.id,
-    nombre: lead.nombre,
-    fuente: lead.fuente,
-    fuente_detalle: lead.fuente_detalle,
-    etapa: lead.etapa,
-    creado_en: lead.creado_en,
-    clasificacion_eb: lead.clasificacion_eb,
-    propiedad_titulo: lead.propiedad?.titulo ?? null,
-    ultimo_seguimiento: ultimoSeguimiento.get(lead.id) ?? null,
-  }))
+  // Próximo follow-up pactado por ESTE usuario en cada lead (⏰ de la
+  // tarjeta). Se manda ya formateado: la etiqueta depende del día calendario
+  // de Monterrey y calcularla en el cliente repetiría la lógica.
+  const recordatorios = await proximoRecordatorioPorLead(
+    supabase,
+    usuario.user_id,
+    filas.map((l) => l.id)
+  )
+  const ahora = new Date()
+
+  const items: LeadKanban[] = filas.map((lead) => {
+    const recordatorio = recordatorios.get(lead.id)
+    return {
+      id: lead.id,
+      nombre: lead.nombre,
+      fuente: lead.fuente,
+      fuente_detalle: lead.fuente_detalle,
+      etapa: lead.etapa,
+      creado_en: lead.creado_en,
+      clasificacion_eb: lead.clasificacion_eb,
+      propiedad_titulo: lead.propiedad?.titulo ?? null,
+      ultimo_seguimiento: ultimoSeguimiento.get(lead.id) ?? null,
+      proximo_recordatorio: recordatorio
+        ? etiquetaFechaRecordatorio(recordatorio.fecha_hora, ahora)
+        : null,
+    }
+  })
 
   const opcionesPropiedad = (propiedades ?? []).map((p) => ({ id: p.id, titulo: p.titulo }))
 

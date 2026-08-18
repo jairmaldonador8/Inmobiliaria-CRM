@@ -6,6 +6,7 @@ import { toast } from 'sonner'
 import { Plus, X } from 'lucide-react'
 
 import { registrarSeguimiento } from '@/lib/seguimientos/acciones'
+import { sugerirRecordatorio } from '@/components/recordatorios/sugerir'
 import {
   MAX_NOTA_SEGUIMIENTO,
   TIPOS_SEGUIMIENTO,
@@ -105,6 +106,10 @@ export function SheetSeguimiento({ leadId, propiedadLeadId, propiedades }: Props
       toast.success('Seguimiento registrado')
       alCambiarAbierto(false)
       router.refresh()
+
+      // Tras registrar actividad, la ficha sugiere pactar el siguiente
+      // follow-up (ronda 2; la escucha CardRecordatorio vía sugerir.ts).
+      sugerirRecordatorio(leadId)
     })
   }
 

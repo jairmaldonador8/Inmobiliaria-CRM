@@ -17,6 +17,7 @@ import { revalidatePath } from 'next/cache'
 import { usuarioActual } from '@/lib/auth/usuario-actual'
 import { createClient } from '@/lib/supabase/server'
 import { registrarEvento } from '@/lib/eventos/registrar'
+import { resolverRecordatoriosVencidos } from '@/lib/recordatorios/resolver'
 import {
   MAX_NOTA_SEGUIMIENTO,
   TIPOS_SEGUIMIENTO,
@@ -65,6 +66,10 @@ export async function registrarSeguimiento(
   }
 
   await registrarEvento(supabase, leadId, 'seguimiento_registrado', { tipo: datos.tipo }, usuario.user_id)
+
+  // Un seguimiento manual es actividad real: los recordatorios vencidos del
+  // autor sobre este lead se dan por hechos (best-effort, ver resolver.ts).
+  await resolverRecordatoriosVencidos(supabase, leadId, usuario.user_id)
 
   revalidatePath(`/asesor/leads/${leadId}`)
   revalidatePath(`/admin/leads/${leadId}`)

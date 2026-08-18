@@ -18,6 +18,7 @@ import { createClient } from '@/lib/supabase/server'
 import { registrarEvento } from '@/lib/eventos/registrar'
 import { avanzarEtapaPorEvento } from '@/lib/leads/avance-automatico'
 import { cambiarEtapa } from '@/lib/leads/acciones-asesor'
+import { resolverRecordatoriosVencidos } from '@/lib/recordatorios/resolver'
 import { DESENLACES_ELEGIBLES, type DesenlaceElegible } from '@/lib/contactos/formato'
 
 export type ResultadoContactoAccion = { ok: true } | { error: string }
@@ -168,6 +169,10 @@ async function registrarSalida(
       motivo: datos.canal === 'llamada' ? 'llamada' : 'whatsapp_enviado',
     })
   }
+
+  // El contacto ES el follow-up: los recordatorios vencidos del autor sobre
+  // este lead se dan por hechos (best-effort, ver resolver.ts).
+  await resolverRecordatoriosVencidos(supabase, leadId, usuario.user_id)
 
   revalidarSegunRol(leadId, usuario.rol)
   return { ok: true }

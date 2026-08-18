@@ -5,7 +5,7 @@ import { useMemo, useOptimistic, useState, useTransition } from 'react'
 import { formatDistanceToNow } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { toast } from 'sonner'
-import { Building2, EllipsisVertical } from 'lucide-react'
+import { AlarmClock, Building2, EllipsisVertical } from 'lucide-react'
 import {
   DndContext,
   PointerSensor,
@@ -50,8 +50,10 @@ export type LeadKanban = {
   creado_en: string
   clasificacion_eb: ClasificacionLeadEB | null
   propiedad_titulo: string | null
-  /** creado_en del último seguimiento del lead, o null si no tiene. */
+  /** creado_en de la última actividad real del lead, o null si no tiene. */
   ultimo_seguimiento: string | null
+  /** Próximo follow-up pactado, ya formateado («mañana 9:00 am»), o null. */
+  proximo_recordatorio: string | null
 }
 
 const HORA_MS = 60 * 60 * 1000
@@ -143,6 +145,12 @@ function TarjetaLead({ lead, onMover }: { lead: LeadKanban; onMover: MoverLead }
               clasificacion={lead.clasificacion_eb}
               className="px-1.5 text-[0.6875rem]"
             />
+            {lead.proximo_recordatorio ? (
+              <span className="flex items-center gap-0.5 text-[0.6875rem] font-medium text-emerald-700">
+                <AlarmClock aria-hidden className="size-3" />
+                {lead.proximo_recordatorio}
+              </span>
+            ) : null}
             {/* suppressHydrationWarning: «hace X» se calcula en servidor y
                 cliente con milisegundos de diferencia. */}
             <span suppressHydrationWarning className="text-[0.6875rem] text-slate-400">
@@ -271,6 +279,12 @@ function FilaLeadMovil({ lead, onMover }: { lead: LeadKanban; onMover: MoverLead
             clasificacion={lead.clasificacion_eb}
             className="px-1.5 text-[0.6875rem]"
           />
+          {lead.proximo_recordatorio ? (
+            <span className="flex items-center gap-0.5 text-[0.6875rem] font-medium text-emerald-700">
+              <AlarmClock aria-hidden className="size-3" />
+              {lead.proximo_recordatorio}
+            </span>
+          ) : null}
           <span suppressHydrationWarning className="text-[0.6875rem] text-slate-400">
             {antiguedad}
           </span>

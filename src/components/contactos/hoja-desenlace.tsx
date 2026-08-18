@@ -6,6 +6,7 @@ import { toast } from 'sonner'
 import { CalendarClock, MessageCircle, PhoneOff, ThumbsDown } from 'lucide-react'
 
 import { resolverContacto } from '@/lib/contactos/acciones'
+import { sugerirRecordatorio } from '@/components/recordatorios/sugerir'
 import {
   etiquetaResultado,
   type DesenlaceElegible,
@@ -150,6 +151,13 @@ export function HojaDesenlace({
 
       setPospuesto(true)
       router.refresh()
+
+      // El siguiente paso natural tras reportar «contestó» / «no contestó»
+      // es pactar CUÁNDO retomarlo (ronda 2). 'no_interesa' cierra el lead y
+      // 'cita' ya agenda la visita — ahí no hay follow-up que pactar.
+      if (desenlace === 'contesto' || desenlace === 'no_contesto') {
+        sugerirRecordatorio(leadId)
+      }
     })
   }
 
