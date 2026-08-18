@@ -163,12 +163,23 @@ function crearSupabaseFake(opts: {
     eq: eqAvanceId,
   }))
 
+  // recordatorios: update({estado}).eq(lead).eq(asesor).eq(estado).lte(fecha)
+  // — la auto-resolución de ronda 2 (resolver.ts); best-effort, siempre ok.
+  const lteRecordatorios = vi.fn().mockResolvedValue({ error: null })
+  const eqRecordatoriosEstado = vi.fn(() => ({ lte: lteRecordatorios }))
+  const eqRecordatoriosAsesor = vi.fn(() => ({ eq: eqRecordatoriosEstado }))
+  const eqRecordatoriosLead = vi.fn(() => ({ eq: eqRecordatoriosAsesor }))
+  const updateRecordatorios = vi.fn<
+    (valores: Record<string, unknown>) => { eq: typeof eqRecordatoriosLead }
+  >(() => ({ eq: eqRecordatoriosLead }))
+
   const from = vi.fn((table: string) => {
     if (table === 'seguimientos') return { insert: insertSeguimiento }
     if (table === 'contactos')
       return { select: selectContactos, update: updateContactos, insert: insertContacto }
     if (table === 'leads') return { select: selectLead, update: updateLead }
     if (table === 'lead_eventos') return { insert: insertEvento }
+    if (table === 'recordatorios') return { update: updateRecordatorios }
     throw new Error(`tabla inesperada en el stub: ${table}`)
   })
 

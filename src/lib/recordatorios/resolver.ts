@@ -18,15 +18,21 @@ export async function resolverRecordatoriosVencidos(
   leadId: string,
   asesorId: string
 ): Promise<void> {
-  const { error } = await supabase
-    .from('recordatorios')
-    .update({ estado: 'hecho' })
-    .eq('lead_id', leadId)
-    .eq('asesor_id', asesorId)
-    .eq('estado', 'pendiente')
-    .lte('fecha_hora', new Date().toISOString())
+  // try/catch además del chequeo de error: el contrato es «nunca lanza»
+  // (defensa en profundidad, mismo criterio que crearNotificacion/enviarPush).
+  try {
+    const { error } = await supabase
+      .from('recordatorios')
+      .update({ estado: 'hecho' })
+      .eq('lead_id', leadId)
+      .eq('asesor_id', asesorId)
+      .eq('estado', 'pendiente')
+      .lte('fecha_hora', new Date().toISOString())
 
-  if (error) {
-    console.error('resolverRecordatoriosVencidos: se omite —', error.message)
+    if (error) {
+      console.error('resolverRecordatoriosVencidos: se omite —', error.message)
+    }
+  } catch (e) {
+    console.error('resolverRecordatoriosVencidos: se omite —', e)
   }
 }
