@@ -264,25 +264,70 @@ export function mapearContactRequest(cr: ContactRequestEB): FilaLead {
 export type ClasificacionLeadEB = 'cliente_directo' | 'co_broke' | 'saliente'
 
 /**
+ * Habla de corredor en el mensaje del contact request (ronda 2). El tag
+ * "agente" de EasyBroker se queda corto: hay corredores sin perfil etiquetado
+ * que llegan como cliente directo — pero se delatan en el texto («tengo un
+ * cliente interesado», «para un cliente») porque un comprador real habla de
+ * SÍ mismo, no de su cliente. Patrones sobre texto normalizado (minúsculas y
+ * sin acentos), medidos contra los mensajes reales del Live test.
+ */
+const PATRONES_CORREDOR: RegExp[] = [
+  /\btengo (un |una |a |al |el )?cliente/,
+  /\bmis? clientes?\b/,
+  /\bpara (un |mi |nuestro )?cliente\b/,
+  /\bclientes? (muy )?interesad/,
+  /\bsoy (asesor|asesora|agente|corredor|corredora|broker)/,
+  /\b(asesor|asesora|agente|corredor|corredora) inmobiliari/,
+  /\bcomision compartida\b/,
+  /\bcompart(ir|imos|es|en) (la )?comision\b/,
+  /\bco.?broke\b/,
+  /\bde otra inmobiliaria\b/,
+]
+
+/** Minúsculas y sin diacríticos: «Comisión» → «comision». */
+function normalizarMensaje(mensaje: string): string {
+  // NFD separa la letra de su acento; el rango U+0300–U+036F son los
+  // diacríticos combinantes que quedan sueltos.
+  return mensaje
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+}
+
+/**
+ * ¿El mensaje suena a corredor externo con cliente propio? Función pura;
+ * `null`/vacío nunca dispara (sin mensaje no hay evidencia).
+ */
+export function mensajeSuenaACorredor(mensaje: string | null | undefined): boolean {
+  if (!mensaje) return false
+  const texto = normalizarMensaje(mensaje)
+  return PATRONES_CORREDOR.some((patron) => patron.test(texto))
+}
+
+/**
  * Clasifica un contact request en una de las 3 categorias verificadas:
  *  - 'saliente': `property_id` NO esta en nuestro catalogo (`propiedades`) ->
  *    un asesor de Montana pregunto por una propiedad AJENA. No es un lead.
  *  - 'co_broke': la propiedad SI es nuestra y el contacto trae el tag
- *    "agente" -> corredor externo con un cliente interesado.
- *  - 'cliente_directo': la propiedad es nuestra y el contacto NO trae ese tag.
+ *    "agente" O el mensaje suena a corredor (mensajeSuenaACorredor, ronda 2:
+ *    hay corredores sin tag que llegaban como cliente directo).
+ *  - 'cliente_directo': la propiedad es nuestra y nada delata corretaje.
  *
  * Funcion pura: `propiedadEsNuestra` y `tagsContacto` ya los resuelve el sync
  * (consulta local a `propiedades.easybroker_id` + GET /v1/contacts/{id}).
  * `tagsContacto` es `null` cuando no se pudo determinar (la llamada al
- * contacto fallo, o no habia contact_id) — en ese caso NO se adivina: se
- * devuelve `null` (sin clasificar). No confundir con `[]` (contacto
- * consultado con exito, simplemente sin tags).
+ * contacto fallo, o no habia contact_id) — ahi el mensaje positivo BASTA para
+ * 'co_broke' (evidencia directa), pero sin mensaje delator NO se adivina
+ * cliente_directo: se devuelve `null` (sin clasificar). No confundir con `[]`
+ * (contacto consultado con exito, simplemente sin tags).
  */
 export function clasificarContactRequest(
   propiedadEsNuestra: boolean,
-  tagsContacto: string[] | null
+  tagsContacto: string[] | null,
+  mensaje?: string | null
 ): ClasificacionLeadEB | null {
   if (!propiedadEsNuestra) return 'saliente'
+  if (mensajeSuenaACorredor(mensaje)) return 'co_broke'
   if (tagsContacto === null) return null
   return tagsContacto.includes('agente') ? 'co_broke' : 'cliente_directo'
 }

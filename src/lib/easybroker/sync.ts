@@ -643,14 +643,20 @@ async function clasificarLeadNuevo(
 ): Promise<ClasificacionLeadEB | null> {
   if (!fila.propiedad_eb_id) return null
   if (!propiedad) return clasificarContactRequest(false, null) // 'saliente'
-  if (!fila.contacto_eb_id) return null
+  // Sin contact_id no hay tags que pedir, pero el MENSAJE puede bastar
+  // (ronda 2: mensajeSuenaACorredor delata al corredor sin tag).
+  if (!fila.contacto_eb_id) {
+    return clasificarContactRequest(true, null, fila.mensaje_original)
+  }
 
   await pausa(PAUSA_ENTRE_DETALLES_MS) // rate limit: 1 request extra por lead nuevo
   try {
     const contacto = await ctx.obtenerContacto(fila.contacto_eb_id)
-    return clasificarContactRequest(true, contacto.tags ?? [])
+    return clasificarContactRequest(true, contacto.tags ?? [], fila.mensaje_original)
   } catch {
-    return null // GET /v1/contacts fallo: el lead se guarda sin clasificar.
+    // GET /v1/contacts fallo: queda el mensaje como única evidencia (puede
+    // dar 'co_broke' o null — nunca se adivina 'cliente_directo' sin tags).
+    return clasificarContactRequest(true, null, fila.mensaje_original)
   }
 }
 

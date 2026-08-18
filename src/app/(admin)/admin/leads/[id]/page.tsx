@@ -13,6 +13,8 @@ import {
 } from '@/lib/leads/formato'
 import { visitasDelLead } from '@/lib/visitas/consultas'
 import { Badge } from '@/components/ui/badge'
+import { BannerReclasificacion } from '@/components/leads/banner-reclasificacion'
+import { BarritaEtapa } from '@/components/leads/barrita-etapa'
 import { EtiquetaClasificacionEB } from '@/components/leads/etiqueta-clasificacion-eb'
 import { BotonLlamar } from '@/components/contactos/boton-llamar'
 import { HojaDesenlace } from '@/components/contactos/hoja-desenlace'
@@ -138,6 +140,20 @@ export default async function PaginaDetalleLeadAdmin({
     (seguimientos ?? []) as unknown as FilaSeguimiento[]
   )
 
+  // Reporte de «es un corredor, no cliente» esperando decisión (ronda 2). El
+  // hint !solicitante_id desambigua: la tabla tiene DOS fks a usuarios.
+  const { data: reclasificaciones } = await supabase
+    .from('lead_reclasificaciones')
+    .select('id, motivo, solicitante:usuarios!solicitante_id(nombre)')
+    .eq('lead_id', id)
+    .eq('estado', 'pendiente')
+    .limit(1)
+  // `as unknown`: el join singular viene tipado como arreglo por el cliente
+  // genérico (mismo caso que leadDetalle arriba).
+  const reclasificacionPendiente = (reclasificaciones ?? [])[0] as unknown as
+    | { id: string; motivo: string; solicitante: { nombre: string } | null }
+    | undefined
+
   // {asesor} en las plantillas = el asesor asignado; sin asesor, el admin.
   // Mismo nombre para la confirmación de WhatsApp de la visita agendada.
   const asesorNombre = leadDetalle.asesor?.nombre ?? admin.nombre
@@ -193,7 +209,18 @@ export default async function PaginaDetalleLeadAdmin({
             {antiguedad}
           </span>
         </div>
+        {/* La vida del lead con Klo caminando encima (ronda 2). */}
+        <BarritaEtapa etapa={leadDetalle.etapa} />
       </header>
+
+      {/* Reporte de reclasificación esperando tu decisión (ronda 2). */}
+      {reclasificacionPendiente ? (
+        <BannerReclasificacion
+          solicitudId={reclasificacionPendiente.id}
+          solicitanteNombre={reclasificacionPendiente.solicitante?.nombre ?? 'Un asesor'}
+          motivo={reclasificacionPendiente.motivo}
+        />
+      ) : null}
 
       {/* Asesor asignado + (re)asignación — el diferencial del detalle admin. */}
       <div className="flex flex-col gap-3 rounded-xl bg-white p-4 ring-1 ring-slate-200">

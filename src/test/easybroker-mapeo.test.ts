@@ -16,6 +16,7 @@ import {
   mapearPropiedadDetalle,
   mapearContactRequest,
   clasificarContactRequest,
+  mensajeSuenaACorredor,
   estatusEsActivo,
   type PropiedadListaEB,
   type PropiedadDetalleEB,
@@ -191,6 +192,58 @@ describe('clasificarContactRequest', () => {
 
   it('propiedad nuestra + tags no determinados (llamada al contacto fallida) -> null (sin clasificar)', () => {
     expect(clasificarContactRequest(true, null)).toBeNull()
+  })
+
+  it('el mensaje delator gana aunque el contacto NO traiga el tag "agente" (ronda 2)', () => {
+    expect(clasificarContactRequest(true, [], 'Hola, tengo un cliente interesado en la casa')).toBe(
+      'co_broke'
+    )
+    // Con tags no determinados, el mensaje positivo BASTA…
+    expect(clasificarContactRequest(true, null, 'Es para un cliente que busca en la zona')).toBe(
+      'co_broke'
+    )
+    // …pero sin mensaje delator sigue sin adivinarse.
+    expect(clasificarContactRequest(true, null, 'Me interesa la casa, ¿sigue disponible?')).toBeNull()
+  })
+
+  it('un mensaje de comprador real NO cambia el cliente_directo', () => {
+    expect(
+      clasificarContactRequest(true, [], 'Me interesa la casa, ¿puedo visitarla el sábado?')
+    ).toBe('cliente_directo')
+  })
+
+  it('la propiedad ajena sigue siendo "saliente" aunque el mensaje suene a corredor', () => {
+    expect(clasificarContactRequest(false, null, 'Tengo un cliente interesado')).toBe('saliente')
+  })
+})
+
+describe('mensajeSuenaACorredor', () => {
+  it.each([
+    'Tengo un cliente interesado en esta propiedad',
+    'tengo cliente para renta, ¿comparten comisión?',
+    'Busco casa para un cliente en San Pedro',
+    'Mi cliente quiere agendar visita',
+    'Hola, soy asesor inmobiliario y tengo interesados',
+    'Soy agente de otra inmobiliaria, ¿hacen co-broke?',
+    'CLIENTE INTERESADO EN LA CASA, comisión compartida?',
+  ])('detecta habla de corredor: %s', (mensaje) => {
+    expect(mensajeSuenaACorredor(mensaje)).toBe(true)
+  })
+
+  it.each([
+    'Me interesa la casa, ¿sigue disponible?',
+    'Quiero más información de la propiedad',
+    '¿Puedo visitarla este sábado con mi esposa?',
+    'Hola, vi la casa en inmuebles24 y me encantó',
+    'Estoy interesado en rentar, ¿cuáles son los requisitos?',
+  ])('no marca a un comprador real: %s', (mensaje) => {
+    expect(mensajeSuenaACorredor(mensaje)).toBe(false)
+  })
+
+  it('sin mensaje no hay evidencia', () => {
+    expect(mensajeSuenaACorredor(null)).toBe(false)
+    expect(mensajeSuenaACorredor(undefined)).toBe(false)
+    expect(mensajeSuenaACorredor('')).toBe(false)
   })
 })
 

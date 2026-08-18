@@ -13,6 +13,8 @@ import { etiquetaFuenteConDetalle } from '@/lib/leads/formato'
 import { visitasDelLead } from '@/lib/visitas/consultas'
 import { Badge } from '@/components/ui/badge'
 import { SelectorEtapa } from '@/components/leads/selector-etapa'
+import { BarritaEtapa } from '@/components/leads/barrita-etapa'
+import { BotonReportarCorredor } from '@/components/leads/boton-reportar-corredor'
 import { EtiquetaClasificacionEB } from '@/components/leads/etiqueta-clasificacion-eb'
 import { BotonWhatsApp, type PlantillaWhatsApp } from '@/components/leads/boton-whatsapp'
 import {
@@ -163,6 +165,20 @@ export default async function PaginaDetalleLeadAsesor({
   const recordatorios = await proximoRecordatorioPorLead(supabase, usuario.user_id, [id])
   const proximoRecordatorio = recordatorios.get(id) ?? null
 
+  // ¿Ya reporté que este lead es un corredor? (RLS: el asesor solo ve SUS
+  // solicitudes — si otro la abrió, el índice único de 0026 lo dirá al
+  // intentar reportar.) Solo aplica si aún no está marcado como corredor.
+  const puedeReportarCorredor =
+    leadDetalle.clasificacion_eb !== 'co_broke' && leadDetalle.clasificacion_eb !== 'saliente'
+  const { data: reportesPendientes } = puedeReportarCorredor
+    ? await supabase
+        .from('lead_reclasificaciones')
+        .select('id')
+        .eq('lead_id', id)
+        .eq('estado', 'pendiente')
+        .limit(1)
+    : { data: null }
+
   // El asesor solo puede leer SU fila de usuarios (RLS): un autor ajeno
   // (p. ej. un admin) llega sin nombre → el timeline muestra «Sistema».
   const historia = fusionarHistoria(
@@ -215,6 +231,8 @@ export default async function PaginaDetalleLeadAsesor({
             {antiguedad}
           </span>
         </div>
+        {/* La vida del lead con Klo caminando encima (ronda 2). */}
+        <BarritaEtapa etapa={leadDetalle.etapa} />
       </header>
 
       {/* Barra de acciones: 2×2 para objetivos táctiles grandes en móvil. */}
@@ -261,6 +279,15 @@ export default async function PaginaDetalleLeadAsesor({
         leadNombre={leadDetalle.nombre}
         recordatorio={proximoRecordatorio}
       />
+
+      {/* «Es un corredor, no cliente»: reporte con candado de admin (ronda 2). */}
+      {puedeReportarCorredor ? (
+        <BotonReportarCorredor
+          leadId={leadDetalle.id}
+          leadNombre={leadDetalle.nombre}
+          reportePendiente={(reportesPendientes ?? []).length > 0}
+        />
+      ) : null}
 
       {leadDetalle.propiedad ? (
         <CardPropiedadInteres
