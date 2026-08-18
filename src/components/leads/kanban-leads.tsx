@@ -256,14 +256,9 @@ function FilaLeadMovil({ lead, onMover }: { lead: LeadKanban; onMover: MoverLead
         ) : null}
 
         <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
-          <span
-            className={cn(
-              'rounded-full px-2 py-0.5 text-[0.6875rem] font-medium',
-              claseBadgeEtapa(lead.etapa)
-            )}
-          >
-            {etiquetaEtapa(lead.etapa)}
-          </span>
+          {/* Sin pill de etapa: la fila siempre vive bajo un encabezado de
+              sección (vista «Todos») o bajo un chip de etapa activo, y
+              repetirla en cada tarjeta era ruido puro en 390px. */}
           {/* max-w + truncate en el texto: fuente_detalle viene crudo de
               EasyBroker y un source largo desbordaba la fila en el teléfono
               (el Badge trae shrink-0 + nowrap y ni encoge ni parte). */}
@@ -323,6 +318,9 @@ function FilaLeadMovil({ lead, onMover }: { lead: LeadKanban; onMover: MoverLead
  *
  * El filtro vive aquí y no en la URL a propósito: es un vistazo, no un
  * destino que valga la pena compartir o al que volver con el botón atrás.
+ *
+ * En «Todos» la lista se agrupa en SECCIONES por etapa (ronda 2): el pipeline
+ * completo se lee bajando con el dedo, sin el scroll horizontal del tablero.
  */
 function ListaLeadsMovil({
   leads,
@@ -335,18 +333,25 @@ function ListaLeadsMovil({
 }) {
   const [filtro, setFiltro] = useState<EtapaLead | 'todos'>('todos')
 
+  // Más nuevos arriba (ronda 2, pedido del Live test): el mismo criterio que
+  // la bandeja del admin, para que ninguna lista se lea «al revés». El orden
+  // anterior por urgencia confundía al equipo (el lead recién llegado caía
+  // hasta abajo); la urgencia la siguen contando los puntos ámbar/rojo.
+  const porMasNuevo = (a: LeadKanban, b: LeadKanban) =>
+    new Date(b.creado_en).getTime() - new Date(a.creado_en).getTime()
+
+  const secciones = useMemo(() => {
+    if (filtro !== 'todos') return null
+    return ETAPAS_KANBAN.map((etapa) => ({
+      etapa,
+      leads: [...(columnas.get(etapa) ?? [])].sort(porMasNuevo),
+    })).filter((s) => s.leads.length > 0)
+  }, [filtro, columnas])
+
   const visibles = useMemo(() => {
-    const base = filtro === 'todos' ? leads : (columnas.get(filtro) ?? [])
-    // Orden por urgencia: primero el que lleva más tiempo sin que nadie lo
-    // toque. `ultimo_seguimiento` si lo tuvo; si nunca, su fecha de alta —
-    // que es exactamente la referencia con la que `puntoSeguimiento` decide
-    // el punto ámbar o rojo, así que la lista y los puntos cuentan lo mismo.
-    return [...base].sort(
-      (a, b) =>
-        new Date(a.ultimo_seguimiento ?? a.creado_en).getTime() -
-        new Date(b.ultimo_seguimiento ?? b.creado_en).getTime()
-    )
-  }, [filtro, leads, columnas])
+    if (filtro === 'todos') return []
+    return [...(columnas.get(filtro) ?? [])].sort(porMasNuevo)
+  }, [filtro, columnas])
 
   const sinSeguimiento = leads.filter((lead) => puntoSeguimiento(lead) !== null).length
 
@@ -393,9 +398,40 @@ function ListaLeadsMovil({
         </div>
       </div>
 
-      {visibles.length === 0 ? (
+      {secciones ? (
+        secciones.length === 0 ? (
+          <p className="rounded-xl border border-dashed border-slate-300 px-3 py-8 text-center text-sm text-slate-400">
+            Sin leads activos
+          </p>
+        ) : (
+          secciones.map(({ etapa, leads: grupo }) => (
+            <section key={etapa} aria-label={`Etapa ${etiquetaEtapa(etapa)}`}>
+              {/* Encabezado de sección: el MISMO pill de etapa que usan las
+                  columnas del tablero, + línea + conteo. Vocabulario idéntico
+                  en teléfono y escritorio. */}
+              <div className="mb-2 flex items-center gap-2">
+                <span
+                  className={cn(
+                    'rounded-full px-2 py-0.5 text-xs font-medium',
+                    claseBadgeEtapa(etapa)
+                  )}
+                >
+                  {etiquetaEtapa(etapa)}
+                </span>
+                <span aria-hidden className="h-px flex-1 bg-slate-200" />
+                <span className="text-xs font-medium text-slate-500">{grupo.length}</span>
+              </div>
+              <ul className="mb-3 flex flex-col gap-2">
+                {grupo.map((lead) => (
+                  <FilaLeadMovil key={lead.id} lead={lead} onMover={onMover} />
+                ))}
+              </ul>
+            </section>
+          ))
+        )
+      ) : visibles.length === 0 ? (
         <p className="rounded-xl border border-dashed border-slate-300 px-3 py-8 text-center text-sm text-slate-400">
-          {filtro === 'todos' ? 'Sin leads activos' : `Sin leads en ${etiquetaEtapa(filtro)}`}
+          {`Sin leads en ${etiquetaEtapa(filtro)}`}
         </p>
       ) : (
         <ul className="flex flex-col gap-2">

@@ -14,7 +14,14 @@ import { requireAsesor } from '@/lib/auth/usuario-actual'
 import { createClient } from '@/lib/supabase/server'
 import { proximasVisitas } from '@/lib/dashboard/consultas'
 import { leadsSinRespuesta } from '@/lib/contactos/consultas'
-import { ETAPAS_CERRADAS, NOTA_CIERRE } from '@/lib/leads/formato'
+import {
+  ETAPAS_CERRADAS,
+  NOTA_CIERRE,
+  claseBadgeEtapa,
+  etiquetaEtapa,
+} from '@/lib/leads/formato'
+import { cn } from '@/lib/utils'
+import { EtiquetaClasificacionEB } from '@/components/leads/etiqueta-clasificacion-eb'
 import { fechaHoyMonterrey, formatearFechaHoraMonterrey } from '@/lib/fechas/monterrey'
 import { horaCorta } from '@/lib/guardias/calendario'
 import {
@@ -31,6 +38,7 @@ type LeadCola = {
   creado_en: string
   asignado_en: string | null
   clasificacion_eb: ClasificacionLeadEB | null
+  propiedad: { titulo: string } | null
 }
 
 const MAX_NECESITAN_SEGUIMIENTO = 10
@@ -38,6 +46,47 @@ const HORA_MS = 60 * 60 * 1000
 
 function capitalizar(texto: string): string {
   return texto.charAt(0).toUpperCase() + texto.slice(1)
+}
+
+/**
+ * Tarjeta compartida de las colas del inicio (ronda 2): además del nombre y
+ * el subtítulo propio de cada cola, muestra la propiedad de interés, la etapa
+ * y la clasificación — el asesor decide a quién atender sin abrir la ficha.
+ */
+function CardLeadCola({ lead, subtitulo }: { lead: LeadCola; subtitulo: string }) {
+  return (
+    <li>
+      <Link
+        href={`/asesor/leads/${lead.id}`}
+        className="flex items-center justify-between gap-2 rounded-xl bg-white p-3 shadow-xs ring-1 ring-slate-200 transition-colors active:bg-slate-50"
+      >
+        <div className="min-w-0">
+          <p className="truncate text-sm font-medium text-slate-900">{lead.nombre}</p>
+          {lead.propiedad ? (
+            <p className="truncate text-xs text-slate-500">{lead.propiedad.titulo}</p>
+          ) : null}
+          <p suppressHydrationWarning className="mt-0.5 text-xs text-slate-500">
+            {subtitulo}
+          </p>
+          <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+            <span
+              className={cn(
+                'rounded-full px-1.5 py-0.5 text-[0.6875rem] font-medium',
+                claseBadgeEtapa(lead.etapa)
+              )}
+            >
+              {etiquetaEtapa(lead.etapa)}
+            </span>
+            <EtiquetaClasificacionEB
+              clasificacion={lead.clasificacion_eb}
+              className="px-1.5 text-[0.6875rem]"
+            />
+          </div>
+        </div>
+        <ChevronRight aria-hidden className="size-4 shrink-0 text-slate-400" />
+      </Link>
+    </li>
+  )
 }
 
 type BusquedaPagina = { gcal?: string }
@@ -87,7 +136,9 @@ export default async function PaginaInicioAsesor({
       // vería los leads de toda la agencia (ver requireAsesor()).
       supabase
         .from('leads')
-        .select('id, nombre, etapa, creado_en, asignado_en, clasificacion_eb')
+        .select(
+          'id, nombre, etapa, creado_en, asignado_en, clasificacion_eb, propiedad:propiedades(titulo)'
+        )
         .eq('asesor_id', usuario.user_id)
         .eq('archivado', false)
         .not('etapa', 'in', `(${ETAPAS_CERRADAS.join(',')})`)
@@ -136,7 +187,10 @@ export default async function PaginaInicioAsesor({
     throw new Error(`No se pudo cargar la cola del día: ${errorLeads.message}`)
   }
 
-  const leads = (leadsData ?? []) as LeadCola[]
+  // `as unknown`: el join de propiedad viene tipado como arreglo por el
+  // cliente genérico aunque la FK es singular (mismo caso que FilaLead en
+  // /asesor/leads).
+  const leads = (leadsData ?? []) as unknown as LeadCola[]
 
   const estadoGoogle: EstadoConexionGoogleUI = conexionGoogle
     ? (conexionGoogle.estado as EstadoConexionGoogleUI)
@@ -147,8 +201,15 @@ export default async function PaginaInicioAsesor({
   // un botón que lleva a un error de Google.
   const googleConfigurado = Boolean(process.env.GOOGLE_CLIENT_ID)
 
-  // Último seguimiento por lead: mismo patrón que el kanban (src/app/(asesor)/asesor/leads/page.tsx)
-  // — segunda consulta ordenada desc; el primer registro visto por lead es el más reciente.
+  // Última ACTIVIDAD REAL del asesor por lead: mismo patrón que el kanban
+  // (src/app/(asesor)/asesor/leads/page.tsx) — segunda consulta ordenada desc;
+  // el primer registro visto por lead es el más reciente.
+  //
+  // Se excluye `tipo = 'sistema'` a propósito: asignar, tomar o reasignar un
+  // lead registra un seguimiento de sistema (acciones.ts, sync.ts), y contarlo
+  // aquí sacaba de «Atiende ahora» a TODO lead recién asignado en el mismo
+  // instante de asignarlo — el bug que reportaron Renata y Arturo en el Live
+  // test. Un seguimiento de sistema documenta al lead; no es atención.
   const ultimoSeguimiento = new Map<string, string>()
   // Contactos de WhatsApp de esos mismos leads: alimentan la lista «Sin
   // respuesta». Se declara fuera del `if` para que la derivación de abajo lo
@@ -162,6 +223,7 @@ export default async function PaginaInicioAsesor({
         'lead_id',
         leads.map((l) => l.id)
       )
+      .neq('tipo', 'sistema')
       .order('creado_en', { ascending: false })
 
     for (const s of seguimientos ?? []) {
@@ -192,7 +254,8 @@ export default async function PaginaInicioAsesor({
 
   // «Atiende ahora»: asignados (asignado_en no nulo — un lead auto-capturado
   // por el asesor ya se considera atendido, ver acciones-asesor.ts) que
-  // TODAVÍA no tienen ningún seguimiento. Más antiguo asignado primero.
+  // TODAVÍA no tienen actividad real del asesor (los seguimientos de sistema
+  // no cuentan, ver arriba). Más antiguo asignado primero.
   //
   // Se excluyen los `clasificacion_eb === 'saliente'` (ver migración 0011 y
   // skill easybroker-api): esos NO son leads, son al revés — un asesor de
@@ -304,24 +367,14 @@ export default async function PaginaInicioAsesor({
         ) : (
           <ul className="flex flex-col gap-2 lg:grid lg:grid-cols-2 lg:gap-3 xl:grid-cols-3">
             {atiendeAhora.map((lead) => (
-              <li key={lead.id}>
-                <Link
-                  href={`/asesor/leads/${lead.id}`}
-                  className="flex items-center justify-between gap-2 rounded-xl bg-white p-3 shadow-xs ring-1 ring-slate-200 transition-colors active:bg-slate-50"
-                >
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-medium text-slate-900">{lead.nombre}</p>
-                    <p suppressHydrationWarning className="mt-0.5 text-xs text-slate-500">
-                      Asignado{' '}
-                      {formatDistanceToNow(new Date(lead.asignado_en!), {
-                        addSuffix: true,
-                        locale: es,
-                      })}
-                    </p>
-                  </div>
-                  <ChevronRight aria-hidden className="size-4 shrink-0 text-slate-400" />
-                </Link>
-              </li>
+              <CardLeadCola
+                key={lead.id}
+                lead={lead}
+                subtitulo={`Asignado ${formatDistanceToNow(new Date(lead.asignado_en!), {
+                  addSuffix: true,
+                  locale: es,
+                })}`}
+              />
             ))}
           </ul>
         )}
@@ -346,24 +399,14 @@ export default async function PaginaInicioAsesor({
         ) : (
           <ul className="flex flex-col gap-2 lg:grid lg:grid-cols-2 lg:gap-3 xl:grid-cols-3">
             {sinRespuesta.map((lead) => (
-              <li key={lead.id}>
-                <Link
-                  href={`/asesor/leads/${lead.id}`}
-                  className="flex items-center justify-between gap-2 rounded-xl bg-white p-3 shadow-xs ring-1 ring-slate-200 transition-colors active:bg-slate-50"
-                >
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-medium text-slate-900">{lead.nombre}</p>
-                    <p suppressHydrationWarning className="mt-0.5 text-xs text-slate-500">
-                      Le escribiste{' '}
-                      {formatDistanceToNow(new Date(ultimoContacto.get(lead.id)!), {
-                        addSuffix: true,
-                        locale: es,
-                      })}
-                    </p>
-                  </div>
-                  <ChevronRight aria-hidden className="size-4 shrink-0 text-slate-400" />
-                </Link>
-              </li>
+              <CardLeadCola
+                key={lead.id}
+                lead={lead}
+                subtitulo={`Le escribiste ${formatDistanceToNow(
+                  new Date(ultimoContacto.get(lead.id)!),
+                  { addSuffix: true, locale: es }
+                )}`}
+              />
             ))}
           </ul>
         )}
@@ -388,24 +431,14 @@ export default async function PaginaInicioAsesor({
         ) : (
           <ul className="flex flex-col gap-2 lg:grid lg:grid-cols-2 lg:gap-3 xl:grid-cols-3">
             {necesitanSeguimiento.map((lead) => (
-              <li key={lead.id}>
-                <Link
-                  href={`/asesor/leads/${lead.id}`}
-                  className="flex items-center justify-between gap-2 rounded-xl bg-white p-3 shadow-xs ring-1 ring-slate-200 transition-colors active:bg-slate-50"
-                >
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-medium text-slate-900">{lead.nombre}</p>
-                    <p suppressHydrationWarning className="mt-0.5 text-xs text-slate-500">
-                      Último contacto{' '}
-                      {formatDistanceToNow(new Date(ultimoSeguimiento.get(lead.id)!), {
-                        addSuffix: true,
-                        locale: es,
-                      })}
-                    </p>
-                  </div>
-                  <ChevronRight aria-hidden className="size-4 shrink-0 text-slate-400" />
-                </Link>
-              </li>
+              <CardLeadCola
+                key={lead.id}
+                lead={lead}
+                subtitulo={`Último contacto ${formatDistanceToNow(
+                  new Date(ultimoSeguimiento.get(lead.id)!),
+                  { addSuffix: true, locale: es }
+                )}`}
+              />
             ))}
           </ul>
         )}
@@ -470,25 +503,36 @@ export default async function PaginaInicioAsesor({
           <TrendingUp aria-hidden className="size-4 text-slate-500" />
           <h2 className="text-sm font-semibold text-slate-900">Mis números del mes</h2>
         </div>
+        {/* Cada cifra navega a los leads que la componen (pedido del Live
+            test: «poder ver a los leads que se refiere»). */}
         <div className="grid grid-cols-3 gap-2 lg:max-w-xl lg:gap-3">
-          <div className="rounded-xl bg-white p-3 text-center shadow-xs ring-1 ring-slate-200">
+          <Link
+            href="/asesor/leads"
+            className="rounded-xl bg-white p-3 text-center shadow-xs ring-1 ring-slate-200 transition-colors active:bg-slate-50"
+          >
             <p className="text-xl font-semibold tracking-tight text-slate-900">{leadsActivos}</p>
             <p className="mt-0.5 text-[0.6875rem] leading-tight text-slate-500">Leads activos</p>
-          </div>
-          <div className="rounded-xl bg-white p-3 text-center shadow-xs ring-1 ring-slate-200">
+          </Link>
+          <Link
+            href="/asesor/leads"
+            className="rounded-xl bg-white p-3 text-center shadow-xs ring-1 ring-slate-200 transition-colors active:bg-slate-50"
+          >
             <p className="text-xl font-semibold tracking-tight text-slate-900">
               {leadsNuevosMes ?? 0}
             </p>
             <p className="mt-0.5 text-[0.6875rem] leading-tight text-slate-500">Nuevos del mes</p>
-          </div>
-          <div className="rounded-xl bg-white p-3 text-center shadow-xs ring-1 ring-slate-200">
+          </Link>
+          <Link
+            href="/asesor/leads?vista=cerrados"
+            className="rounded-xl bg-white p-3 text-center shadow-xs ring-1 ring-slate-200 transition-colors active:bg-slate-50"
+          >
             <p className="text-xl font-semibold tracking-tight text-slate-900">
               {cerradosGanadosMes}
             </p>
             <p className="mt-0.5 text-[0.6875rem] leading-tight text-slate-500">
               Cerrados ganados
             </p>
-          </div>
+          </Link>
         </div>
       </div>
     </section>

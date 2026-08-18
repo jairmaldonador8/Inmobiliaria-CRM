@@ -171,8 +171,12 @@ export default async function PaginaLeadsAsesor({
   }
   const filas = (leads ?? []) as unknown as FilaLead[]
 
-  // Último seguimiento por lead: segunda consulta simple (orden descendente)
+  // Última actividad REAL por lead: segunda consulta simple (orden descendente)
   // agrupada aquí — el primer registro visto por lead es el más reciente.
+  // Excluye `tipo = 'sistema'` con el mismo criterio del inicio y del motor de
+  // escalamiento (escalamiento.ts): asignar/tomar un lead registra un
+  // seguimiento de sistema y NO cuenta como atenderlo — sin este filtro el
+  // punto ámbar/rojo se apagaba con la pura asignación.
   const ultimoSeguimiento = new Map<string, string>()
   if (filas.length > 0) {
     const { data: seguimientos } = await supabase
@@ -182,6 +186,7 @@ export default async function PaginaLeadsAsesor({
         'lead_id',
         filas.map((l) => l.id)
       )
+      .neq('tipo', 'sistema')
       .order('creado_en', { ascending: false })
 
     for (const s of seguimientos ?? []) {
