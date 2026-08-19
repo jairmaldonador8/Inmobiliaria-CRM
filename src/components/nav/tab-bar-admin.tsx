@@ -38,12 +38,21 @@ type Pestana = {
   exacta?: boolean
 }
 
-/** Los 4 destinos con slot fijo en la barra (igual forma que NavAsesor). */
+/**
+ * Los 4 destinos con slot fijo en la barra (igual forma que NavAsesor).
+ *
+ * «Asesores» ocupa el cuarto slot desde el 2026-08-19, a pedido de Renata
+ * («en lugar de que salga propiedades... debería estar asesores»): con el
+ * panorama, ver cómo va el equipo es trabajo diario de la dirección y el
+ * inventario no. Propiedades baja a la hoja «Más»; los 3 puntitos se
+ * quedan porque son la única puerta del teléfono a captaciones, guardias,
+ * sugerencias y ajustes.
+ */
 const PESTANAS: Pestana[] = [
   { href: '/admin', etiqueta: 'Inicio', Icono: House, exacta: true },
   { href: '/admin/bandeja', etiqueta: 'Bandeja', Icono: Inbox },
   { href: '/admin/leads', etiqueta: 'Leads', Icono: Users },
-  { href: '/admin/propiedades', etiqueta: 'Propiedades', Icono: Building2 },
+  { href: '/admin/asesores', etiqueta: 'Asesores', Icono: UserRound },
 ]
 
 /** Los destinos de la hoja «Más» nunca necesitan match exacto (ver esActiva). */
@@ -57,8 +66,8 @@ type PestanaMas = Omit<Pestana, 'exacta'>
  * destino real más cercano al que describe NavAdmin.
  */
 const DESTINOS_MAS: PestanaMas[] = [
+  { href: '/admin/propiedades', etiqueta: 'Propiedades', Icono: Building2 },
   { href: '/admin/captaciones', etiqueta: 'Captaciones', Icono: ClipboardCheck },
-  { href: '/admin/asesores', etiqueta: 'Asesores', Icono: UserRound },
   { href: '/admin/guardias', etiqueta: 'Guardias', Icono: CalendarClock },
   { href: '/admin/ajustes', etiqueta: 'Plantillas', Icono: MessageSquareText },
   { href: '/admin/sugerencias', etiqueta: 'Sugerencias', Icono: Lightbulb },

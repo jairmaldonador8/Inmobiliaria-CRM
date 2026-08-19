@@ -56,25 +56,35 @@ describe('TabBarAdmin — pestaña activa', () => {
     expect(screen.getByRole('link', { name: /^leads$/i })).toHaveAttribute('aria-current', 'page')
   })
 
-  it('en /admin/propiedades/45, Propiedades está activo', () => {
-    mockUsePathname.mockReturnValue('/admin/propiedades/45')
+  // Desde el 2026-08-19 el cuarto slot es Asesores (pedido de Renata) y
+  // Propiedades vive en la hoja «Más».
+  it('en /admin/asesores/45, Asesores está activo', () => {
+    mockUsePathname.mockReturnValue('/admin/asesores/45')
     render(<TabBarAdmin nombre={NOMBRE} />)
 
-    expect(screen.getByRole('link', { name: /propiedades/i })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: /asesores/i })).toHaveAttribute(
       'aria-current',
       'page'
     )
   })
+
+  it('en /admin/propiedades/45 «Más» queda activo: Propiedades bajó a la hoja', () => {
+    mockUsePathname.mockReturnValue('/admin/propiedades/45')
+    render(<TabBarAdmin nombre={NOMBRE} />)
+
+    expect(screen.queryByRole('link', { name: /propiedades/i })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /más/i })).toHaveAttribute('aria-current', 'page')
+  })
 })
 
 describe('TabBarAdmin — hoja «Más»', () => {
-  it('el botón «Más» abre una hoja con Asesores, Plantillas, Sugerencias, Notificaciones y Ajustes', async () => {
+  it('el botón «Más» abre una hoja con Propiedades, Plantillas, Sugerencias, Notificaciones y Ajustes', async () => {
     mockUsePathname.mockReturnValue('/admin')
     render(<TabBarAdmin nombre={NOMBRE} />)
 
     fireEvent.click(screen.getByRole('button', { name: /más/i }))
 
-    expect(await screen.findByRole('link', { name: /asesores/i })).toBeInTheDocument()
+    expect(await screen.findByRole('link', { name: /propiedades/i })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: /plantillas/i })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: /sugerencias/i })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: /notificaciones/i })).toBeInTheDocument()
