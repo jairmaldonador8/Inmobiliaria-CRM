@@ -378,3 +378,126 @@ export async function capturarLead(datos: DatosCapturarLead): Promise<ResultadoA
   revalidarRutasLeads()
   return { ok: true }
 }
+
+// ===================== Papelera de leads =====================
+//
+// «Eliminar» en la UI = ARCHIVAR: el lead sale de bandeja, pipeline, tablero,
+// escalamiento y métricas de un golpe, porque TODA consulta de la casa filtra
+// `archivado = false`. Es reversible a propósito: un lead guarda datos de una
+// persona real y un mal clic no debe costarlos (mismo criterio que
+// `reactivarLead`). El borrado de verdad vive en /admin/leads/archivados.
+//
+// Solo admin: los asesores no ven la opción (decisión de Jair, 2026-08-19).
+
+/** Rutas que además hay que revalidar cuando un lead entra o sale de la papelera. */
+function revalidarPapelera(leadId: string) {
+  revalidarRutasLeads()
+  revalidatePath('/admin/leads/archivados')
+  revalidatePath('/admin')
+  revalidatePath('/asesor')
+  revalidatePath('/asesor/leads')
+  revalidatePath(`/asesor/leads/${leadId}`)
+  revalidatePath(`/admin/leads/${leadId}`)
+}
+
+/**
+ * Manda un lead a la papelera. El evento `lead_archivado` lo anota solo el
+ * trigger de 0016; el seguimiento de sistema es el que deja el NOMBRE de
+ * quién lo hizo (bajo service role `auth.uid()` es null → actor «sistema»).
+ */
+export async function archivarLead(leadId: string): Promise<ResultadoAccion> {
+  const admin = await requireAdmin()
+  const supabase = createAdminClient()
+
+  const { data: actualizados, error } = await supabase
+    .from('leads')
+    .update({ archivado: true, archivado_en: new Date().toISOString() })
+    .eq('id', leadId)
+    .eq('archivado', false)
+    .select('id, nombre')
+
+  if (error) return { error: `No se pudo eliminar el lead: ${error.message}` }
+  if (!actualizados?.[0]) return { error: 'Este lead ya no está activo' }
+
+  // Best-effort: el archivado ya quedó persistido; si la nota falla se
+  // reporta sin deshacerlo (mismo criterio que registrarAsignacion).
+  const { error: errorSeguimiento } = await supabase.from('seguimientos').insert({
+    lead_id: leadId,
+    autor_id: admin.user_id,
+    tipo: 'sistema',
+    nota: `Eliminado (enviado a la papelera) por ${admin.nombre}`,
+  })
+  if (errorSeguimiento) console.error('archivarLead: seguimiento falló:', errorSeguimiento.message)
+
+  revalidarPapelera(leadId)
+  return { ok: true }
+}
+
+/** Saca un lead de la papelera y lo devuelve tal cual estaba (mismo asesor y etapa). */
+export async function restaurarLead(leadId: string): Promise<ResultadoAccion> {
+  const admin = await requireAdmin()
+  const supabase = createAdminClient()
+
+  const { data: actualizados, error } = await supabase
+    .from('leads')
+    .update({ archivado: false, archivado_en: null })
+    .eq('id', leadId)
+    .eq('archivado', true)
+    .select('id, nombre')
+
+  if (error) return { error: `No se pudo restaurar el lead: ${error.message}` }
+  if (!actualizados?.[0]) return { error: 'Este lead ya está activo' }
+
+  const { error: errorSeguimiento } = await supabase.from('seguimientos').insert({
+    lead_id: leadId,
+    autor_id: admin.user_id,
+    tipo: 'sistema',
+    nota: `Restaurado desde la papelera por ${admin.nombre}`,
+  })
+  if (errorSeguimiento) console.error('restaurarLead: seguimiento falló:', errorSeguimiento.message)
+
+  revalidarPapelera(leadId)
+  return { ok: true }
+}
+
+/**
+ * Borra un lead y todo su rastro. NO tiene vuelta atrás.
+ *
+ * Toda la mecánica vive en `public.eliminar_lead_definitivo` (migración
+ * 0027): es una sola transacción y es el único punto donde se levanta la
+ * inmutabilidad de `seguimientos` y `lead_eventos`. Aquí solo se exige que
+ * el lead YA esté en la papelera — así el borrado definitivo siempre son dos
+ * decisiones separadas, nunca un clic.
+ */
+export async function eliminarLeadDefinitivo(leadId: string): Promise<ResultadoAccion> {
+  await requireAdmin()
+  const supabase = createAdminClient()
+
+  const { data: lead, error: errorLead } = await supabase
+    .from('leads')
+    .select('id, archivado')
+    .eq('id', leadId)
+    .maybeSingle()
+
+  if (errorLead) return { error: `No se pudo leer el lead: ${errorLead.message}` }
+  if (!lead) return { error: 'Este lead ya no existe' }
+  if (!lead.archivado) {
+    return { error: 'Primero manda el lead a la papelera' }
+  }
+
+  const { error } = await supabase.rpc('eliminar_lead_definitivo', { p_lead_id: leadId })
+
+  if (error) {
+    if (error.message.includes('lead_con_operacion')) {
+      return {
+        error:
+          'Este lead tiene una operación cerrada registrada: se queda en la papelera para no romper las comisiones',
+      }
+    }
+    if (error.message.includes('lead_inexistente')) return { error: 'Este lead ya no existe' }
+    return { error: `No se pudo eliminar el lead: ${error.message}` }
+  }
+
+  revalidarPapelera(leadId)
+  return { ok: true }
+}

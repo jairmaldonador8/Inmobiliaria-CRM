@@ -270,3 +270,77 @@ export async function leadsEnConversacion(): Promise<LeadEnConversacion[]> {
     return fb.localeCompare(fa)
   })
 }
+
+export type LeadArchivado = {
+  id: string
+  nombre: string
+  telefono: string | null
+  email: string | null
+  fuente: string
+  fuente_detalle: string | null
+  etapa: string
+  creado_en: string
+  /** Cuándo se mandó a la papelera. null = archivado antes de que existiera. */
+  archivado_en: string | null
+  asesor: { nombre: string } | null
+  propiedad: { titulo: string } | null
+  /** true = tiene operación cerrada: no se puede borrar de la base. */
+  tieneOperacion: boolean
+}
+
+/**
+ * Papelera del admin: lo último que se tiró, arriba.
+ *
+ * Los leads sin `archivado_en` (archivados antes de 0027 — en producción
+ * eran 107, entre fixtures TEST-SYNC viejos y leads reales que se sacaron de
+ * circulación a mano) caen al final: son historia, no lo que acabas de
+ * eliminar.
+ *
+ * Trae además si el lead tiene una operación registrada, para que la vista
+ * no ofrezca «Eliminar definitivamente» en algo que la migración 0027 va a
+ * rechazar de todos modos (las comisiones apuntan al lead).
+ */
+export async function leadsArchivados(): Promise<LeadArchivado[]> {
+  const supabase = createAdminClient()
+
+  const { data, error } = await supabase
+    .from('leads')
+    .select(
+      'id, nombre, telefono, email, fuente, fuente_detalle, etapa, creado_en, archivado_en, asesor:usuarios(nombre), propiedad:propiedades(titulo)'
+    )
+    .eq('archivado', true)
+    .order('archivado_en', { ascending: false, nullsFirst: false })
+    .order('creado_en', { ascending: false })
+
+  if (error) throw new Error(`No se pudieron cargar los leads archivados: ${error.message}`)
+  const leads = (data ?? []) as unknown as Omit<LeadArchivado, 'tieneOperacion'>[]
+  if (leads.length === 0) return []
+
+  const { data: operaciones, error: errorOperaciones } = await supabase
+    .from('operaciones')
+    .select('lead_id')
+    .in(
+      'lead_id',
+      leads.map((l) => l.id)
+    )
+
+  if (errorOperaciones) {
+    throw new Error(`No se pudieron cargar las operaciones: ${errorOperaciones.message}`)
+  }
+  const conOperacion = new Set((operaciones ?? []).map((o) => o.lead_id as string))
+
+  return leads.map((lead) => ({ ...lead, tieneOperacion: conOperacion.has(lead.id) }))
+}
+
+/** Cuántos leads hay en la papelera (para la píldora de la pestaña). */
+export async function conteoArchivados(): Promise<number> {
+  const supabase = createAdminClient()
+
+  const { count, error } = await supabase
+    .from('leads')
+    .select('id', { count: 'exact', head: true })
+    .eq('archivado', true)
+
+  if (error) throw new Error(`No se pudo contar la papelera: ${error.message}`)
+  return count ?? 0
+}

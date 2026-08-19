@@ -20,6 +20,7 @@ import { BotonLlamar } from '@/components/contactos/boton-llamar'
 import { HojaDesenlace } from '@/components/contactos/hoja-desenlace'
 import { BotonWhatsApp, type PlantillaWhatsApp } from '@/components/leads/boton-whatsapp'
 import { ReasignarLead } from '@/components/leads/reasignar-lead'
+import { BotonEliminarLead } from '@/components/leads/boton-eliminar-lead'
 import {
   CardPropiedadInteres,
   DatosLead,
@@ -308,6 +309,12 @@ export default async function PaginaDetalleLeadAdmin({
         <h2 className="text-sm font-semibold text-slate-900">Historia del lead</h2>
         <ResumenHistorial historia={historia} />
         <TimelineEventos eventos={historia} />
+      </div>
+
+      {/* Zona de peligro, al final y discreta: quien entra a trabajar el lead
+          no debe toparse con «eliminar» antes que con el teléfono. */}
+      <div className="flex justify-end border-t border-slate-200 pt-3">
+        <BotonEliminarLead leadId={leadDetalle.id} nombre={leadDetalle.nombre} />
       </div>
     </section>
   )
