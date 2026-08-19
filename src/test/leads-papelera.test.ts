@@ -81,10 +81,13 @@ function fakeArchivado(opciones: { filas?: { id: string; nombre: string }[] | nu
  *   rpc('eliminar_lead_definitivo')
  */
 function fakePurga(opciones: {
-  lead?: { id: string; archivado: boolean } | null
+  lead?: { id: string; nombre: string; archivado: boolean } | null
   rpcError?: { message: string } | null
 }) {
-  const lead = opciones.lead === undefined ? { id: 'lead-1', archivado: true } : opciones.lead
+  const lead =
+    opciones.lead === undefined
+      ? { id: 'lead-1', nombre: 'Juan Pérez', archivado: true }
+      : opciones.lead
   const maybeSingle = vi.fn().mockResolvedValue({ data: lead, error: null })
   const eq = vi.fn(() => ({ maybeSingle }))
   const select = vi.fn(() => ({ eq }))
@@ -166,14 +169,39 @@ describe('eliminarLeadDefinitivo', () => {
     expect(fake.rpc).toHaveBeenCalledWith('eliminar_lead_definitivo', { p_lead_id: 'lead-1' })
   })
 
-  it('NO borra un lead vivo: primero tiene que pasar por la papelera', async () => {
-    const fake = fakePurga({ lead: { id: 'lead-1', archivado: false } })
+  it('NO borra un lead vivo sin que se escriba su nombre', async () => {
+    const fake = fakePurga({ lead: { id: 'lead-1', nombre: 'Juan Pérez', archivado: false } })
     createAdminClientMock.mockReturnValue(fake.cliente)
 
-    expect(await eliminarLeadDefinitivo('lead-1')).toEqual({
-      error: 'Primero manda el lead a la papelera',
-    })
+    const resultado = await eliminarLeadDefinitivo('lead-1')
+    expect('error' in resultado && resultado.error).toContain('Juan Pérez')
     expect(fake.rpc).not.toHaveBeenCalled()
+  })
+
+  it('NO borra un lead vivo si el nombre escrito no es el suyo', async () => {
+    const fake = fakePurga({ lead: { id: 'lead-1', nombre: 'Juan Pérez', archivado: false } })
+    createAdminClientMock.mockReturnValue(fake.cliente)
+
+    await eliminarLeadDefinitivo('lead-1', { confirmacionNombre: 'Juana Pérez' })
+    expect(fake.rpc).not.toHaveBeenCalled()
+  })
+
+  it('borra un lead vivo cuando el nombre coincide (sin exigir acentos ni mayúsculas)', async () => {
+    const fake = fakePurga({ lead: { id: 'lead-1', nombre: 'Juan Pérez', archivado: false } })
+    createAdminClientMock.mockReturnValue(fake.cliente)
+
+    expect(await eliminarLeadDefinitivo('lead-1', { confirmacionNombre: '  juan perez ' })).toEqual({
+      ok: true,
+    })
+    expect(fake.rpc).toHaveBeenCalledWith('eliminar_lead_definitivo', { p_lead_id: 'lead-1' })
+  })
+
+  it('desde la papelera NO hace falta escribir nada: llegar ahí ya fue una decisión', async () => {
+    const fake = fakePurga({ lead: { id: 'lead-1', nombre: 'Juan Pérez', archivado: true } })
+    createAdminClientMock.mockReturnValue(fake.cliente)
+
+    expect(await eliminarLeadDefinitivo('lead-1')).toEqual({ ok: true })
+    expect(fake.rpc).toHaveBeenCalled()
   })
 
   it('avisa si el lead ya no existe', async () => {

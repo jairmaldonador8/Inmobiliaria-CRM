@@ -9,7 +9,7 @@ import { registrarEvento } from '@/lib/eventos/registrar'
 import { crearNotificacion } from '@/lib/notificaciones/crear'
 import { leadEnEscalamientoAbierto } from '@/lib/guardias/consultas'
 import { normalizarTelefono } from '@/lib/easybroker/mapeo'
-import { FUENTES_LEAD, type FuenteLead } from '@/lib/leads/formato'
+import { FUENTES_LEAD, nombreConfirmaAlLead, type FuenteLead } from '@/lib/leads/formato'
 import { ROLES_QUE_ASESORAN } from '@/lib/asesores/roles'
 
 export type ResultadoAccion = { ok: true } | { error: string }
@@ -465,24 +465,33 @@ export async function restaurarLead(leadId: string): Promise<ResultadoAccion> {
  *
  * Toda la mecánica vive en `public.eliminar_lead_definitivo` (migración
  * 0027): es una sola transacción y es el único punto donde se levanta la
- * inmutabilidad de `seguimientos` y `lead_eventos`. Aquí solo se exige que
- * el lead YA esté en la papelera — así el borrado definitivo siempre son dos
- * decisiones separadas, nunca un clic.
+ * inmutabilidad de `seguimientos` y `lead_eventos`.
+ *
+ * Dos caminos, con la MISMA cantidad de fricción repartida distinto:
+ *   - Desde la papelera, el lead ya está archivado: llegar ahí fue la
+ *     primera decisión, y confirmar en el diálogo es la segunda.
+ *   - Desde la hoja del lead (menú ⋯), el lead está vivo y no hubo primera
+ *     decisión, así que la pone escribir su nombre. Es la fricción que se
+ *     usa para lo irreversible, y la valida el SERVIDOR: el diálogo del
+ *     cliente no es la frontera.
  */
-export async function eliminarLeadDefinitivo(leadId: string): Promise<ResultadoAccion> {
+export async function eliminarLeadDefinitivo(
+  leadId: string,
+  opciones: { confirmacionNombre?: string } = {}
+): Promise<ResultadoAccion> {
   await requireAdmin()
   const supabase = createAdminClient()
 
   const { data: lead, error: errorLead } = await supabase
     .from('leads')
-    .select('id, archivado')
+    .select('id, nombre, archivado')
     .eq('id', leadId)
     .maybeSingle()
 
   if (errorLead) return { error: `No se pudo leer el lead: ${errorLead.message}` }
   if (!lead) return { error: 'Este lead ya no existe' }
-  if (!lead.archivado) {
-    return { error: 'Primero manda el lead a la papelera' }
+  if (!lead.archivado && !nombreConfirmaAlLead(opciones.confirmacionNombre, lead.nombre)) {
+    return { error: `Para borrar un lead vivo escribe su nombre tal cual: ${lead.nombre}` }
   }
 
   const { error } = await supabase.rpc('eliminar_lead_definitivo', { p_lead_id: leadId })

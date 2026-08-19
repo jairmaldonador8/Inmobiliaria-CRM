@@ -40,7 +40,12 @@ export async function procesarRecordatorios(
 
   const { data, error } = await supabase
     .from('recordatorios')
-    .select('id, lead_id, asesor_id, fecha_hora, nota, lead:leads(nombre)')
+    // !inner + filtro sobre la relación: un lead archivado (eliminado desde
+    // la papelera) NO debe seguir empujando push ni campanita — su hoja ya
+    // no existe para el asesor y el aviso llevaría a un 404. Al restaurarlo,
+    // como `notificado_en` sigue null, el recordatorio avisa entonces.
+    .select('id, lead_id, asesor_id, fecha_hora, nota, lead:leads!inner(nombre, archivado)')
+    .eq('lead.archivado', false)
     .eq('estado', 'pendiente')
     .is('notificado_en', null)
     .lte('fecha_hora', ahora.toISOString())

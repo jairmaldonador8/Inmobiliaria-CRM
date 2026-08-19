@@ -20,7 +20,7 @@ import { BotonLlamar } from '@/components/contactos/boton-llamar'
 import { HojaDesenlace } from '@/components/contactos/hoja-desenlace'
 import { BotonWhatsApp, type PlantillaWhatsApp } from '@/components/leads/boton-whatsapp'
 import { ReasignarLead } from '@/components/leads/reasignar-lead'
-import { BotonEliminarLead } from '@/components/leads/boton-eliminar-lead'
+import { MenuAccionesLead } from '@/components/leads/menu-acciones-lead'
 import {
   CardPropiedadInteres,
   DatosLead,
@@ -195,9 +195,19 @@ export default async function PaginaDetalleLeadAdmin({
       </div>
 
       <header className="flex flex-col gap-2">
-        <h1 className="text-xl font-semibold tracking-tight text-slate-900">
-          {leadDetalle.nombre}
-        </h1>
+        <div className="flex items-start justify-between gap-3">
+          <h1 className="min-w-0 text-xl font-semibold tracking-tight text-slate-900">
+            {leadDetalle.nombre}
+          </h1>
+          {/* Acciones de la ficha en el ⋯ de arriba (pedido de Jair,
+              2026-08-19): archivar, eliminar y copiar datos. */}
+          <MenuAccionesLead
+            leadId={leadDetalle.id}
+            nombre={leadDetalle.nombre}
+            telefono={leadDetalle.telefono}
+            email={leadDetalle.email}
+          />
+        </div>
         <div className="flex flex-wrap items-center gap-2">
           <Badge className={claseBadgeEtapa(leadDetalle.etapa)}>
             {etiquetaEtapa(leadDetalle.etapa)}
@@ -309,12 +319,6 @@ export default async function PaginaDetalleLeadAdmin({
         <h2 className="text-sm font-semibold text-slate-900">Historia del lead</h2>
         <ResumenHistorial historia={historia} />
         <TimelineEventos eventos={historia} />
-      </div>
-
-      {/* Zona de peligro, al final y discreta: quien entra a trabajar el lead
-          no debe toparse con «eliminar» antes que con el teléfono. */}
-      <div className="flex justify-end border-t border-slate-200 pt-3">
-        <BotonEliminarLead leadId={leadDetalle.id} nombre={leadDetalle.nombre} />
       </div>
     </section>
   )

@@ -105,7 +105,10 @@ export async function citasHoy(supabase: SupabaseClient, ahora: Date = new Date(
 
   const { count, error } = await supabase
     .from('visitas')
-    .select('id', { count: 'exact', head: true })
+    // Una visita de un lead archivado ya no es una cita de hoy: el lead salió
+    // de circulación y su hoja no existe.
+    .select('id, lead:leads!inner(archivado)', { count: 'exact', head: true })
+    .eq('lead.archivado', false)
     .eq('estado', 'agendada')
     .gte('fecha', inicioHoy.toISOString())
     .lt('fecha', inicioManana.toISOString())
@@ -167,7 +170,8 @@ export async function proximasVisitas(
 ): Promise<ProximaVisita[]> {
   let consulta = supabase
     .from('visitas')
-    .select('id, fecha, duracion_min, lead:leads!inner(id, nombre), propiedad:propiedades(titulo)')
+    .select('id, fecha, duracion_min, lead:leads!inner(id, nombre, archivado), propiedad:propiedades(titulo)')
+    .eq('lead.archivado', false)
     .eq('estado', 'agendada')
     .gte('fecha', ahora.toISOString())
 

@@ -181,3 +181,25 @@ export function formatearTelefono(telefono: string | null): string {
   }
   return telefono
 }
+
+/**
+ * Compara el nombre escrito a mano contra el real, con la manga ancha justa:
+ * sin acentos, sin mayúsculas y sin espacios de sobra. Se le pide a alguien
+ * que confirme, no que transcriba con precisión de notario.
+ *
+ * Vive aquí y no en `leads/acciones.ts` porque ese módulo es 'use server'
+ * (todo lo que exporta tiene que ser una Server Action async) y esto lo
+ * necesitan los dos lados: el diálogo para habilitar el botón y el servidor
+ * para decidir de verdad.
+ */
+export function nombreConfirmaAlLead(escrito: string | undefined, real: string): boolean {
+  if (!escrito) return false
+  const normalizar = (texto: string) =>
+    texto
+      .normalize('NFD')
+      .replace(/\p{Diacritic}/gu, '')
+      .trim()
+      .replace(/\s+/g, ' ')
+      .toLowerCase()
+  return normalizar(escrito) === normalizar(real)
+}

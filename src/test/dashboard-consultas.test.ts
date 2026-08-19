@@ -48,14 +48,20 @@ function crearSupabaseSeguimientosFake(filas: { lead_id: string }[], error: Erro
   return { supabase: { from } as unknown as SupabaseClient, from, select, eqTipo, eqNota, gte }
 }
 
-/** Stub chainable para visitas: select().eq().gte().lt() resuelve al final (head:true → {count,error}). */
+/**
+ * Stub chainable para visitas:
+ * select().eq(lead.archivado).eq(estado).gte().lt() resuelve al final
+ * (head:true → {count,error}). El primer .eq es el filtro sobre la relación
+ * que evita contar citas de leads archivados (regresión 2026-08-19).
+ */
 function crearSupabaseVisitasFake(count: number | null, error: ErrorFake | null = null) {
   const lt = vi.fn().mockResolvedValue({ count, error })
   const gte = vi.fn(() => ({ lt }))
-  const eq = vi.fn(() => ({ gte }))
+  const eqEstado = vi.fn(() => ({ gte }))
+  const eq = vi.fn(() => ({ eq: eqEstado }))
   const select = vi.fn(() => ({ eq }))
   const from = vi.fn(() => ({ select }))
-  return { supabase: { from } as unknown as SupabaseClient, from, select, eq, gte, lt }
+  return { supabase: { from } as unknown as SupabaseClient, from, select, eq, eqEstado, gte, lt }
 }
 
 /** Fila cruda tal como la devolvería Supabase para el join de `proximasVisitas`. */
@@ -75,10 +81,12 @@ function crearSupabaseProximasVisitasFake(
   const limit = vi.fn().mockResolvedValue({ data: filas, error })
   const order = vi.fn(() => ({ limit }))
   const gte = vi.fn(() => ({ order }))
-  const eq = vi.fn(() => ({ gte }))
+  // .eq('lead.archivado', false) → .eq('estado', 'agendada') → .gte(...)
+  const eqEstado = vi.fn(() => ({ gte }))
+  const eq = vi.fn(() => ({ eq: eqEstado }))
   const select = vi.fn(() => ({ eq }))
   const from = vi.fn(() => ({ select }))
-  return { supabase: { from } as unknown as SupabaseClient, from, select, eq, gte, order, limit }
+  return { supabase: { from } as unknown as SupabaseClient, from, select, eq, eqEstado, gte, order, limit }
 }
 
 describe('serieLeads30Dias', () => {
@@ -207,13 +215,18 @@ describe('citasHoy', () => {
   })
 
   it('consulta visitas estado=agendada dentro de los límites del día de hoy en Monterrey', async () => {
-    const { supabase, from, select, eq, gte, lt } = crearSupabaseVisitasFake(0)
+    const { supabase, from, select, eq, eqEstado, gte, lt } = crearSupabaseVisitasFake(0)
 
     await citasHoy(supabase, AHORA)
 
     expect(from).toHaveBeenCalledWith('visitas')
-    expect(select).toHaveBeenCalledWith('id', { count: 'exact', head: true })
-    expect(eq).toHaveBeenCalledWith('estado', 'agendada')
+    expect(select).toHaveBeenCalledWith('id, lead:leads!inner(archivado)', {
+      count: 'exact',
+      head: true,
+    })
+    // Una cita de un lead archivado ya no es cita de hoy (regresión 2026-08-19).
+    expect(eq).toHaveBeenCalledWith('lead.archivado', false)
+    expect(eqEstado).toHaveBeenCalledWith('estado', 'agendada')
     expect(gte).toHaveBeenCalledWith('fecha', '2026-03-15T06:00:00.000Z')
     expect(lt).toHaveBeenCalledWith('fecha', '2026-03-16T06:00:00.000Z')
   })
@@ -273,15 +286,18 @@ describe('proximasVisitas', () => {
   })
 
   it('consulta visitas estado=agendada, futuras (gte fecha=ahora), orden ascendente por fecha, con el límite pedido', async () => {
-    const { supabase, from, select, eq, gte, order, limit } = crearSupabaseProximasVisitasFake([])
+    const { supabase, from, select, eq, eqEstado, gte, order, limit } =
+      crearSupabaseProximasVisitasFake([])
 
     await proximasVisitas(supabase, 5, AHORA)
 
     expect(from).toHaveBeenCalledWith('visitas')
     expect(select).toHaveBeenCalledWith(
-      'id, fecha, duracion_min, lead:leads!inner(id, nombre), propiedad:propiedades(titulo)'
+      'id, fecha, duracion_min, lead:leads!inner(id, nombre, archivado), propiedad:propiedades(titulo)'
     )
-    expect(eq).toHaveBeenCalledWith('estado', 'agendada')
+    // Las visitas de leads archivados salen de la lista (regresión 2026-08-19).
+    expect(eq).toHaveBeenCalledWith('lead.archivado', false)
+    expect(eqEstado).toHaveBeenCalledWith('estado', 'agendada')
     expect(gte).toHaveBeenCalledWith('fecha', AHORA.toISOString())
     expect(order).toHaveBeenCalledWith('fecha', { ascending: true })
     expect(limit).toHaveBeenCalledWith(5)

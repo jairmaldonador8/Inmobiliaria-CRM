@@ -36,7 +36,10 @@ export async function recordatoriosParaHoy(
 
   const { data, error } = await supabase
     .from('recordatorios')
-    .select('id, lead_id, fecha_hora, nota, lead:leads(nombre)')
+    // Los leads archivados salen de TODA vista (ver leads/acciones.ts):
+    // sin este !inner, «Para hoy» pintaba en rojo un lead que ya no existe.
+    .select('id, lead_id, fecha_hora, nota, lead:leads!inner(nombre, archivado)')
+    .eq('lead.archivado', false)
     .eq('asesor_id', asesorId)
     .eq('estado', 'pendiente')
     .lt('fecha_hora', finDeHoy.toISOString())
@@ -69,7 +72,10 @@ export async function proximoRecordatorioPorLead(
 
   const { data } = await supabase
     .from('recordatorios')
-    .select('id, lead_id, fecha_hora, nota')
+    // Aquí los ids ya vienen de listas sin archivados, pero el !inner lo deja
+    // cierto por construcción y no a merced de quien llame mañana.
+    .select('id, lead_id, fecha_hora, nota, lead:leads!inner(archivado)')
+    .eq('lead.archivado', false)
     .eq('asesor_id', asesorId)
     .eq('estado', 'pendiente')
     .in('lead_id', leadIds)
